@@ -8,13 +8,15 @@ import kotlin.random.Random
 
 data class UserProfile(
     val id: String = "user_123",
-    val name: String = "Ueli Maurer",
-    val email: String = "ueli@example.ch",
-    val phone: String = "079 123 45 67",
-    val homeAddress: String = "Langstrasse 120, 8004 Zürich",
-    val invoiceAddress: String = "Langstrasse 120, 8004 Zürich",
+    val name: String = "",
+    val email: String = "",
+    val phone: String = "",
+    val homeAddress: String = "",
+    val invoiceAddress: String = "",
     val invoiceSameAsHome: Boolean = true,
-    val defaultPaymentMethod: String = "twint_demo"
+    val defaultPaymentMethod: String = "twint_demo",
+    val isLoggedIn: Boolean = false,
+    val authType: String? = null
 )
 
 data class CategoryBreakdown(
@@ -52,6 +54,44 @@ object RecyclingRepository {
 
     private val _lastPickup = MutableStateFlow<PickupRequest?>(null)
     val lastPickup: StateFlow<PickupRequest?> = _lastPickup.asStateFlow()
+
+    fun loginWithGoogle(name: String, email: String) {
+        _userProfile.value = UserProfile(
+            name = name,
+            email = email,
+            isLoggedIn = true,
+            authType = "GOOGLE"
+        )
+    }
+
+    fun loginWithEmail(name: String, email: String) {
+        _userProfile.value = UserProfile(
+            name = name,
+            email = email,
+            isLoggedIn = true,
+            authType = "EMAIL"
+        )
+    }
+
+    fun loginWithPhone(phone: String) {
+        _userProfile.value = UserProfile(
+            phone = phone,
+            isLoggedIn = true,
+            authType = "PHONE"
+        )
+    }
+
+    fun registerAddress(homeAddr: String) {
+        val current = _userProfile.value
+        _userProfile.value = current.copy(
+            homeAddress = homeAddr,
+            invoiceAddress = homeAddr
+        )
+    }
+
+    fun logout() {
+        _userProfile.value = UserProfile()
+    }
 
     fun updateProfile(name: String, phone: String, homeAddr: String, payment: String) {
         val current = _userProfile.value

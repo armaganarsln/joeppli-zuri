@@ -19,11 +19,26 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
+import com.example.zuerijoeppli.data.RecyclingRepository
 import com.example.zuerijoeppli.ui.screens.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainAppLayout() {
+    val profile by RecyclingRepository.userProfile.collectAsState()
+
+    if (!profile.isLoggedIn) {
+        AuthScreen()
+    } else if (profile.homeAddress.isEmpty()) {
+        AddressRegistrationScreen()
+    } else {
+        MainAppContent()
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun MainAppContent() {
     var activeTab by remember { mutableStateOf("HOME") }
     var prefillQuickOrder by remember { mutableStateOf(false) }
 

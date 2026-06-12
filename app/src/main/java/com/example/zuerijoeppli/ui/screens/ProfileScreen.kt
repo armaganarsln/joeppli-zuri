@@ -227,5 +227,21 @@ fun ProfileScreen() {
                 }
             }
         }
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        Button(
+            onClick = {
+                RecyclingRepository.logout()
+                Toast.makeText(context, "Erfolgriich abgemeldet", Toast.LENGTH_SHORT).show()
+            },
+            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
+            shape = RoundedCornerShape(24.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(48.dp)
+        ) {
+            Text("Abmelde (Log Out)", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onError)
+        }
     }
 }
