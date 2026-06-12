@@ -36,10 +36,10 @@ val gitVersionCode: Int = if (rootProject.file(".git").exists()) {
 }
 
 android {
-    namespace = "com.example.zuerijoeppli"
+    namespace = "gl.joeppli.zueri"
     compileSdk = 36
     defaultConfig {
-        applicationId = "com.example.zuerijoeppli"
+        applicationId = "gl.joeppli.zueri"
         minSdk = 24
         targetSdk = 36
         versionCode = gitVersionCode

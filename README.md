@@ -57,9 +57,8 @@ Then publish to the Closed Testing (Alpha) track:
 ```
 
 Note: release builds are minified (R8) and must be signed — they intentionally
-fail without the keystore. The app id (`com.example.zuerijoeppli`) must be
-changed to a final id **before** the first Play upload; it cannot be changed
-afterwards.
+fail without the keystore. The app id is `gl.joeppli.zueri`; Play locks it
+permanently on first upload.
 
 ## App structure
 
