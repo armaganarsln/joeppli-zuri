@@ -25,6 +25,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import com.example.zuerijoeppli.data.RecyclingRepository
 import com.example.zuerijoeppli.theme.EcoGreen
+import com.example.zuerijoeppli.ui.LocalJoeppliStrings
 
 @Composable
 fun HomeScreen(
@@ -34,6 +35,14 @@ fun HomeScreen(
     val stats by RecyclingRepository.stats.collectAsState()
     val profile by RecyclingRepository.userProfile.collectAsState()
     val scrollState = rememberScrollState()
+    val strings = LocalJoeppliStrings.current
+    val lang by RecyclingRepository.userLanguage.collectAsState()
+
+    val firstName = if (profile.name.isBlank()) {
+        if (lang == "en") "Recycler" else "Recycler"
+    } else {
+        profile.name.substringBefore(' ')
+    }
 
     Column(
         modifier = Modifier
@@ -47,12 +56,12 @@ fun HomeScreen(
 
         // Greeting
         Text(
-            text = "Grüezi, ${profile.name.substringBefore(' ')}!",
+            text = strings.greeting.format(firstName),
             style = MaterialTheme.typography.headlineMedium,
             color = MaterialTheme.colorScheme.onBackground
         )
         Text(
-            text = "Parat zum recycle?",
+            text = strings.readyToRecycle,
             style = MaterialTheme.typography.bodyLarge,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.padding(top = 4.dp)
@@ -66,7 +75,7 @@ fun HomeScreen(
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             MiniStatCard(
-                title = "Züri-Karma",
+                title = strings.statKarma,
                 value = "${stats.karma}/100",
                 icon = Icons.Filled.Star,
                 iconColor = EcoGreen,
@@ -74,7 +83,7 @@ fun HomeScreen(
                 modifier = Modifier.weight(1f)
             )
             MiniStatCard(
-                title = "CO2 gspart",
+                title = strings.statCo2,
                 value = "-${stats.co2Saved.toInt()} kg",
                 icon = Icons.Filled.Favorite,
                 iconColor = Color(0xFFE11D48),
@@ -116,19 +125,19 @@ fun HomeScreen(
                     ) {
                         Icon(
                             imageVector = Icons.Filled.Bolt,
-                            contentDescription = "Schnäll Abholig",
+                            contentDescription = strings.quickPickup,
                             tint = MaterialTheme.colorScheme.onPrimary,
                             modifier = Modifier.size(30.dp)
                         )
                     }
                     Column {
                         Text(
-                            text = "Schnäll Abholig",
+                            text = strings.quickPickup,
                             color = MaterialTheme.colorScheme.onPrimary,
                             style = MaterialTheme.typography.titleLarge
                         )
                         Text(
-                            text = "Hole mini Favorite",
+                            text = strings.quickPickupDesc,
                             color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.85f),
                             style = MaterialTheme.typography.bodyMedium
                         )
@@ -150,20 +159,20 @@ fun HomeScreen(
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             MenuRowCard(
-                title = "Jöppli bestellen",
-                subtitle = "Autonomi Abholig planä",
+                title = if (lang == "en") "Order Jöppli" else "Jöppli bestellen",
+                subtitle = if (lang == "en") "Schedule autonomous collection" else "Autonomi Abholig planä",
                 icon = Icons.Outlined.LocalShipping,
                 onClick = { onNavigateToTab("ORDER") }
             )
             MenuRowCard(
-                title = "Was chan ich recycle?",
-                subtitle = "Entsorgigs-Wegwiiser & AI Scanner",
+                title = if (lang == "en") "What can I recycle?" else "Was chan ich recycle?",
+                subtitle = if (lang == "en") "Disposal guide & AI Scanner" else "Entsorgigs-Wegwiiser & AI Scanner",
                 icon = Icons.AutoMirrored.Outlined.MenuBook,
                 onClick = { onNavigateToTab("GUIDE") }
             )
             MenuRowCard(
-                title = "Mini Date",
-                subtitle = "Adresse & TWINT",
+                title = if (lang == "en") "My Profile" else "Mini Date",
+                subtitle = if (lang == "en") "Address & TWINT" else "Adresse & TWINT",
                 icon = Icons.Outlined.ManageAccounts,
                 onClick = { onNavigateToTab("PROFILE") }
             )

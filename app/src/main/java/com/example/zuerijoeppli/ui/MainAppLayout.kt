@@ -25,14 +25,18 @@ import com.example.zuerijoeppli.ui.screens.*
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainAppLayout() {
+    val lang by RecyclingRepository.userLanguage.collectAsState()
+    val strings = if (lang == "en") EnStrings else DeStrings
     val profile by RecyclingRepository.userProfile.collectAsState()
 
-    if (!profile.isLoggedIn) {
-        AuthScreen()
-    } else if (profile.homeAddress.isEmpty()) {
-        AddressRegistrationScreen()
-    } else {
-        MainAppContent()
+    CompositionLocalProvider(LocalJoeppliStrings provides strings) {
+        if (!profile.isLoggedIn) {
+            AuthScreen()
+        } else if (profile.homeAddress.isEmpty()) {
+            AddressRegistrationScreen()
+        } else {
+            MainAppContent()
+        }
     }
 }
 
@@ -90,6 +94,7 @@ fun CustomBottomBar(
     onTabSelect: (String) -> Unit,
     onQuickPickupClick: () -> Unit
 ) {
+    val strings = LocalJoeppliStrings.current
     // 26dp of transparent headroom keeps the floating FAB inside the
     // composable's bounds (no clipping, full touch target).
     Box(modifier = Modifier.fillMaxWidth()) {
@@ -109,14 +114,14 @@ fun CustomBottomBar(
                 horizontalArrangement = Arrangement.SpaceAround
             ) {
                 BottomTabItem(
-                    label = "Start",
+                    label = strings.bottomStart,
                     icon = Icons.Outlined.Home,
                     selectedIcon = Icons.Filled.Home,
                     selected = activeTab == "HOME",
                     onClick = { onTabSelect("HOME") }
                 )
                 BottomTabItem(
-                    label = "Recycling",
+                    label = strings.bottomRecycling,
                     icon = Icons.Outlined.BarChart,
                     selectedIcon = Icons.Outlined.BarChart,
                     selected = activeTab == "STATS",
@@ -125,14 +130,14 @@ fun CustomBottomBar(
                 // Space reserved for the centered FAB
                 Spacer(modifier = Modifier.weight(1f))
                 BottomTabItem(
-                    label = "Scannen",
+                    label = strings.bottomScanner,
                     icon = Icons.Outlined.CenterFocusWeak,
                     selectedIcon = Icons.Outlined.CenterFocusWeak,
                     selected = activeTab == "GUIDE",
                     onClick = { onTabSelect("GUIDE") }
                 )
                 BottomTabItem(
-                    label = "Profil",
+                    label = strings.bottomProfile,
                     icon = Icons.Outlined.Person,
                     selectedIcon = Icons.Filled.Person,
                     selected = activeTab == "PROFILE",
@@ -152,7 +157,7 @@ fun CustomBottomBar(
         ) {
             Icon(
                 imageVector = Icons.Filled.Recycling,
-                contentDescription = "Jöppli bestellen",
+                contentDescription = strings.quickPickup,
                 modifier = Modifier.size(30.dp)
             )
         }

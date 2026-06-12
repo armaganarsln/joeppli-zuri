@@ -17,11 +17,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.example.zuerijoeppli.data.RecyclingRepository
+import com.example.zuerijoeppli.ui.LocalJoeppliStrings
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProfileScreen() {
     val profile by RecyclingRepository.userProfile.collectAsState()
+    val activeLang by RecyclingRepository.userLanguage.collectAsState()
+    val strings = LocalJoeppliStrings.current
     val context = LocalContext.current
     val scrollState = rememberScrollState()
 
@@ -59,12 +62,12 @@ fun ProfileScreen() {
             }
             Column(modifier = Modifier.padding(start = 16.dp)) {
                 Text(
-                    text = "Profil & Adresse",
+                    text = if (activeLang == "en") "Profile Settings" else "Profil & Adresse",
                     style = MaterialTheme.typography.headlineSmall,
                     color = MaterialTheme.colorScheme.onBackground
                 )
                 Text(
-                    text = "Dini Date für automatischi Abholige",
+                    text = if (activeLang == "en") "Your credentials for Jöppli collection" else "Dini Date für automatischi Abholige",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -82,7 +85,7 @@ fun ProfileScreen() {
         ) {
             Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
                 Text(
-                    text = "Wohnort & Kontakt",
+                    text = strings.profileContact,
                     style = MaterialTheme.typography.titleMedium,
                     color = MaterialTheme.colorScheme.secondary
                 )
@@ -90,7 +93,7 @@ fun ProfileScreen() {
                 OutlinedTextField(
                     value = name,
                     onValueChange = { name = it },
-                    label = { Text("Vorname Nachname") },
+                    label = { Text(strings.profileName) },
                     singleLine = true,
                     shape = RoundedCornerShape(12.dp),
                     modifier = Modifier.fillMaxWidth()
@@ -99,7 +102,7 @@ fun ProfileScreen() {
                 OutlinedTextField(
                     value = phone,
                     onValueChange = { phone = it },
-                    label = { Text("Telefonnummer") },
+                    label = { Text(strings.profilePhone) },
                     singleLine = true,
                     shape = RoundedCornerShape(12.dp),
                     modifier = Modifier.fillMaxWidth()
@@ -108,7 +111,7 @@ fun ProfileScreen() {
                 OutlinedTextField(
                     value = address,
                     onValueChange = { address = it },
-                    label = { Text("Zürcher Wohnadresse") },
+                    label = { Text(strings.profileAddress) },
                     singleLine = true,
                     shape = RoundedCornerShape(12.dp),
                     modifier = Modifier.fillMaxWidth()
@@ -117,14 +120,49 @@ fun ProfileScreen() {
                 Button(
                     onClick = {
                         RecyclingRepository.updateProfile(name, phone, address, selectedPayment)
-                        Toast.makeText(context, "Date erfolgriich gspicheret", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, strings.profileSaveToast, Toast.LENGTH_SHORT).show()
                     },
                     shape = RoundedCornerShape(24.dp),
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(48.dp)
                 ) {
-                    Text("Spichere", style = MaterialTheme.typography.labelLarge)
+                    Text(strings.profileSave, style = MaterialTheme.typography.labelLarge)
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Language settings card
+        Card(
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+            shape = RoundedCornerShape(16.dp),
+            elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Column(modifier = Modifier.padding(16.dp)) {
+                Text(
+                    text = strings.profileLangTitle,
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.secondary
+                )
+                Spacer(modifier = Modifier.height(12.dp))
+
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    val isDe = activeLang == "de"
+                    FilterChip(
+                        selected = isDe,
+                        onClick = { RecyclingRepository.setLanguage("de") },
+                        label = { Text("Deutsch (CH) 🇨🇭") },
+                        modifier = Modifier.weight(1f)
+                    )
+                    FilterChip(
+                        selected = !isDe,
+                        onClick = { RecyclingRepository.setLanguage("en") },
+                        label = { Text("English 🇬🇧") },
+                        modifier = Modifier.weight(1f)
+                    )
                 }
             }
         }
@@ -140,7 +178,7 @@ fun ProfileScreen() {
         ) {
             Column(modifier = Modifier.padding(16.dp)) {
                 Text(
-                    text = "Standard-Zahlmittel",
+                    text = strings.profilePayment,
                     style = MaterialTheme.typography.titleMedium,
                     color = MaterialTheme.colorScheme.secondary
                 )
@@ -163,7 +201,7 @@ fun ProfileScreen() {
                             selectedPayment = "card"
                             RecyclingRepository.updateProfile(name, phone, address, "card")
                         },
-                        label = { Text("Kreditkarte") },
+                        label = { Text(if (activeLang == "en") "Credit Card" else "Kreditkarte") },
                         modifier = Modifier.weight(1f)
                     )
                 }
@@ -181,12 +219,12 @@ fun ProfileScreen() {
         ) {
             Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 Text(
-                    text = "ERZ Leitstell kontaktiere",
+                    text = strings.profileSupportTitle,
                     style = MaterialTheme.typography.titleMedium,
                     color = MaterialTheme.colorScheme.secondary
                 )
                 Text(
-                    text = "Hesch Frage zur Entsorgig oder dim Jöppli-Fahrzüg?",
+                    text = strings.profileSupportSubtitle,
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -194,7 +232,7 @@ fun ProfileScreen() {
                 OutlinedTextField(
                     value = supportMessage,
                     onValueChange = { supportMessage = it },
-                    label = { Text("Dini Mitteilig") },
+                    label = { Text(strings.profileSupportMsg) },
                     shape = RoundedCornerShape(12.dp),
                     modifier = Modifier
                         .fillMaxWidth()
@@ -205,10 +243,10 @@ fun ProfileScreen() {
                 Button(
                     onClick = {
                         if (supportMessage.isNotBlank()) {
-                            Toast.makeText(context, "Meldig gsendet! ERZ wird antworte.", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, strings.profileSupportToast, Toast.LENGTH_SHORT).show()
                             supportMessage = ""
                         } else {
-                            Toast.makeText(context, "Bitte Nachricht igäh", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, strings.profileSupportError, Toast.LENGTH_SHORT).show()
                         }
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary),
@@ -223,7 +261,7 @@ fun ProfileScreen() {
                         modifier = Modifier.size(18.dp)
                     )
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("Nachricht absende", style = MaterialTheme.typography.labelLarge)
+                    Text(strings.profileSupportSend, style = MaterialTheme.typography.labelLarge)
                 }
             }
         }
@@ -233,7 +271,7 @@ fun ProfileScreen() {
         Button(
             onClick = {
                 RecyclingRepository.logout()
-                Toast.makeText(context, "Erfolgriich abgemeldet", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, strings.profileLogoutToast, Toast.LENGTH_SHORT).show()
             },
             colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
             shape = RoundedCornerShape(24.dp),
@@ -241,7 +279,7 @@ fun ProfileScreen() {
                 .fillMaxWidth()
                 .height(48.dp)
         ) {
-            Text("Abmelde (Log Out)", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onError)
+            Text(strings.profileLogout, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onError)
         }
     }
 }

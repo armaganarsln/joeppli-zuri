@@ -1,7 +1,6 @@
 package com.example.zuerijoeppli.ui.screens
 
-import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -24,6 +23,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.PathMeasure
@@ -32,7 +33,10 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.example.zuerijoeppli.data.RecyclingRepository
+import com.example.zuerijoeppli.theme.EcoGreen
+import com.example.zuerijoeppli.theme.ZurichBlue
 import com.example.zuerijoeppli.theme.TwintCyan
+import com.example.zuerijoeppli.ui.LocalJoeppliStrings
 import kotlinx.coroutines.delay
 import java.text.SimpleDateFormat
 import java.util.*
@@ -42,6 +46,9 @@ fun OrderScreen(
     onNavigateHome: () -> Unit,
     prefillQuick: Boolean = false
 ) {
+    val strings = LocalJoeppliStrings.current
+    val lang by RecyclingRepository.userLanguage.collectAsState()
+    
     var currentStep by remember { mutableStateOf(if (prefillQuick) 2 else 1) }
 
     // Form states
@@ -55,13 +62,21 @@ fun OrderScreen(
 
     // Initializer
     LaunchedEffect(profile) {
-        address = profile.homeAddress
+        if (profile.homeAddress.isNotEmpty()) {
+            address = profile.homeAddress
+        }
     }
 
     if (prefillQuick && selectedMaterials.isEmpty()) {
-        selectedMaterials.addAll(listOf("Papier/Karton", "Altglas", "Alu/Metall", "Biogut/Kompost"))
-        selectedDate = SimpleDateFormat("EEEE, dd. MMMM", Locale.GERMAN).format(Date())
-        selectedTimeSlot = "Feierabend (18:00 - 21:00)"
+        val standardPaper = if (lang == "en") "Paper / Cardboard" else "Papier/Karton"
+        val standardGlass = if (lang == "en") "Glass" else "Altglas"
+        val standardMetal = if (lang == "en") "Aluminum / Metal" else "Alu/Metall"
+        val standardCompost = if (lang == "en") "Compost / Organic" else "Biogut/Kompost"
+        selectedMaterials.addAll(listOf(standardPaper, standardGlass, standardMetal, standardCompost))
+        
+        val format = SimpleDateFormat("EEEE, dd. MMMM", if (lang == "en") Locale.US else Locale.GERMAN)
+        selectedDate = format.format(Date())
+        selectedTimeSlot = strings.orderSlotEvening
     }
 
     // Pricing calculation
@@ -71,7 +86,7 @@ fun OrderScreen(
     }
     var price = 0f
     if (hasPaidMaterial) price += 8f
-    if (isExpress) price += 5f
+    if (isExpress) price += 4.5f
 
     Column(
         modifier = Modifier
@@ -82,11 +97,11 @@ fun OrderScreen(
         if (currentStep <= 5) {
             WizardHeader(
                 title = when (currentStep) {
-                    1 -> "Abholort wählen"
-                    2 -> "Abholzeit wählen"
-                    3 -> "Wertstoffe sortieren"
-                    4 -> "Zusammenfassung"
-                    else -> "Zahlung"
+                    1 -> strings.orderStepAddress
+                    2 -> strings.orderStepSlot
+                    3 -> strings.orderStepMaterials
+                    4 -> strings.orderStepSummary
+                    else -> strings.orderStepPayment
                 },
                 step = currentStep,
                 totalSteps = 5,
@@ -118,6 +133,7 @@ private fun WizardHeader(
     totalSteps: Int,
     onBack: () -> Unit
 ) {
+    val lang by RecyclingRepository.userLanguage.collectAsState()
     Column {
         Row(
             verticalAlignment = Alignment.CenterVertically,
@@ -135,7 +151,7 @@ private fun WizardHeader(
                     color = MaterialTheme.colorScheme.onBackground
                 )
                 Text(
-                    text = "Schritt $step von $totalSteps",
+                    text = if (lang == "en") "Step $step of $totalSteps" else "Schritt $step von $totalSteps",
                     style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -177,10 +193,12 @@ fun OrderStep1(
     onAddressChange: (String) -> Unit,
     onNext: () -> Unit
 ) {
+    val strings = LocalJoeppliStrings.current
+    val lang by RecyclingRepository.userLanguage.collectAsState()
     Column(modifier = Modifier.padding(16.dp)) {
         Spacer(modifier = Modifier.height(16.dp))
         Text(
-            "Wo soll s'Jöppli-Fahrzeug vorfahre?",
+            if (lang == "en") "Where should the Jöppli vehicle arrive?" else "Wo soll s'Jöppli-Fahrzeug vorfahre?",
             style = MaterialTheme.typography.bodyLarge,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
@@ -189,14 +207,14 @@ fun OrderStep1(
         OutlinedTextField(
             value = address,
             onValueChange = onAddressChange,
-            label = { Text("Zürcher Adresse") },
+            label = { Text(strings.profileAddress) },
             leadingIcon = { Icon(Icons.Outlined.LocationOn, contentDescription = null) },
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(16.dp)
         )
         Spacer(modifier = Modifier.height(24.dp))
 
-        WizardCta("Weiter", enabled = address.isNotBlank(), onClick = onNext)
+        WizardCta(if (lang == "en") "Continue" else "Weiter", enabled = address.isNotBlank(), onClick = onNext)
     }
 }
 
@@ -210,18 +228,25 @@ fun OrderStep2(
     onExpressChange: (Boolean) -> Unit,
     onNext: () -> Unit
 ) {
-    val dateOptions = remember {
-        val format = SimpleDateFormat("EEEE, dd. MMMM", Locale.GERMAN)
+    val strings = LocalJoeppliStrings.current
+    val lang by RecyclingRepository.userLanguage.collectAsState()
+    
+    val dateOptions = remember(lang) {
+        val format = SimpleDateFormat("EEEE, dd. MMMM", if (lang == "en") Locale.US else Locale.GERMAN)
         val today = Date()
         val tomorrow = Date(today.time + 24 * 60 * 60 * 1000)
         val nextDay = Date(today.time + 2 * 24 * 60 * 60 * 1000)
-        listOf("Heute (${format.format(today)})", "Morgen (${format.format(tomorrow)})", format.format(nextDay))
+        listOf(
+            if (lang == "en") "Today (${format.format(today)})" else "Heute (${format.format(today)})",
+            if (lang == "en") "Tomorrow (${format.format(tomorrow)})" else "Morgen (${format.format(tomorrow)})",
+            format.format(nextDay)
+        )
     }
 
     val timeSlots = listOf(
-        "Vormittag (08:00 - 12:00)",
-        "Nachmittag (13:00 - 17:00)",
-        "Feierabend (18:00 - 21:00)"
+        strings.orderSlotMorning,
+        strings.orderSlotAfternoon,
+        strings.orderSlotEvening
     )
 
     Column(
@@ -232,7 +257,7 @@ fun OrderStep2(
         Spacer(modifier = Modifier.height(8.dp))
 
         // Date selection list
-        Text("Datum", style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.secondary)
+        Text(if (lang == "en") "Date" else "Datum", style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.secondary)
         Spacer(modifier = Modifier.height(4.dp))
         dateOptions.forEach { date ->
             Row(
@@ -251,7 +276,7 @@ fun OrderStep2(
         Spacer(modifier = Modifier.height(16.dp))
 
         // Time Slot selection list
-        Text("Zeitfenster", style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.secondary)
+        Text(if (lang == "en") "Time Window" else "Zeitfenster", style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.secondary)
         Spacer(modifier = Modifier.height(4.dp))
         timeSlots.forEach { slot ->
             Row(
@@ -294,12 +319,12 @@ fun OrderStep2(
                         .padding(horizontal = 12.dp)
                 ) {
                     Text(
-                        "Sofort (Express Abholig)",
+                        strings.orderExpressToggle,
                         style = MaterialTheme.typography.titleSmall,
                         color = MaterialTheme.colorScheme.onSurface
                     )
                     Text(
-                        "Jöppli startet sofort zu dir (+ CHF 5.00)",
+                        strings.orderExpressDesc,
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -311,7 +336,7 @@ fun OrderStep2(
         Spacer(modifier = Modifier.height(24.dp))
 
         WizardCta(
-            "Weiter",
+            if (lang == "en") "Continue" else "Weiter",
             enabled = selectedDate.isNotEmpty() && selectedTimeSlot.isNotEmpty(),
             onClick = onNext
         )
@@ -323,13 +348,14 @@ fun OrderStep3(
     selectedMaterials: MutableList<String>,
     onNext: () -> Unit
 ) {
+    val lang by RecyclingRepository.userLanguage.collectAsState()
     val materials = listOf(
-        Pair("Papier/Karton", true),
-        Pair("Altglas", true),
-        Pair("Alu/Metall", true),
-        Pair("Biogut/Kompost", true),
-        Pair("Elektroschrott", false),
-        Pair("Sperrgut (Möbel, Holz)", false)
+        Pair(if (lang == "en") "Paper / Cardboard" else "Papier/Karton", true),
+        Pair(if (lang == "en") "Glass" else "Altglas", true),
+        Pair(if (lang == "en") "Aluminum / Metal" else "Alu/Metall", true),
+        Pair(if (lang == "en") "Compost / Organic" else "Biogut/Kompost", true),
+        Pair(if (lang == "en") "Electronic Waste" else "Elektroschrott", false),
+        Pair(if (lang == "en") "Bulky Waste (Furniture, Wood)" else "Sperrgut (Möbel, Holz)", false)
     )
 
     Column(
@@ -339,7 +365,7 @@ fun OrderStep3(
     ) {
         Spacer(modifier = Modifier.height(8.dp))
         Text(
-            "Standardgut isch gratis. Sperrgut & E-Schrott koschtet CHF 8.– pauschal.",
+            text = if (lang == "en") "Standard items are free. Bulky waste & E-waste costs CHF 8.00 flat fee." else "Standardgut isch gratis. Sperrgut & E-Schrott koschtet CHF 8.– pauschal.",
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
@@ -385,7 +411,7 @@ fun OrderStep3(
                         .padding(horizontal = 8.dp, vertical = 4.dp)
                 ) {
                     Text(
-                        text = if (isFree) "GRATIS" else "+ CHF 8.–",
+                        text = if (isFree) (if (lang == "en") "FREE" else "GRATIS") else "+ CHF 8.–",
                         style = MaterialTheme.typography.labelSmall,
                         color = if (isFree) MaterialTheme.colorScheme.onPrimaryContainer
                         else MaterialTheme.colorScheme.secondary
@@ -396,7 +422,7 @@ fun OrderStep3(
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        WizardCta("Weiter zur Kasse", enabled = selectedMaterials.isNotEmpty(), onClick = onNext)
+        WizardCta(if (lang == "en") "Continue to Checkout" else "Weiter zur Kasse", enabled = selectedMaterials.isNotEmpty(), onClick = onNext)
     }
 }
 
@@ -410,6 +436,8 @@ fun OrderStep4(
     isExpress: Boolean,
     onNext: () -> Unit
 ) {
+    val strings = LocalJoeppliStrings.current
+    val lang by RecyclingRepository.userLanguage.collectAsState()
     Column(
         modifier = Modifier
             .padding(16.dp)
@@ -435,7 +463,7 @@ fun OrderStep4(
                 Row(verticalAlignment = Alignment.Top, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                     Icon(Icons.AutoMirrored.Outlined.ListAlt, contentDescription = null, tint = onContainer)
                     Column {
-                        Text("Wertstoffe", style = MaterialTheme.typography.titleSmall, color = onContainer)
+                        Text(if (lang == "en") "Recycle Items" else "Wertstoffe", style = MaterialTheme.typography.titleSmall, color = onContainer)
                         Text(
                             materials.joinToString(", "),
                             style = MaterialTheme.typography.bodySmall,
@@ -446,7 +474,7 @@ fun OrderStep4(
                 if (isExpress) {
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                         Icon(Icons.Filled.Bolt, contentDescription = null, tint = onContainer)
-                        Text("Express Abholig (+ CHF 5.00)", style = MaterialTheme.typography.bodyMedium, color = onContainer)
+                        Text("${strings.orderExpressToggle} (+ CHF 4.50)", style = MaterialTheme.typography.bodyMedium, color = onContainer)
                     }
                 }
 
@@ -457,9 +485,9 @@ fun OrderStep4(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text("Total Gebühr", style = MaterialTheme.typography.titleMedium, color = onContainer)
+                    Text(if (lang == "en") "Total Fee" else "Total Gebühr", style = MaterialTheme.typography.titleMedium, color = onContainer)
                     Text(
-                        text = if (price == 0f) "GRATIS" else String.format(Locale.ROOT, "CHF %.2f", price),
+                        text = if (price == 0f) (if (lang == "en") "FREE" else "GRATIS") else String.format(Locale.ROOT, "CHF %.2f", price),
                         style = MaterialTheme.typography.headlineSmall,
                         color = onContainer
                     )
@@ -469,7 +497,12 @@ fun OrderStep4(
 
         Spacer(modifier = Modifier.height(32.dp))
 
-        WizardCta(if (price == 0f) "Bestellig bestätige" else "Zahle mit TWINT", onClick = onNext)
+        val ctaText = if (price == 0f) {
+            if (lang == "en") "Confirm Order" else "Bestellig bestätige"
+        } else {
+            if (lang == "en") "Pay with TWINT" else "Zahle mit TWINT"
+        }
+        WizardCta(ctaText, onClick = onNext)
     }
 }
 
@@ -478,6 +511,8 @@ fun OrderStep5(
     price: Float,
     onPaymentSuccess: () -> Unit
 ) {
+    val strings = LocalJoeppliStrings.current
+    val lang by RecyclingRepository.userLanguage.collectAsState()
     var loading by remember { mutableStateOf(false) }
 
     if (loading) {
@@ -498,7 +533,7 @@ fun OrderStep5(
             CircularProgressIndicator(modifier = Modifier.size(64.dp))
             Spacer(modifier = Modifier.height(24.dp))
             Text(
-                "Zahlig wird verarbeitet…",
+                if (lang == "en") "Processing Payment..." else "Zahlig wird verarbeitet…",
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.secondary
             )
@@ -518,7 +553,7 @@ fun OrderStep5(
             }
             Spacer(modifier = Modifier.height(24.dp))
             Text(
-                "TWINT Express-Zahlig",
+                if (lang == "en") "TWINT Express Payment" else "TWINT Express-Zahlig",
                 style = MaterialTheme.typography.titleLarge,
                 color = MaterialTheme.colorScheme.secondary
             )
@@ -529,7 +564,7 @@ fun OrderStep5(
                 modifier = Modifier.padding(vertical = 12.dp)
             )
             Text(
-                text = "Klick unde, zum d'Zahlig über d'TWINT-Demo freigäh.",
+                text = if (lang == "en") "Tap below to authorize the payment via TWINT sandbox." else "Klick unde, zum d'Zahlig über d'TWINT-Demo freigäh.",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(horizontal = 16.dp),
@@ -545,7 +580,7 @@ fun OrderStep5(
                     .height(56.dp),
                 shape = RoundedCornerShape(28.dp)
             ) {
-                Text("Zahlig freigäh", style = MaterialTheme.typography.labelLarge)
+                Text(if (lang == "en") "Authorize Payment" else "Zahlig freigäh", style = MaterialTheme.typography.labelLarge)
             }
         }
     }
@@ -556,24 +591,38 @@ fun JöppliTrackerScreen(
     address: String,
     onGoHome: () -> Unit
 ) {
+    val strings = LocalJoeppliStrings.current
+    val lang by RecyclingRepository.userLanguage.collectAsState()
     var statusIndex by remember { mutableIntStateOf(0) }
     val progress = remember { Animatable(0f) }
 
-    val statusMessages = remember {
-        listOf(
-            "Dispositioniert: Jöppli verlaht de ERZ Werkhof Hardau…",
-            "Routeplanig durch Kreis 4/5 wird grächnet…",
-            "Ladesensore kalibriert: 100% Ökostrom glade…",
-            "Überquert d'Hardbrugg Richtig Langstrass…",
-            "Wiicht churz em Tram 8 uf de Badenerstrass uus…",
-            "Biegt i dini Quartierstrass ii…",
-            "Jöppli nähert sich dinere Adress…",
-            "Sicherheits-Sensore aktiv: Parat zum Lade…"
-        )
+    val statusMessages = remember(lang) {
+        if (lang == "en") {
+            listOf(
+                "Dispatched: Jöppli is leaving ERZ Werkhof Hardau...",
+                "Calculating route through Kreis 4/5...",
+                "Loading sensors calibrated: 100% green electricity charged...",
+                "Crossing Hardbrücke towards Langstrasse...",
+                "Slightly yielding to Tram 8 on Badenerstrasse...",
+                "Turning into your neighborhood street...",
+                "Jöppli is approaching your address...",
+                "Safety sensors active: Ready to load..."
+            )
+        } else {
+            listOf(
+                "Dispositioniert: Jöppli verlaht de ERZ Werkhof Hardau…",
+                "Routeplanig durch Kreis 4/5 wird grächnet…",
+                "Ladesensore kalibriert: 100% Ökostrom glade…",
+                "Überquert d'Hardbrugg Richtig Langstrass…",
+                "Wiicht churz em Tram 8 uf de Badenerstrass uus…",
+                "Biegt i dini Quartierstrass ii…",
+                "Jöppli nähert sich dinere Adress…",
+                "Sicherheits-Sensore aktiv: Parat zum Lade…"
+            )
+        }
     }
 
     LaunchedEffect(Unit) {
-        // Animate truck movement progress over 20 seconds
         progress.animateTo(
             targetValue = 1f,
             animationSpec = tween(durationMillis = 20000)
@@ -581,7 +630,6 @@ fun JöppliTrackerScreen(
     }
 
     LaunchedEffect(Unit) {
-        // Increment status message index every 2.5 seconds
         while (statusIndex < statusMessages.size - 1) {
             delay(2500)
             statusIndex++
@@ -589,6 +637,18 @@ fun JöppliTrackerScreen(
     }
 
     val isArrived = progress.value >= 1f
+
+    // Radar pulsing transition animation
+    val infiniteTransition = rememberInfiniteTransition(label = "radar")
+    val pulseProgress by infiniteTransition.animateFloat(
+        initialValue = 0f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(1500, easing = LinearEasing),
+            repeatMode = RepeatMode.Restart
+        ),
+        label = "pulse"
+    )
 
     Column(
         modifier = Modifier
@@ -602,7 +662,7 @@ fun JöppliTrackerScreen(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                "Jöppli live verfolge",
+                if (lang == "en") "Jöppli Live Tracking" else "Jöppli live verfolge",
                 style = MaterialTheme.typography.titleLarge,
                 color = MaterialTheme.colorScheme.secondary
             )
@@ -613,7 +673,7 @@ fun JöppliTrackerScreen(
                         .padding(horizontal = 10.dp, vertical = 4.dp)
                 ) {
                     Text(
-                        "AACHO",
+                        if (lang == "en") "ARRIVED" else "AACHO",
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onPrimaryContainer
                     )
@@ -675,14 +735,24 @@ fun JöppliTrackerScreen(
                 // Full route (faded)
                 drawPath(route, color = routeTrack, style = Stroke(width = 10f, cap = StrokeCap.Round))
 
-                // Travelled portion (dashed, brand green)
+                // Travelled portion (Gradient trail, brand green to brand blue)
                 val measure = PathMeasure()
                 measure.setPath(route, false)
                 val travelled = Path()
                 measure.getSegment(0f, measure.length * progress.value, travelled, true)
+                
+                val trailBrush = Brush.linearGradient(
+                    colors = listOf(
+                        ZurichBlue,
+                        EcoGreen
+                    ),
+                    start = start,
+                    end = end
+                )
+
                 drawPath(
                     travelled,
-                    color = routeColor,
+                    brush = trailBrush,
                     style = Stroke(
                         width = 10f,
                         cap = StrokeCap.Round,
@@ -700,6 +770,18 @@ fun JöppliTrackerScreen(
 
                 // Robot marker along the curve
                 val robotPos = measure.getPosition(measure.length * progress.value.coerceIn(0f, 1f))
+                
+                // Pulsing radar ring
+                val maxRadarRadius = 60f
+                val currentRadarRadius = 24f + (maxRadarRadius - 24f) * pulseProgress
+                val radarAlpha = 1f - pulseProgress
+                drawCircle(
+                    color = routeColor.copy(alpha = radarAlpha * 0.45f),
+                    radius = currentRadarRadius,
+                    center = robotPos
+                )
+
+                // Truck puck layers
                 drawCircle(color = puckCenter, radius = 28f, center = robotPos)
                 drawCircle(color = routeColor, radius = 24f, center = robotPos)
                 drawCircle(color = puckCenter, radius = 10f, center = robotPos)
@@ -728,14 +810,14 @@ fun JöppliTrackerScreen(
                         )
                     }
                     Text(
-                        text = if (isArrived) "Parat zum Iilade" else "Jöppli Status",
+                        text = if (isArrived) (if (lang == "en") "Ready for Loading" else "Parat zum Iilade") else (if (lang == "en") "Jöppli Status" else "Jöppli Status"),
                         style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.secondary
                     )
                 }
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
-                    text = if (isArrived) "Ich bi da! Bitte stell dis Recycling vor d'Tür." else statusMessages[statusIndex],
+                    text = if (isArrived) (if (lang == "en") "I am here! Please place your recycling outside your door." else "Ich bi da! Bitte stell dis Recycling vor d'Tür.") else statusMessages[statusIndex],
                     style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.onSurface
                 )
@@ -747,16 +829,15 @@ fun JöppliTrackerScreen(
         Button(
             onClick = onGoHome,
             colors = ButtonDefaults.buttonColors(
-                containerColor = if (isArrived) MaterialTheme.colorScheme.primary
-                else MaterialTheme.colorScheme.secondary
+                containerColor = if (isArrived) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.secondary
             ),
+            shape = RoundedCornerShape(28.dp),
             modifier = Modifier
                 .fillMaxWidth()
-                .height(56.dp),
-            shape = RoundedCornerShape(28.dp)
+                .height(56.dp)
         ) {
             Text(
-                if (isArrived) "Fertig & Zrugg" else "Schliesse & spöter verfolge",
+                text = if (isArrived) (if (lang == "en") "Return Home" else "Zrugg zum Start") else (if (lang == "en") "Go to Start Screen" else "Zrugg zum Startbildschirm"),
                 style = MaterialTheme.typography.labelLarge
             )
         }

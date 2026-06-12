@@ -27,10 +27,12 @@ import androidx.compose.ui.unit.sp
 import com.example.zuerijoeppli.data.RecyclingRepository
 import com.example.zuerijoeppli.theme.EcoGreen
 import com.example.zuerijoeppli.theme.ZurichBlue
+import com.example.zuerijoeppli.ui.LocalJoeppliStrings
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddressRegistrationScreen() {
+    val strings = LocalJoeppliStrings.current
     var addressInput by remember { mutableStateOf("") }
     val context = LocalContext.current
     val scrollState = rememberScrollState()
@@ -70,7 +72,7 @@ fun AddressRegistrationScreen() {
 
         // Title and Description
         Text(
-            text = "Adresse registriere",
+            text = strings.addressRegTitle,
             fontSize = 24.sp,
             fontWeight = FontWeight.Bold,
             color = ZurichBlue,
@@ -78,7 +80,7 @@ fun AddressRegistrationScreen() {
         )
         Spacer(modifier = Modifier.height(8.dp))
         Text(
-            text = "Damit mir d'Recycling-Entsorgig vor dinere Huustüre abhole chönne, bruche mir dini Zürcher Wohnadresse.",
+            text = strings.addressRegSubtitle,
             fontSize = 14.sp,
             color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f),
             textAlign = TextAlign.Center,
@@ -99,7 +101,7 @@ fun AddressRegistrationScreen() {
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 Text(
-                    text = "Huustür Abholadresse",
+                    text = strings.addressRegCustom,
                     fontSize = 15.sp,
                     fontWeight = FontWeight.Bold,
                     color = ZurichBlue
@@ -109,7 +111,7 @@ fun AddressRegistrationScreen() {
                 OutlinedTextField(
                     value = addressInput,
                     onValueChange = { addressInput = it },
-                    label = { Text("Zürcher Wohnadresse") },
+                    label = { Text(strings.profileAddress) },
                     placeholder = { Text("z.B. Langstrasse 120, 8004 Zürich") },
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(12.dp),
@@ -125,7 +127,7 @@ fun AddressRegistrationScreen() {
 
                 // Quick selector heading
                 Text(
-                    text = "Schnelluswahl (Häufigi Adresse)",
+                    text = strings.addressRegQuick,
                     fontSize = 12.sp,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
@@ -184,11 +186,11 @@ fun AddressRegistrationScreen() {
                 Button(
                     onClick = {
                         if (addressInput.isBlank()) {
-                            Toast.makeText(context, "Bitte gib dini Adresse ih", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, if (strings.appName == "Züri-Jöppli" && strings.bottomStart == "Start") "Bitte gib dini Adresse ih" else "Please enter your address", Toast.LENGTH_SHORT).show()
                             return@Button
                         }
                         RecyclingRepository.registerAddress(addressInput)
-                        Toast.makeText(context, "Adresse gspicheret!", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, strings.addressRegToast, Toast.LENGTH_SHORT).show()
                     },
                     modifier = Modifier
                         .fillMaxWidth()
@@ -197,7 +199,7 @@ fun AddressRegistrationScreen() {
                     shape = RoundedCornerShape(12.dp)
                 ) {
                     Text(
-                        text = "Adresse registriere",
+                        text = strings.addressRegSubmit,
                         fontSize = 15.sp,
                         fontWeight = FontWeight.Bold,
                         color = Color.White
@@ -212,7 +214,7 @@ fun AddressRegistrationScreen() {
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Text(
-                        text = "Abmelde & Zrugg",
+                        text = strings.addressRegBack,
                         fontSize = 13.sp,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.error

@@ -46,6 +46,9 @@ data class PickupRequest(
 )
 
 object RecyclingRepository {
+    private val _userLanguage = MutableStateFlow("de")
+    val userLanguage: StateFlow<String> = _userLanguage.asStateFlow()
+
     private val _userProfile = MutableStateFlow(UserProfile())
     val userProfile: StateFlow<UserProfile> = _userProfile.asStateFlow()
 
@@ -91,6 +94,10 @@ object RecyclingRepository {
 
     fun logout() {
         _userProfile.value = UserProfile()
+    }
+
+    fun setLanguage(lang: String) {
+        _userLanguage.value = lang
     }
 
     fun updateProfile(name: String, phone: String, homeAddr: String, payment: String) {

@@ -1,6 +1,10 @@
 package com.example.zuerijoeppli.ui.screens
 
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -8,9 +12,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -23,6 +25,7 @@ import com.example.zuerijoeppli.data.RecyclingRepository
 import com.example.zuerijoeppli.theme.EcoGreen
 import com.example.zuerijoeppli.theme.ZurichBlue
 import com.example.zuerijoeppli.theme.ZurichBlueDark
+import com.example.zuerijoeppli.ui.LocalJoeppliStrings
 import java.util.Locale
 
 @Composable
@@ -31,8 +34,24 @@ fun DashboardScreen(
 ) {
     val stats by RecyclingRepository.stats.collectAsState()
     val scrollState = rememberScrollState()
+    val strings = LocalJoeppliStrings.current
+    val lang by RecyclingRepository.userLanguage.collectAsState()
+
     val carKm = (stats.co2Saved * 7).toInt()
     val treesPlanted = String.format(Locale.ROOT, "%.1f", stats.co2Saved * 0.05f)
+
+    // Entry animation for progress
+    var animationPlayed by remember { mutableStateOf(false) }
+    val targetProgress = stats.karma / 100f
+    val progressAnimation by animateFloatAsState(
+        targetValue = if (animationPlayed) targetProgress else 0f,
+        animationSpec = tween(durationMillis = 1000, easing = FastOutSlowInEasing),
+        label = "karma_progress"
+    )
+
+    LaunchedEffect(key1 = true) {
+        animationPlayed = true
+    }
 
     Column(
         modifier = Modifier
@@ -45,12 +64,12 @@ fun DashboardScreen(
         Spacer(modifier = Modifier.height(24.dp))
 
         Text(
-            text = "Recycling Dashboard",
+            text = if (lang == "en") "Recycling Dashboard" else "Recycling Dashboard",
             style = MaterialTheme.typography.headlineMedium,
             color = MaterialTheme.colorScheme.onBackground
         )
         Text(
-            text = "Din Biitrag zur Zürcher Chreislaufwirtschaft",
+            text = if (lang == "en") "Your contribution to Zürich's circular economy" else "Din Biitrag zur Zürcher Chreislaufwirtschaft",
             style = MaterialTheme.typography.bodyLarge,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.padding(top = 4.dp)
@@ -58,7 +77,7 @@ fun DashboardScreen(
 
         Spacer(modifier = Modifier.height(20.dp))
 
-        // Züri-Karma Hero Card with Gradient (brand blue — intentional in both themes)
+        // Glassmorphic Züri-Karma Hero Card with Gradient and circular progress animation
         Card(
             shape = RoundedCornerShape(24.dp),
             modifier = Modifier.fillMaxWidth(),
@@ -69,8 +88,16 @@ fun DashboardScreen(
                     .fillMaxWidth()
                     .background(
                         Brush.linearGradient(
-                            colors = listOf(ZurichBlue, ZurichBlueDark)
+                            colors = listOf(
+                                ZurichBlue.copy(alpha = 0.85f),
+                                ZurichBlueDark.copy(alpha = 0.85f)
+                            )
                         )
+                    )
+                    .border(
+                        width = 1.dp,
+                        color = Color.White.copy(alpha = 0.2f),
+                        shape = RoundedCornerShape(24.dp)
                     )
                     .padding(24.dp)
             ) {
@@ -86,7 +113,7 @@ fun DashboardScreen(
                                 .padding(horizontal = 10.dp, vertical = 4.dp)
                         ) {
                             Text(
-                                text = "ZÜRI-KARMA",
+                                text = strings.statKarma.uppercase(Locale.ROOT),
                                 style = MaterialTheme.typography.labelSmall,
                                 color = Color.White
                             )
@@ -109,23 +136,37 @@ fun DashboardScreen(
                         }
                         Spacer(modifier = Modifier.height(6.dp))
                         Text(
-                            text = "Level 4: Quartier-Held",
+                            text = if (lang == "en") "Level 4: Neighborhood Hero" else "Level 4: Quartier-Held",
                             style = MaterialTheme.typography.titleSmall,
                             color = EcoGreen
                         )
                     }
 
+                    // Circular Progress Indicators
                     Box(
-                        modifier = Modifier
-                            .size(72.dp)
-                            .background(Color.White.copy(alpha = 0.1f), RoundedCornerShape(36.dp)),
+                        modifier = Modifier.size(80.dp),
                         contentAlignment = Alignment.Center
                     ) {
+                        // Background Circle
+                        CircularProgressIndicator(
+                            progress = { 1f },
+                            modifier = Modifier.fillMaxSize(),
+                            color = Color.White.copy(alpha = 0.15f),
+                            strokeWidth = 6.dp,
+                        )
+                        // Animated fill Circle
+                        CircularProgressIndicator(
+                            progress = { progressAnimation },
+                            modifier = Modifier.fillMaxSize(),
+                            color = EcoGreen,
+                            strokeWidth = 6.dp,
+                        )
+                        // Star Icon
                         Icon(
                             imageVector = Icons.Filled.Star,
                             contentDescription = "Karma badge",
                             tint = EcoGreen,
-                            modifier = Modifier.size(44.dp)
+                            modifier = Modifier.size(36.dp)
                         )
                     }
                 }
@@ -140,19 +181,19 @@ fun DashboardScreen(
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             MetricCard(
-                label = "TOTAL RECYCLET",
+                label = if (lang == "en") "TOTAL RECYCLED" else "TOTAL RECYCLET",
                 value = String.format(Locale.ROOT, "%.1f kg", stats.totalKg),
                 modifier = Modifier.weight(1f)
             )
             MetricCard(
-                label = "CO2 GSPART",
+                label = if (lang == "en") "CO2 SAVED" else "CO2 GSPART",
                 value = String.format(Locale.ROOT, "-%.0f kg", stats.co2Saved),
                 valueColor = Color(0xFF10B981),
                 modifier = Modifier.weight(1f)
             )
             MetricCard(
-                label = "SERIE (WUCHE)",
-                value = "${stats.streakWeeks} W.",
+                label = if (lang == "en") "STREAK (WEEKS)" else "SERIE (WUCHE)",
+                value = "${stats.streakWeeks} ${if (lang == "en") "W." else "W."}",
                 modifier = Modifier.weight(1f)
             )
         }
@@ -167,7 +208,7 @@ fun DashboardScreen(
         ) {
             Column(modifier = Modifier.padding(16.dp)) {
                 Text(
-                    text = "Umwelteffekt",
+                    text = if (lang == "en") "Environmental Impact" else "Umwelteffekt",
                     style = MaterialTheme.typography.titleSmall,
                     color = MaterialTheme.colorScheme.onPrimaryContainer
                 )
@@ -178,24 +219,24 @@ fun DashboardScreen(
                 ) {
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
-                            text = "AUTOFAHRTE VERMIEDE",
+                            text = if (lang == "en") "CAR TRIPS AVOIDED" else "AUTOFAHRTE VERMIEDE",
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.6f)
                         )
                         Text(
-                            text = "$carKm km Autofahrt",
+                            text = "$carKm ${if (lang == "en") "km of driving" else "km Autofahrt"}",
                             style = MaterialTheme.typography.titleSmall,
                             color = MaterialTheme.colorScheme.onPrimaryContainer
                         )
                     }
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
-                            text = "BÄUM PFLANZT",
+                            text = if (lang == "en") "TREES PLANTED" else "BÄUM PFLANZT",
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.6f)
                         )
                         Text(
-                            text = "$treesPlanted Bäum",
+                            text = "$treesPlanted ${if (lang == "en") "trees" else "Bäum"}",
                             style = MaterialTheme.typography.titleSmall,
                             color = MaterialTheme.colorScheme.onPrimaryContainer
                         )
@@ -215,18 +256,18 @@ fun DashboardScreen(
         ) {
             Column(modifier = Modifier.padding(16.dp)) {
                 Text(
-                    text = "Wertstoff ufteilt",
+                    text = if (lang == "en") "Recycled Materials Breakdown" else "Wertstoff ufteilt",
                     style = MaterialTheme.typography.titleMedium,
                     color = MaterialTheme.colorScheme.secondary
                 )
                 Spacer(modifier = Modifier.height(16.dp))
 
                 val cats = stats.categories
-                CategoryBar("Papier / Karton", cats.cardboard, stats.totalKg, Color(0xFF3B82F6))
-                CategoryBar("Altglas", cats.glass, stats.totalKg, Color(0xFF10B981))
-                CategoryBar("Alu / Metall", cats.aluminum, stats.totalKg, Color(0xFFF59E0B))
-                CategoryBar("Biogut / Kompost", cats.bio, stats.totalKg, Color(0xFF059669))
-                CategoryBar("PET / Plastik", cats.pet, stats.totalKg, Color(0xFF8B5CF6))
+                CategoryBar(if (lang == "en") "Paper / Cardboard" else "Papier / Karton", cats.cardboard, stats.totalKg, Color(0xFF3B82F6))
+                CategoryBar(if (lang == "en") "Glass" else "Altglas", cats.glass, stats.totalKg, Color(0xFF10B981))
+                CategoryBar(if (lang == "en") "Aluminum / Metal" else "Alu / Metall", cats.aluminum, stats.totalKg, Color(0xFFF59E0B))
+                CategoryBar(if (lang == "en") "Compost / Organic" else "Biogut / Kompost", cats.bio, stats.totalKg, Color(0xFF059669))
+                CategoryBar(if (lang == "en") "PET / Plastic" else "PET / Plastik", cats.pet, stats.totalKg, Color(0xFF8B5CF6))
             }
         }
 
@@ -247,12 +288,12 @@ fun DashboardScreen(
                 ) {
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
-                            text = "Quartier-Meilestei",
+                            text = if (lang == "en") "Neighborhood Milestone" else "Quartier-Meilestei",
                             style = MaterialTheme.typography.titleMedium,
                             color = MaterialTheme.colorScheme.secondary
                         )
                         Text(
-                            text = "Gsammlet im Kreis 4 / 5 de Monet",
+                            text = if (lang == "en") "Collected in Kreis 4 / 5 this month" else "Gsammlet im Kreis 4 / 5 de Monet",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -280,12 +321,12 @@ fun DashboardScreen(
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Text(
-                        text = "${stats.neighborhoodTotalKg.toInt()} kg gsammlet",
+                        text = "${stats.neighborhoodTotalKg.toInt()} kg ${if (lang == "en") "collected" else "gsammlet"}",
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Text(
-                        text = "Ziel: 5'000 kg",
+                        text = if (lang == "en") "Goal: 5,000 kg" else "Ziel: 5'000 kg",
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -303,7 +344,7 @@ fun DashboardScreen(
                 .fillMaxWidth()
                 .height(56.dp)
         ) {
-            Text("Jöppli bestelle", style = MaterialTheme.typography.labelLarge)
+            Text(if (lang == "en") "Order Jöppli" else "Jöppli bestelle", style = MaterialTheme.typography.labelLarge)
         }
     }
 }

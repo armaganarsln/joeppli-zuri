@@ -1,7 +1,6 @@
 package com.example.zuerijoeppli.ui.screens
 
 import android.widget.Toast
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -9,6 +8,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -18,6 +18,9 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
@@ -30,11 +33,14 @@ import androidx.compose.ui.unit.sp
 import com.example.zuerijoeppli.data.RecyclingRepository
 import com.example.zuerijoeppli.theme.EcoGreen
 import com.example.zuerijoeppli.theme.ZurichBlue
-import kotlinx.coroutines.delay
+import com.example.zuerijoeppli.ui.LocalJoeppliStrings
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AuthScreen() {
+    val strings = LocalJoeppliStrings.current
+    val activeLang by RecyclingRepository.userLanguage.collectAsState()
+
     var loginMethod by remember { mutableStateOf<String?>(null) } // "GOOGLE", "EMAIL", "PHONE"
     var showGoogleAccounts by remember { mutableStateOf(false) }
     var showOtpScreen by remember { mutableStateOf(false) }
@@ -51,6 +57,10 @@ fun AuthScreen() {
     val context = LocalContext.current
     val scrollState = rememberScrollState()
 
+    // 6-digit OTP focus coordinates
+    val otpFocusRequester = remember { FocusRequester() }
+    var isOtpFocused by remember { mutableStateOf(false) }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -60,6 +70,44 @@ fun AuthScreen() {
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
+        // Language Selector Toggle
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 16.dp),
+            horizontalArrangement = Arrangement.End,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = if (activeLang == "en") "Language: " else "Sprache: ",
+                fontSize = 12.sp,
+                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f),
+                fontWeight = FontWeight.Medium
+            )
+            Spacer(modifier = Modifier.width(4.dp))
+            TextButton(
+                onClick = { RecyclingRepository.setLanguage("de") },
+                colors = ButtonDefaults.textButtonColors(
+                    contentColor = if (activeLang == "de") EcoGreen else MaterialTheme.colorScheme.onBackground.copy(alpha = 0.4f)
+                ),
+                modifier = Modifier.height(32.dp),
+                contentPadding = PaddingValues(horizontal = 6.dp)
+            ) {
+                Text("DE", fontWeight = if (activeLang == "de") FontWeight.Black else FontWeight.Normal, fontSize = 13.sp)
+            }
+            Text("|", color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.3f), fontSize = 12.sp)
+            TextButton(
+                onClick = { RecyclingRepository.setLanguage("en") },
+                colors = ButtonDefaults.textButtonColors(
+                    contentColor = if (activeLang == "en") EcoGreen else MaterialTheme.colorScheme.onBackground.copy(alpha = 0.4f)
+                ),
+                modifier = Modifier.height(32.dp),
+                contentPadding = PaddingValues(horizontal = 6.dp)
+            ) {
+                Text("EN", fontWeight = if (activeLang == "en") FontWeight.Black else FontWeight.Normal, fontSize = 13.sp)
+            }
+        }
+
         // App Logo & Brand Header
         Box(
             modifier = Modifier
@@ -78,20 +126,20 @@ fun AuthScreen() {
         Spacer(modifier = Modifier.height(16.dp))
         
         Text(
-            text = "Züri-Jöppli",
+            text = strings.appName,
             fontSize = 28.sp,
             fontWeight = FontWeight.Bold,
             color = ZurichBlue
         )
         Text(
-            text = "Autonome Abholung & Recycling",
+            text = if (activeLang == "en") "Autonomous Waste Collection & Recycling" else "Autonome Abholung & Recycling",
             fontSize = 14.sp,
             color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f),
             fontWeight = FontWeight.Medium,
             modifier = Modifier.padding(top = 4.dp)
         )
 
-        Spacer(modifier = Modifier.height(40.dp))
+        Spacer(modifier = Modifier.height(32.dp))
 
         if (loginMethod == null) {
             // Main auth gateway selection cards
@@ -107,7 +155,7 @@ fun AuthScreen() {
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Text(
-                        text = "Anmeldemethode wählen",
+                        text = strings.authSelectTitle,
                         fontSize = 15.sp,
                         fontWeight = FontWeight.Bold,
                         color = ZurichBlue
@@ -128,7 +176,7 @@ fun AuthScreen() {
                     ) {
                         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                             Icon(Icons.Default.AccountCircle, contentDescription = null, tint = Color.White)
-                            Text("Mit Google anmelden", fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                            Text(strings.authGoogleBtn, fontSize = 14.sp, fontWeight = FontWeight.Bold)
                         }
                     }
 
@@ -143,7 +191,7 @@ fun AuthScreen() {
                     ) {
                         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                             Icon(Icons.Default.Email, contentDescription = null, tint = Color.White)
-                            Text("Mit E-Mail anmelden", fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                            Text(strings.authEmailBtn, fontSize = 14.sp, fontWeight = FontWeight.Bold)
                         }
                     }
 
@@ -158,7 +206,7 @@ fun AuthScreen() {
                     ) {
                         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                             Icon(Icons.Default.Phone, contentDescription = null, tint = Color.White)
-                            Text("Mit Telefonnummer anmelden", fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                            Text(strings.authPhoneBtn, fontSize = 14.sp, fontWeight = FontWeight.Bold)
                         }
                     }
                 }
@@ -182,9 +230,9 @@ fun AuthScreen() {
                     ) {
                         Text(
                             text = when (loginMethod) {
-                                "GOOGLE" -> "Google Anmeldung"
-                                "EMAIL" -> "E-Mail Login"
-                                else -> "SMS-Verifikation"
+                                "GOOGLE" -> strings.authGoogleHeader
+                                "EMAIL" -> strings.authEmailHeader
+                                else -> strings.authPhoneHeader
                             },
                             fontSize = 16.sp,
                             fontWeight = FontWeight.Bold,
@@ -195,14 +243,15 @@ fun AuthScreen() {
                             showGoogleAccounts = false
                             showOtpScreen = false
                             isLoading = false
+                            otpInput = ""
                         }) {
-                            Text("Zurück", color = EcoGreen, fontWeight = FontWeight.Bold)
+                            Text(strings.authBackBtn, color = EcoGreen, fontWeight = FontWeight.Bold)
                         }
                     }
 
                     if (loginMethod == "GOOGLE" && showGoogleAccounts) {
                         Text(
-                            text = "Wähle ein Google-Konto aus:",
+                            text = strings.authGoogleSelect,
                             fontSize = 12.sp,
                             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
                         )
@@ -225,7 +274,7 @@ fun AuthScreen() {
                                         android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
                                             isLoading = false
                                             RecyclingRepository.loginWithGoogle(name, email)
-                                            Toast.makeText(context, "Erfolgreich angemeldet als $name", Toast.LENGTH_SHORT).show()
+                                            Toast.makeText(context, if (activeLang == "en") "Successfully logged in as $name" else "Erfolgreich angemeldet als $name", Toast.LENGTH_SHORT).show()
                                         }, 1000)
                                     }
                                     .padding(12.dp),
@@ -252,8 +301,8 @@ fun AuthScreen() {
                         OutlinedTextField(
                             value = nameInput,
                             onValueChange = { nameInput = it },
-                            label = { Text("Display Name") },
-                            placeholder = { Text("Ueli Maurer") },
+                            label = { Text(strings.authEmailName) },
+                            placeholder = { Text(strings.authEmailNamePlaceholder) },
                             modifier = Modifier.fillMaxWidth(),
                             singleLine = true
                         )
@@ -261,7 +310,7 @@ fun AuthScreen() {
                         OutlinedTextField(
                             value = emailInput,
                             onValueChange = { emailInput = it },
-                            label = { Text("E-Mail Adresse") },
+                            label = { Text(strings.authEmailMail) },
                             placeholder = { Text("ueli@example.ch") },
                             modifier = Modifier.fillMaxWidth(),
                             singleLine = true
@@ -270,8 +319,8 @@ fun AuthScreen() {
                         OutlinedTextField(
                             value = passwordInput,
                             onValueChange = { passwordInput = it },
-                            label = { Text("Passwort") },
-                            placeholder = { Text("Mindestens 6 Zeichen") },
+                            label = { Text(strings.authEmailPassword) },
+                            placeholder = { Text(strings.authEmailPasswordPlaceholder) },
                             modifier = Modifier.fillMaxWidth(),
                             singleLine = true,
                             visualTransformation = if (isPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
@@ -288,7 +337,7 @@ fun AuthScreen() {
                         Button(
                             onClick = {
                                 if (emailInput.isBlank() || nameInput.isBlank() || passwordInput.length < 6) {
-                                    Toast.makeText(context, "Bitte fülle alle Felder korrekt aus", Toast.LENGTH_SHORT).show()
+                                    Toast.makeText(context, strings.authEmailErrorFill, Toast.LENGTH_SHORT).show()
                                     return@Button
                                 }
                                 isLoading = true
@@ -307,7 +356,7 @@ fun AuthScreen() {
                             if (isLoading) {
                                 CircularProgressIndicator(modifier = Modifier.size(20.dp), color = Color.White, strokeWidth = 2.dp)
                             } else {
-                                Text("Registrieren & Anmelden", fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                                Text(strings.authEmailRegister, fontSize = 14.sp, fontWeight = FontWeight.Bold)
                             }
                         }
                     } else if (loginMethod == "PHONE") {
@@ -316,8 +365,8 @@ fun AuthScreen() {
                             OutlinedTextField(
                                 value = phoneInput,
                                 onValueChange = { phoneInput = it },
-                                label = { Text("Telefonnummer") },
-                                placeholder = { Text("e.g. +41 79 123 45 67") },
+                                label = { Text(strings.authPhoneEnter) },
+                                placeholder = { Text(strings.authPhoneEnterPlaceholder) },
                                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
                                 modifier = Modifier.fillMaxWidth(),
                                 singleLine = true
@@ -326,7 +375,7 @@ fun AuthScreen() {
                             Button(
                                 onClick = {
                                     if (phoneInput.isBlank() || phoneInput.length < 9) {
-                                        Toast.makeText(context, "Bitte gib eine gültige Telefonnummer ein", Toast.LENGTH_SHORT).show()
+                                        Toast.makeText(context, strings.authPhoneErrorValid, Toast.LENGTH_SHORT).show()
                                         return@Button
                                     }
                                     isLoading = true
@@ -345,39 +394,81 @@ fun AuthScreen() {
                                 if (isLoading) {
                                     CircularProgressIndicator(modifier = Modifier.size(20.dp), color = Color.White, strokeWidth = 2.dp)
                                 } else {
-                                    Text("Sende Verifikations-Code", fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                                    Text(strings.authPhoneSendOtp, fontSize = 14.sp, fontWeight = FontWeight.Bold)
                                 }
                             }
                         } else {
-                            // 6-digit OTP Simulation input
+                            // Premium 6-digit OTP simulation
                             Text(
-                                text = "Wir haben einen 6-stelligen Code an $phoneInput gesendet. Trage ihn unten ein.",
+                                text = strings.authPhoneOtpDesc.format(phoneInput),
                                 fontSize = 12.sp,
                                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
                                 lineHeight = 16.sp
                             )
 
-                            OutlinedTextField(
+                            // Hidden BasicTextField driving state
+                            BasicTextField(
                                 value = otpInput,
-                                onValueChange = { if (it.length <= 6) otpInput = it },
-                                label = { Text("SMS-Code (6 Ziffern)") },
-                                placeholder = { Text("123456") },
+                                onValueChange = {
+                                    if (it.length <= 6 && it.all { c -> c.isDigit() }) {
+                                        otpInput = it
+                                    }
+                                },
                                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword),
-                                modifier = Modifier.fillMaxWidth(),
-                                singleLine = true
+                                modifier = Modifier
+                                    .size(1.dp) // minimized size
+                                    .focusRequester(otpFocusRequester)
+                                    .onFocusChanged { isOtpFocused = it.isFocused }
                             )
+
+                            // Visual 6-Digit Grid Boxes
+                            Row(
+                                horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable { otpFocusRequester.requestFocus() }
+                                    .padding(vertical = 8.dp)
+                            ) {
+                                repeat(6) { index ->
+                                    val char = otpInput.getOrNull(index)?.toString() ?: ""
+                                    val isFocusedBox = index == otpInput.length && isOtpFocused
+
+                                    Box(
+                                        modifier = Modifier
+                                            .size(44.dp, 48.dp)
+                                            .border(
+                                                width = if (isFocusedBox) 2.dp else 1.dp,
+                                                color = if (isFocusedBox) EcoGreen else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f),
+                                                shape = RoundedCornerShape(8.dp)
+                                            )
+                                            .background(
+                                                if (isFocusedBox) MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+                                                else MaterialTheme.colorScheme.surface
+                                            ),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Text(
+                                            text = char,
+                                            fontSize = 20.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            color = ZurichBlue,
+                                            textAlign = TextAlign.Center
+                                        )
+                                    }
+                                }
+                            }
 
                             Button(
                                 onClick = {
                                     if (otpInput.length != 6) {
-                                        Toast.makeText(context, "Bitte gib den 6-stelligen Code ein", Toast.LENGTH_SHORT).show()
+                                        Toast.makeText(context, strings.authPhoneErrorOtp, Toast.LENGTH_SHORT).show()
                                         return@Button
                                     }
                                     isLoading = true
                                     android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
                                         isLoading = false
                                         RecyclingRepository.loginWithPhone(phoneInput)
-                                        Toast.makeText(context, "Verifiziert!", Toast.LENGTH_SHORT).show()
+                                        Toast.makeText(context, strings.authPhoneOtpVerifyToast, Toast.LENGTH_SHORT).show()
                                     }, 1000)
                                 },
                                 colors = ButtonDefaults.buttonColors(containerColor = EcoGreen),
@@ -390,7 +481,7 @@ fun AuthScreen() {
                                 if (isLoading) {
                                     CircularProgressIndicator(modifier = Modifier.size(20.dp), color = Color.White, strokeWidth = 2.dp)
                                 } else {
-                                    Text("Code verifizieren", fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                                    Text(strings.authPhoneOtpVerify, fontSize = 14.sp, fontWeight = FontWeight.Bold)
                                 }
                             }
                         }
