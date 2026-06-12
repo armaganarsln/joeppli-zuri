@@ -1,11 +1,28 @@
 package gl.joeppli.zueri.data
 
+import android.content.Context
+import androidx.datastore.core.DataStore
+import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.stringPreferencesKey
+import androidx.datastore.preferences.preferencesDataStore
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.decodeFromString
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 import kotlin.math.min
 import kotlin.random.Random
 
+@Serializable
 data class UserProfile(
     val id: String = "user_123",
     val name: String = "",
@@ -19,6 +36,7 @@ data class UserProfile(
     val authType: String? = null
 )
 
+@Serializable
 data class CategoryBreakdown(
     var glass: Float = 45.2f,
     var cardboard: Float = 52.8f,
@@ -27,6 +45,7 @@ data class CategoryBreakdown(
     var aluminum: Float = 7.5f
 )
 
+@Serializable
 data class RecyclingStats(
     val totalKg: Float = 142.5f,
     val categories: CategoryBreakdown = CategoryBreakdown(),
@@ -36,6 +55,7 @@ data class RecyclingStats(
     val neighborhoodTotalKg: Float = 4230f
 )
 
+@Serializable
 data class PickupRequest(
     val address: String,
     val dateString: String,
@@ -45,7 +65,18 @@ data class PickupRequest(
     val isExpress: Boolean
 )
 
+private val Context.joeppliDataStore: DataStore<Preferences> by preferencesDataStore(name = "joeppli_state")
+
 object RecyclingRepository {
+    private val LANGUAGE = stringPreferencesKey("language")
+    private val PROFILE = stringPreferencesKey("profile")
+    private val STATS = stringPreferencesKey("stats")
+    private val LAST_PICKUP = stringPreferencesKey("last_pickup")
+
+    private val json = Json { ignoreUnknownKeys = true }
+    private var store: DataStore<Preferences>? = null
+    private val persistScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+
     private val _userLanguage = MutableStateFlow("de")
     val userLanguage: StateFlow<String> = _userLanguage.asStateFlow()
 
@@ -58,6 +89,45 @@ object RecyclingRepository {
     private val _lastPickup = MutableStateFlow<PickupRequest?>(null)
     val lastPickup: StateFlow<PickupRequest?> = _lastPickup.asStateFlow()
 
+    /**
+     * Hydrates state from disk. Call once from Application.onCreate, before
+     * any Activity draws. The blocking read is a single small file; doing it
+     * synchronously avoids flashing the logged-out auth screen on every cold
+     * start.
+     */
+    fun initialize(context: Context) {
+        if (store != null) return
+        val ds = context.applicationContext.joeppliDataStore
+        store = ds
+        val prefs = runBlocking { ds.data.first() }
+        prefs[LANGUAGE]?.let { _userLanguage.value = it }
+        prefs[PROFILE]?.let { decode<UserProfile>(it)?.let { p -> _userProfile.value = p } }
+        prefs[STATS]?.let { decode<RecyclingStats>(it)?.let { s -> _stats.value = s } }
+        prefs[LAST_PICKUP]?.let { decode<PickupRequest>(it)?.let { p -> _lastPickup.value = p } }
+    }
+
+    private inline fun <reified T> decode(raw: String): T? = try {
+        json.decodeFromString<T>(raw)
+    } catch (e: Exception) {
+        null // stale or corrupt entry: fall back to defaults
+    }
+
+    private fun persist() {
+        val ds = store ?: return // not initialized (e.g. unit tests): in-memory only
+        val language = _userLanguage.value
+        val profile = json.encodeToString(_userProfile.value)
+        val stats = json.encodeToString(_stats.value)
+        val lastPickup = _lastPickup.value?.let { json.encodeToString(it) }
+        persistScope.launch {
+            ds.edit { prefs ->
+                prefs[LANGUAGE] = language
+                prefs[PROFILE] = profile
+                prefs[STATS] = stats
+                if (lastPickup != null) prefs[LAST_PICKUP] = lastPickup else prefs.remove(LAST_PICKUP)
+            }
+        }
+    }
+
     fun loginWithGoogle(name: String, email: String) {
         _userProfile.value = UserProfile(
             name = name,
@@ -65,6 +135,7 @@ object RecyclingRepository {
             isLoggedIn = true,
             authType = "GOOGLE"
         )
+        persist()
     }
 
     fun loginWithEmail(name: String, email: String) {
@@ -74,6 +145,7 @@ object RecyclingRepository {
             isLoggedIn = true,
             authType = "EMAIL"
         )
+        persist()
     }
 
     fun loginWithPhone(phone: String) {
@@ -82,6 +154,7 @@ object RecyclingRepository {
             isLoggedIn = true,
             authType = "PHONE"
         )
+        persist()
     }
 
     fun registerAddress(homeAddr: String) {
@@ -90,14 +163,17 @@ object RecyclingRepository {
             homeAddress = homeAddr,
             invoiceAddress = homeAddr
         )
+        persist()
     }
 
     fun logout() {
         _userProfile.value = UserProfile()
+        persist()
     }
 
     fun setLanguage(lang: String) {
         _userLanguage.value = lang
+        persist()
     }
 
     fun updateProfile(name: String, phone: String, homeAddr: String, payment: String) {
@@ -109,12 +185,13 @@ object RecyclingRepository {
             invoiceAddress = if (current.invoiceSameAsHome) homeAddr else current.invoiceAddress,
             defaultPaymentMethod = payment
         )
+        persist()
     }
 
     fun addPickup(address: String, dateString: String, timeSlot: String, materials: List<String>, price: Float, isExpress: Boolean) {
         val request = PickupRequest(address, dateString, timeSlot, materials, price, isExpress)
         _lastPickup.value = request
-        
+
         // Update statistics
         val currentStats = _stats.value
         val addedGlass = if (materials.contains("glass") || materials.contains("Altglas")) Random.nextFloat() * 5f + 2f else 0f
@@ -138,5 +215,6 @@ object RecyclingRepository {
             co2Saved = currentStats.co2Saved + sumAdded * 1.4f,
             neighborhoodTotalKg = currentStats.neighborhoodTotalKg + sumAdded + Random.nextFloat() * 10f
         )
+        persist()
     }
 }
