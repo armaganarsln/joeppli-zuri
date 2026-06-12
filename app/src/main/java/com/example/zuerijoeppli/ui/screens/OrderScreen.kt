@@ -11,22 +11,28 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.outlined.ListAlt
+import androidx.compose.material.icons.filled.Bolt
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.outlined.CalendarMonth
+import androidx.compose.material.icons.outlined.LocationOn
+import androidx.compose.material.icons.outlined.PhoneIphone
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.PathEffect
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.graphics.PathMeasure
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.example.zuerijoeppli.data.RecyclingRepository
-import com.example.zuerijoeppli.theme.EcoGreen
-import com.example.zuerijoeppli.theme.ZurichBlue
+import com.example.zuerijoeppli.theme.TwintCyan
 import kotlinx.coroutines.delay
 import java.text.SimpleDateFormat
 import java.util.*
@@ -37,21 +43,21 @@ fun OrderScreen(
     prefillQuick: Boolean = false
 ) {
     var currentStep by remember { mutableStateOf(if (prefillQuick) 2 else 1) }
-    
+
     // Form states
     var address by remember { mutableStateOf("Langstrasse 120, 8004 Zürich") }
     var selectedDate by remember { mutableStateOf("") }
     var selectedTimeSlot by remember { mutableStateOf("") }
     val selectedMaterials = remember { mutableStateListOf<String>() }
     var isExpress by remember { mutableStateOf(prefillQuick) }
-    
+
     val profile by RecyclingRepository.userProfile.collectAsState()
-    
+
     // Initializer
     LaunchedEffect(profile) {
         address = profile.homeAddress
     }
-    
+
     if (prefillQuick && selectedMaterials.isEmpty()) {
         selectedMaterials.addAll(listOf("Papier/Karton", "Altglas", "Alu/Metall", "Biogut/Kompost"))
         selectedDate = SimpleDateFormat("EEEE, dd. MMMM", Locale.GERMAN).format(Date())
@@ -67,23 +73,101 @@ fun OrderScreen(
     if (hasPaidMaterial) price += 8f
     if (isExpress) price += 5f
 
-    Box(
+    Column(
         modifier = Modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
     ) {
-        when (currentStep) {
-            1 -> OrderStep1(address, { address = it }, { currentStep = 2 })
-            2 -> OrderStep2(selectedDate, { selectedDate = it }, selectedTimeSlot, { selectedTimeSlot = it }, isExpress, { isExpress = it }, { currentStep = 3 })
-            3 -> OrderStep3(selectedMaterials, { currentStep = 4 }, hasPaid = hasPaidMaterial)
-            4 -> OrderStep4(address, selectedDate, selectedTimeSlot, selectedMaterials, price, isExpress, { currentStep = 5 })
-            5 -> OrderStep5(price, {
-                // Complete order and update stats
-                RecyclingRepository.addPickup(address, selectedDate, selectedTimeSlot, selectedMaterials.toList(), price, isExpress)
-                currentStep = 6
-            })
-            6 -> JöppliTrackerScreen(address, onNavigateHome)
+        // Wizard header with back navigation + progress (hidden on the tracker)
+        if (currentStep <= 5) {
+            WizardHeader(
+                title = when (currentStep) {
+                    1 -> "Abholort wählen"
+                    2 -> "Abholzeit wählen"
+                    3 -> "Wertstoffe sortieren"
+                    4 -> "Zusammenfassung"
+                    else -> "Zahlung"
+                },
+                step = currentStep,
+                totalSteps = 5,
+                onBack = { if (currentStep > 1) currentStep-- else onNavigateHome() }
+            )
         }
+
+        Box(modifier = Modifier.weight(1f)) {
+            when (currentStep) {
+                1 -> OrderStep1(address, { address = it }, { currentStep = 2 })
+                2 -> OrderStep2(selectedDate, { selectedDate = it }, selectedTimeSlot, { selectedTimeSlot = it }, isExpress, { isExpress = it }, { currentStep = 3 })
+                3 -> OrderStep3(selectedMaterials, { currentStep = 4 })
+                4 -> OrderStep4(address, selectedDate, selectedTimeSlot, selectedMaterials, price, isExpress, { currentStep = 5 })
+                5 -> OrderStep5(price, {
+                    // Complete order and update stats
+                    RecyclingRepository.addPickup(address, selectedDate, selectedTimeSlot, selectedMaterials.toList(), price, isExpress)
+                    currentStep = 6
+                })
+                6 -> JöppliTrackerScreen(address, onNavigateHome)
+            }
+        }
+    }
+}
+
+@Composable
+private fun WizardHeader(
+    title: String,
+    step: Int,
+    totalSteps: Int,
+    onBack: () -> Unit
+) {
+    Column {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 4.dp, vertical = 4.dp)
+        ) {
+            IconButton(onClick = onBack) {
+                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Zurück")
+            }
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onBackground
+                )
+                Text(
+                    text = "Schritt $step von $totalSteps",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
+        LinearProgressIndicator(
+            progress = { step / totalSteps.toFloat() },
+            color = MaterialTheme.colorScheme.primary,
+            trackColor = MaterialTheme.colorScheme.surfaceContainerHighest,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp)
+                .clip(RoundedCornerShape(4.dp))
+        )
+    }
+}
+
+@Composable
+private fun WizardCta(
+    label: String,
+    enabled: Boolean = true,
+    onClick: () -> Unit
+) {
+    Button(
+        onClick = onClick,
+        enabled = enabled,
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(56.dp),
+        shape = RoundedCornerShape(28.dp)
+    ) {
+        Text(label, style = MaterialTheme.typography.labelLarge)
     }
 }
 
@@ -94,30 +178,25 @@ fun OrderStep1(
     onNext: () -> Unit
 ) {
     Column(modifier = Modifier.padding(16.dp)) {
-        Spacer(modifier = Modifier.height(24.dp))
-        Text("Abholort wählen", fontSize = 24.sp, fontWeight = FontWeight.Bold, color = ZurichBlue)
-        Text("Wo soll der Jöppli-Fahrzeug vorfahren?", fontSize = 14.sp, color = Color.Gray)
-        Spacer(modifier = Modifier.height(24.dp))
+        Spacer(modifier = Modifier.height(16.dp))
+        Text(
+            "Wo soll s'Jöppli-Fahrzeug vorfahre?",
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        Spacer(modifier = Modifier.height(20.dp))
 
         OutlinedTextField(
             value = address,
             onValueChange = onAddressChange,
             label = { Text("Zürcher Adresse") },
+            leadingIcon = { Icon(Icons.Outlined.LocationOn, contentDescription = null) },
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(16.dp)
         )
         Spacer(modifier = Modifier.height(24.dp))
 
-        Button(
-            onClick = onNext,
-            colors = ButtonDefaults.buttonColors(containerColor = EcoGreen),
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(56.dp),
-            shape = RoundedCornerShape(28.dp)
-        ) {
-            Text("Weiter", fontSize = 16.sp, fontWeight = FontWeight.Bold)
-        }
+        WizardCta("Weiter", enabled = address.isNotBlank(), onClick = onNext)
     }
 }
 
@@ -150,41 +229,41 @@ fun OrderStep2(
             .padding(16.dp)
             .verticalScroll(rememberScrollState())
     ) {
-        Spacer(modifier = Modifier.height(24.dp))
-        Text("Abholzeit wählen", fontSize = 24.sp, fontWeight = FontWeight.Bold, color = ZurichBlue)
-        Spacer(modifier = Modifier.height(20.dp))
+        Spacer(modifier = Modifier.height(8.dp))
 
         // Date selection list
-        Text("Datum", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = ZurichBlue)
-        Spacer(modifier = Modifier.height(8.dp))
+        Text("Datum", style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.secondary)
+        Spacer(modifier = Modifier.height(4.dp))
         dateOptions.forEach { date ->
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
+                    .clip(RoundedCornerShape(12.dp))
                     .clickable { onDateChange(date) }
-                    .padding(vertical = 12.dp),
+                    .padding(vertical = 8.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                RadioButton(selected = selectedDate == date, onClick = { onDateChange(date) }, colors = RadioButtonDefaults.colors(selectedColor = EcoGreen))
-                Text(date, fontSize = 15.sp, modifier = Modifier.padding(start = 8.dp))
+                RadioButton(selected = selectedDate == date, onClick = { onDateChange(date) })
+                Text(date, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(start = 8.dp))
             }
         }
 
         Spacer(modifier = Modifier.height(16.dp))
 
         // Time Slot selection list
-        Text("Zeitfenster", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = ZurichBlue)
-        Spacer(modifier = Modifier.height(8.dp))
+        Text("Zeitfenster", style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.secondary)
+        Spacer(modifier = Modifier.height(4.dp))
         timeSlots.forEach { slot ->
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
+                    .clip(RoundedCornerShape(12.dp))
                     .clickable { onTimeSlotChange(slot) }
-                    .padding(vertical = 12.dp),
+                    .padding(vertical = 8.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                RadioButton(selected = selectedTimeSlot == slot, onClick = { onTimeSlotChange(slot) }, colors = RadioButtonDefaults.colors(selectedColor = EcoGreen))
-                Text(slot, fontSize = 15.sp, modifier = Modifier.padding(start = 8.dp))
+                RadioButton(selected = selectedTimeSlot == slot, onClick = { onTimeSlotChange(slot) })
+                Text(slot, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(start = 8.dp))
             }
         }
 
@@ -194,6 +273,7 @@ fun OrderStep2(
         Card(
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
             shape = RoundedCornerShape(16.dp),
+            elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
             modifier = Modifier.fillMaxWidth()
         ) {
             Row(
@@ -203,35 +283,45 @@ fun OrderStep2(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Column(modifier = Modifier.weight(1f)) {
-                    Text("Sofort (Express Abholung)", fontWeight = FontWeight.Bold, color = ZurichBlue)
-                    Text("Jöppli startet sofort zu dir (+ CHF 5.00)", fontSize = 12.sp, color = Color.Gray)
+                Icon(
+                    imageVector = Icons.Filled.Bolt,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.tertiary
+                )
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(horizontal = 12.dp)
+                ) {
+                    Text(
+                        "Sofort (Express Abholig)",
+                        style = MaterialTheme.typography.titleSmall,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Text(
+                        "Jöppli startet sofort zu dir (+ CHF 5.00)",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
                 }
-                Switch(checked = isExpress, onCheckedChange = onExpressChange, colors = SwitchDefaults.colors(checkedThumbColor = EcoGreen))
+                Switch(checked = isExpress, onCheckedChange = onExpressChange)
             }
         }
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        Button(
-            onClick = onNext,
+        WizardCta(
+            "Weiter",
             enabled = selectedDate.isNotEmpty() && selectedTimeSlot.isNotEmpty(),
-            colors = ButtonDefaults.buttonColors(containerColor = EcoGreen),
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(56.dp),
-            shape = RoundedCornerShape(28.dp)
-        ) {
-            Text("Weiter", fontSize = 16.sp, fontWeight = FontWeight.Bold)
-        }
+            onClick = onNext
+        )
     }
 }
 
 @Composable
 fun OrderStep3(
     selectedMaterials: MutableList<String>,
-    onNext: () -> Unit,
-    hasPaid: Boolean
+    onNext: () -> Unit
 ) {
     val materials = listOf(
         Pair("Papier/Karton", true),
@@ -247,47 +337,58 @@ fun OrderStep3(
             .padding(16.dp)
             .verticalScroll(rememberScrollState())
     ) {
-        Spacer(modifier = Modifier.height(24.dp))
-        Text("Wertstoffe sortieren", fontSize = 24.sp, fontWeight = FontWeight.Bold, color = ZurichBlue)
-        Text("Standardgut ist gratis. Bulky/E-waste kostet CHF 8.- flat.", fontSize = 14.sp, color = Color.Gray)
-        Spacer(modifier = Modifier.height(20.dp))
+        Spacer(modifier = Modifier.height(8.dp))
+        Text(
+            "Standardgut isch gratis. Sperrgut & E-Schrott koschtet CHF 8.– pauschal.",
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        Spacer(modifier = Modifier.height(12.dp))
 
         materials.forEach { (name, isFree) ->
             val checked = selectedMaterials.contains(name)
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
+                    .clip(RoundedCornerShape(12.dp))
                     .clickable {
                         if (checked) selectedMaterials.remove(name) else selectedMaterials.add(name)
                     }
-                    .padding(vertical = 12.dp),
+                    .padding(vertical = 8.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.weight(1f)
+                ) {
                     Checkbox(
                         checked = checked,
                         onCheckedChange = {
                             if (checked) selectedMaterials.remove(name) else selectedMaterials.add(name)
-                        },
-                        colors = CheckboxDefaults.colors(checkedColor = EcoGreen)
+                        }
                     )
-                    Text(name, fontSize = 16.sp, modifier = Modifier.padding(start = 8.dp), fontWeight = FontWeight.Bold)
+                    Text(
+                        name,
+                        style = MaterialTheme.typography.titleSmall,
+                        modifier = Modifier.padding(start = 8.dp)
+                    )
                 }
 
                 Box(
                     modifier = Modifier
                         .background(
-                            if (isFree) EcoGreen.copy(alpha = 0.15f) else Color.LightGray.copy(alpha = 0.3f),
+                            if (isFree) MaterialTheme.colorScheme.primaryContainer
+                            else MaterialTheme.colorScheme.surfaceContainerHighest,
                             RoundedCornerShape(6.dp)
                         )
                         .padding(horizontal = 8.dp, vertical = 4.dp)
                 ) {
                     Text(
-                        text = if (isFree) "GRATIS" else "+ CHF 8.-",
-                        fontSize = 10.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = if (isFree) EcoGreen else ZurichBlue
+                        text = if (isFree) "GRATIS" else "+ CHF 8.–",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = if (isFree) MaterialTheme.colorScheme.onPrimaryContainer
+                        else MaterialTheme.colorScheme.secondary
                     )
                 }
             }
@@ -295,17 +396,7 @@ fun OrderStep3(
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        Button(
-            onClick = onNext,
-            enabled = selectedMaterials.isNotEmpty(),
-            colors = ButtonDefaults.buttonColors(containerColor = EcoGreen),
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(56.dp),
-            shape = RoundedCornerShape(28.dp)
-        ) {
-            Text("Weiter zur Kasse", fontSize = 16.sp, fontWeight = FontWeight.Bold)
-        }
+        WizardCta("Weiter zur Kasse", enabled = selectedMaterials.isNotEmpty(), onClick = onNext)
     }
 }
 
@@ -319,54 +410,58 @@ fun OrderStep4(
     isExpress: Boolean,
     onNext: () -> Unit
 ) {
-    Column(modifier = Modifier.padding(16.dp)) {
-        Spacer(modifier = Modifier.height(24.dp))
-        Text("Zusammenfassung", fontSize = 24.sp, fontWeight = FontWeight.Bold, color = ZurichBlue)
-        Spacer(modifier = Modifier.height(20.dp))
+    Column(
+        modifier = Modifier
+            .padding(16.dp)
+            .verticalScroll(rememberScrollState())
+    ) {
+        Spacer(modifier = Modifier.height(8.dp))
 
         Card(
-            colors = CardDefaults.cardColors(containerColor = Color(0xFFF3FBEF)),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
             shape = RoundedCornerShape(24.dp),
-            modifier = Modifier
-                .fillMaxWidth()
-                .border(1.dp, EcoGreen.copy(alpha = 0.2f), RoundedCornerShape(24.dp))
+            modifier = Modifier.fillMaxWidth()
         ) {
             Column(modifier = Modifier.padding(24.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                val onContainer = MaterialTheme.colorScheme.onPrimaryContainer
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    Icon(Icons.Default.LocationOn, contentDescription = null, tint = EcoGreen)
-                    Text(address, fontSize = 14.sp, fontWeight = FontWeight.Medium)
+                    Icon(Icons.Outlined.LocationOn, contentDescription = null, tint = onContainer)
+                    Text(address, style = MaterialTheme.typography.bodyMedium, color = onContainer)
                 }
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    Icon(Icons.Default.DateRange, contentDescription = null, tint = EcoGreen)
-                    Text("$dateString | $timeSlot", fontSize = 14.sp, fontWeight = FontWeight.Medium)
+                    Icon(Icons.Outlined.CalendarMonth, contentDescription = null, tint = onContainer)
+                    Text("$dateString · $timeSlot", style = MaterialTheme.typography.bodyMedium, color = onContainer)
                 }
-                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    Icon(Icons.Default.List, contentDescription = null, tint = EcoGreen)
+                Row(verticalAlignment = Alignment.Top, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Icon(Icons.AutoMirrored.Outlined.ListAlt, contentDescription = null, tint = onContainer)
                     Column {
-                        Text("Wertstoffe:", fontSize = 14.sp, fontWeight = FontWeight.Bold)
-                        Text(materials.joinToString(", "), fontSize = 12.sp, color = Color.Gray)
+                        Text("Wertstoffe", style = MaterialTheme.typography.titleSmall, color = onContainer)
+                        Text(
+                            materials.joinToString(", "),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = onContainer.copy(alpha = 0.8f)
+                        )
                     }
                 }
                 if (isExpress) {
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                        Icon(Icons.Default.Star, contentDescription = null, tint = EcoGreen)
-                        Text("Express Abholung (+ CHF 5.00)", fontSize = 14.sp, fontWeight = FontWeight.Medium)
+                        Icon(Icons.Filled.Bolt, contentDescription = null, tint = onContainer)
+                        Text("Express Abholig (+ CHF 5.00)", style = MaterialTheme.typography.bodyMedium, color = onContainer)
                     }
                 }
 
-                Divider(color = EcoGreen.copy(alpha = 0.1f))
+                HorizontalDivider(color = onContainer.copy(alpha = 0.15f))
 
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text("Total Gebühr", fontWeight = FontWeight.Bold, fontSize = 16.sp, color = ZurichBlue)
+                    Text("Total Gebühr", style = MaterialTheme.typography.titleMedium, color = onContainer)
                     Text(
-                        text = if (price == 0f) "GRATIS" else String.format("CHF %.2f", price),
-                        fontWeight = FontWeight.ExtraBold,
-                        fontSize = 24.sp,
-                        color = EcoGreen
+                        text = if (price == 0f) "GRATIS" else String.format(Locale.ROOT, "CHF %.2f", price),
+                        style = MaterialTheme.typography.headlineSmall,
+                        color = onContainer
                     )
                 }
             }
@@ -374,16 +469,7 @@ fun OrderStep4(
 
         Spacer(modifier = Modifier.height(32.dp))
 
-        Button(
-            onClick = onNext,
-            colors = ButtonDefaults.buttonColors(containerColor = EcoGreen),
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(56.dp),
-            shape = RoundedCornerShape(28.dp)
-        ) {
-            Text(if (price == 0f) "Bestellung bestätigen" else "Zahlen mit TWINT", fontSize = 16.sp, fontWeight = FontWeight.Bold)
-        }
+        WizardCta(if (price == 0f) "Bestellig bestätige" else "Zahle mit TWINT", onClick = onNext)
     }
 }
 
@@ -394,6 +480,13 @@ fun OrderStep5(
 ) {
     var loading by remember { mutableStateOf(false) }
 
+    if (loading) {
+        LaunchedEffect(Unit) {
+            delay(2000)
+            onPaymentSuccess()
+        }
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -402,56 +495,57 @@ fun OrderStep5(
         verticalArrangement = Arrangement.Center
     ) {
         if (loading) {
-            CircularProgressIndicator(color = EcoGreen, modifier = Modifier.size(64.dp))
+            CircularProgressIndicator(modifier = Modifier.size(64.dp))
             Spacer(modifier = Modifier.height(24.dp))
-            Text("Zahlung wird verarbeitet...", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = ZurichBlue)
+            Text(
+                "Zahlig wird verarbeitet…",
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.secondary
+            )
         } else {
             Box(
                 modifier = Modifier
                     .size(100.dp)
-                    .background(Color(0xFF00B5E2).copy(alpha = 0.1f), RoundedCornerShape(50.dp)),
+                    .background(TwintCyan.copy(alpha = 0.12f), RoundedCornerShape(50.dp)),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
-                    imageVector = Icons.Default.Phone,
+                    imageVector = Icons.Outlined.PhoneIphone,
                     contentDescription = null,
-                    tint = Color(0xFF00B5E2),
+                    tint = TwintCyan,
                     modifier = Modifier.size(48.dp)
                 )
             }
             Spacer(modifier = Modifier.height(24.dp))
-            Text("TWINT Express-Zahlung", fontSize = 22.sp, fontWeight = FontWeight.Bold, color = ZurichBlue)
             Text(
-                text = String.format("CHF %.2f", price),
-                fontSize = 32.sp,
-                fontWeight = FontWeight.ExtraBold,
-                color = Color(0xFF00B5E2),
+                "TWINT Express-Zahlig",
+                style = MaterialTheme.typography.titleLarge,
+                color = MaterialTheme.colorScheme.secondary
+            )
+            Text(
+                text = String.format(Locale.ROOT, "CHF %.2f", price),
+                style = MaterialTheme.typography.displaySmall,
+                color = TwintCyan,
                 modifier = Modifier.padding(vertical = 12.dp)
             )
             Text(
-                text = "Klicke unten, um die Zahlung über die TWINT-Demo freizugeben.",
-                fontSize = 14.sp,
-                color = Color.Gray,
+                text = "Klick unde, zum d'Zahlig über d'TWINT-Demo freigäh.",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(horizontal = 16.dp),
-                textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                textAlign = TextAlign.Center
             )
             Spacer(modifier = Modifier.height(32.dp))
 
             Button(
-                onClick = {
-                    loading = true
-                    android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
-                        loading = false
-                        onPaymentSuccess()
-                    }, 2000)
-                },
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF00B5E2)),
+                onClick = { loading = true },
+                colors = ButtonDefaults.buttonColors(containerColor = TwintCyan),
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp),
                 shape = RoundedCornerShape(28.dp)
             ) {
-                Text("Zahlung freigeben", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                Text("Zahlig freigäh", style = MaterialTheme.typography.labelLarge)
             }
         }
     }
@@ -467,14 +561,14 @@ fun JöppliTrackerScreen(
 
     val statusMessages = remember {
         listOf(
-            "Dispositioniert: Jöppli verlässt den ERZ Werkhof Hardau...",
-            "Routenplanung durch Kreis 4/5 wird berechnet...",
-            "Ladesensoren kalibriert: 100% Ökostrom geladen...",
-            "Überquert die Hardbrücke Richtung Langstrasse...",
-            "Weicht vorübergehend dem Tram 8 auf der Badenerstrasse aus...",
-            "Biegt in Ihre Quartierstrasse ein...",
-            "Jöppli nähert sich Ihrer Adresse...",
-            "Sicherheits-Sensoren aktiv: Bereit zur Beladung..."
+            "Dispositioniert: Jöppli verlaht de ERZ Werkhof Hardau…",
+            "Routeplanig durch Kreis 4/5 wird grächnet…",
+            "Ladesensore kalibriert: 100% Ökostrom glade…",
+            "Überquert d'Hardbrugg Richtig Langstrass…",
+            "Wiicht churz em Tram 8 uf de Badenerstrass uus…",
+            "Biegt i dini Quartierstrass ii…",
+            "Jöppli nähert sich dinere Adress…",
+            "Sicherheits-Sensore aktiv: Parat zum Lade…"
         )
     }
 
@@ -501,91 +595,114 @@ fun JöppliTrackerScreen(
             .fillMaxSize()
             .padding(16.dp)
     ) {
-        Spacer(modifier = Modifier.height(24.dp))
+        Spacer(modifier = Modifier.height(16.dp))
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text("Jöppli live verfolgen", fontSize = 24.sp, fontWeight = FontWeight.Bold, color = ZurichBlue)
+            Text(
+                "Jöppli live verfolge",
+                style = MaterialTheme.typography.titleLarge,
+                color = MaterialTheme.colorScheme.secondary
+            )
             if (isArrived) {
                 Box(
                     modifier = Modifier
-                        .background(EcoGreen.copy(alpha = 0.2f), RoundedCornerShape(8.dp))
+                        .background(MaterialTheme.colorScheme.primaryContainer, RoundedCornerShape(8.dp))
                         .padding(horizontal = 10.dp, vertical = 4.dp)
                 ) {
-                    Text("ANGEKOMMEN", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = EcoGreen)
+                    Text(
+                        "AACHO",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer
+                    )
                 }
             }
         }
         Spacer(modifier = Modifier.height(4.dp))
-        Text("Ziel: $address", fontSize = 12.sp, color = Color.Gray)
-        
+        Text(
+            "Ziel: $address",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+
         Spacer(modifier = Modifier.height(20.dp))
 
-        // Custom canvas animated route tracker representation
+        // Stylized animated route map
+        val mapBg = MaterialTheme.colorScheme.surfaceContainerHigh
+        val roadColor = MaterialTheme.colorScheme.surface
+        val routeTrack = MaterialTheme.colorScheme.secondary.copy(alpha = 0.25f)
+        val routeColor = MaterialTheme.colorScheme.primary
+        val depotColor = MaterialTheme.colorScheme.secondary
+        val destColor = MaterialTheme.colorScheme.error
+        val puckCenter = MaterialTheme.colorScheme.onPrimary
+
         Box(
             modifier = Modifier
                 .weight(1f)
                 .fillMaxWidth()
                 .clip(RoundedCornerShape(24.dp))
-                .background(Color(0xFFE5E7EB))
-                .border(2.dp, Color.White, RoundedCornerShape(24.dp))
+                .background(mapBg)
         ) {
             Canvas(modifier = Modifier.fillMaxSize()) {
                 val w = size.width
                 val h = size.height
 
-                // Draw Zurich Grid mockup background
-                val linePaintColor = Color.White
+                // Zurich street grid mockup
                 for (i in 1..6) {
-                    // Vertical roads
-                    drawLine(linePaintColor, Offset(w * i / 7f, 0f), Offset(w * i / 7f, h), strokeWidth = 8f)
-                    // Horizontal roads
-                    drawLine(linePaintColor, Offset(0f, h * i / 7f), Offset(w, h * i / 7f), strokeWidth = 8f)
+                    drawLine(roadColor, Offset(w * i / 7f, 0f), Offset(w * i / 7f, h), strokeWidth = 8f)
+                    drawLine(roadColor, Offset(0f, h * i / 7f), Offset(w, h * i / 7f), strokeWidth = 8f)
                 }
 
-                // Dotted Path from Werkhof Hardau to Home
-                // Werkhof: w * 0.2f, h * 0.8f
-                // Home: w * 0.8f, h * 0.2f
-                val startX = w * 0.2f
-                val startY = h * 0.8f
-                val endX = w * 0.8f
-                val endY = h * 0.2f
+                // Curved route: Werkhof Hardau (bottom left) → home (top right)
+                val start = Offset(w * 0.15f, h * 0.82f)
+                val end = Offset(w * 0.82f, h * 0.18f)
+                val route = Path().apply {
+                    moveTo(start.x, start.y)
+                    cubicTo(
+                        w * 0.10f, h * 0.45f,
+                        w * 0.50f, h * 0.70f,
+                        w * 0.57f, h * 0.43f
+                    )
+                    cubicTo(
+                        w * 0.63f, h * 0.22f,
+                        w * 0.72f, h * 0.32f,
+                        end.x, end.y
+                    )
+                }
 
-                // Draw route line
-                drawLine(
-                    color = ZurichBlue.copy(alpha = 0.3f),
-                    start = Offset(startX, startY),
-                    end = Offset(endX, endY),
-                    strokeWidth = 10f
+                // Full route (faded)
+                drawPath(route, color = routeTrack, style = Stroke(width = 10f, cap = StrokeCap.Round))
+
+                // Travelled portion (dashed, brand green)
+                val measure = PathMeasure()
+                measure.setPath(route, false)
+                val travelled = Path()
+                measure.getSegment(0f, measure.length * progress.value, travelled, true)
+                drawPath(
+                    travelled,
+                    color = routeColor,
+                    style = Stroke(
+                        width = 10f,
+                        cap = StrokeCap.Round,
+                        pathEffect = PathEffect.dashPathEffect(floatArrayOf(15f, 15f), 0f)
+                    )
                 )
 
-                // Dotted actual track path
-                drawLine(
-                    color = EcoGreen,
-                    start = Offset(startX, startY),
-                    end = Offset(
-                        startX + (endX - startX) * progress.value,
-                        startY + (endY - startY) * progress.value
-                    ),
-                    strokeWidth = 10f,
-                    pathEffect = PathEffect.dashPathEffect(floatArrayOf(15f, 15f), 0f)
-                )
+                // Werkhof Hardau node
+                drawCircle(color = depotColor, radius = 20f, center = start)
+                drawCircle(color = roadColor, radius = 8f, center = start)
 
-                // Draw Werkhof Hardau Node
-                drawCircle(color = ZurichBlue, radius = 20f, center = Offset(startX, startY))
-                drawCircle(color = Color.White, radius = 8f, center = Offset(startX, startY))
+                // Home node
+                drawCircle(color = destColor, radius = 20f, center = end)
+                drawCircle(color = roadColor, radius = 8f, center = end)
 
-                // Draw Home Node
-                drawCircle(color = Color(0xFFDC2626), radius = 20f, center = Offset(endX, endY))
-                drawCircle(color = Color.White, radius = 8f, center = Offset(endX, endY))
-
-                // Draw Robot marker position
-                val currentRobotX = startX + (endX - startX) * progress.value
-                val currentRobotY = startY + (endY - startY) * progress.value
-                drawCircle(color = EcoGreen, radius = 24f, center = Offset(currentRobotX, currentRobotY))
-                drawCircle(color = Color.White, radius = 10f, center = Offset(currentRobotX, currentRobotY))
+                // Robot marker along the curve
+                val robotPos = measure.getPosition(measure.length * progress.value.coerceIn(0f, 1f))
+                drawCircle(color = puckCenter, radius = 28f, center = robotPos)
+                drawCircle(color = routeColor, radius = 24f, center = robotPos)
+                drawCircle(color = puckCenter, radius = 10f, center = robotPos)
             }
         }
 
@@ -595,27 +712,31 @@ fun JöppliTrackerScreen(
         Card(
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
             shape = RoundedCornerShape(16.dp),
+            elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
             modifier = Modifier.fillMaxWidth()
         ) {
             Column(modifier = Modifier.padding(16.dp)) {
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                     if (!isArrived) {
-                        CircularProgressIndicator(color = EcoGreen, modifier = Modifier.size(16.dp), strokeWidth = 2.dp)
+                        CircularProgressIndicator(modifier = Modifier.size(16.dp), strokeWidth = 2.dp)
                     } else {
-                        Icon(Icons.Default.CheckCircle, contentDescription = null, tint = EcoGreen, modifier = Modifier.size(18.dp))
+                        Icon(
+                            Icons.Filled.CheckCircle,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(18.dp)
+                        )
                     }
                     Text(
-                        text = if (isArrived) "Bereit zum Einladen" else "Jöppli Status",
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = ZurichBlue
+                        text = if (isArrived) "Parat zum Iilade" else "Jöppli Status",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.secondary
                     )
                 }
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
-                    text = statusMessages[statusIndex],
-                    fontSize = 15.sp,
-                    fontWeight = FontWeight.Bold,
+                    text = if (isArrived) "Ich bi da! Bitte stell dis Recycling vor d'Tür." else statusMessages[statusIndex],
+                    style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.onSurface
                 )
             }
@@ -625,13 +746,19 @@ fun JöppliTrackerScreen(
 
         Button(
             onClick = onGoHome,
-            colors = ButtonDefaults.buttonColors(containerColor = if (isArrived) EcoGreen else ZurichBlue),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = if (isArrived) MaterialTheme.colorScheme.primary
+                else MaterialTheme.colorScheme.secondary
+            ),
             modifier = Modifier
                 .fillMaxWidth()
                 .height(56.dp),
             shape = RoundedCornerShape(28.dp)
         ) {
-            Text(if (isArrived) "Fertig & Zurück" else "Schliessen & Später verfolgen", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+            Text(
+                if (isArrived) "Fertig & Zrugg" else "Schliesse & spöter verfolge",
+                style = MaterialTheme.typography.labelLarge
+            )
         }
     }
 }

@@ -4,18 +4,19 @@ import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Send
+import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.example.zuerijoeppli.data.RecyclingRepository
-import com.example.zuerijoeppli.theme.EcoGreen
-import com.example.zuerijoeppli.theme.ZurichBlue
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -27,7 +28,7 @@ fun ProfileScreen() {
     var name by remember(profile.name) { mutableStateOf(profile.name) }
     var phone by remember(profile.phone) { mutableStateOf(profile.phone) }
     var address by remember(profile.homeAddress) { mutableStateOf(profile.homeAddress) }
-    
+
     var supportMessage by remember { mutableStateOf("") }
     var selectedPayment by remember(profile.defaultPaymentMethod) { mutableStateOf(profile.defaultPaymentMethod) }
 
@@ -40,20 +41,35 @@ fun ProfileScreen() {
             .padding(bottom = 80.dp)
     ) {
         Spacer(modifier = Modifier.height(24.dp))
-        
-        Text(
-            text = "Profil & Adressen",
-            fontSize = 28.sp,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.onBackground
-        )
-        Text(
-            text = "Hinterlege deine Daten für automatische Abholungen",
-            fontSize = 16.sp,
-            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f),
-            fontWeight = FontWeight.Medium,
-            modifier = Modifier.padding(top = 4.dp)
-        )
+
+        // Header with avatar
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Box(
+                modifier = Modifier
+                    .size(64.dp)
+                    .background(MaterialTheme.colorScheme.primaryContainer, CircleShape),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Outlined.Person,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                    modifier = Modifier.size(32.dp)
+                )
+            }
+            Column(modifier = Modifier.padding(start = 16.dp)) {
+                Text(
+                    text = "Profil & Adresse",
+                    style = MaterialTheme.typography.headlineSmall,
+                    color = MaterialTheme.colorScheme.onBackground
+                )
+                Text(
+                    text = "Dini Date für automatischi Abholige",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
 
         Spacer(modifier = Modifier.height(20.dp))
 
@@ -67,15 +83,16 @@ fun ProfileScreen() {
             Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
                 Text(
                     text = "Wohnort & Kontakt",
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = ZurichBlue
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.secondary
                 )
 
                 OutlinedTextField(
                     value = name,
                     onValueChange = { name = it },
                     label = { Text("Vorname Nachname") },
+                    singleLine = true,
+                    shape = RoundedCornerShape(12.dp),
                     modifier = Modifier.fillMaxWidth()
                 )
 
@@ -83,6 +100,8 @@ fun ProfileScreen() {
                     value = phone,
                     onValueChange = { phone = it },
                     label = { Text("Telefonnummer") },
+                    singleLine = true,
+                    shape = RoundedCornerShape(12.dp),
                     modifier = Modifier.fillMaxWidth()
                 )
 
@@ -90,25 +109,29 @@ fun ProfileScreen() {
                     value = address,
                     onValueChange = { address = it },
                     label = { Text("Zürcher Wohnadresse") },
+                    singleLine = true,
+                    shape = RoundedCornerShape(12.dp),
                     modifier = Modifier.fillMaxWidth()
                 )
 
                 Button(
                     onClick = {
                         RecyclingRepository.updateProfile(name, phone, address, selectedPayment)
-                        Toast.makeText(context, "Daten erfolgreich gespeichert", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, "Date erfolgriich gspicheret", Toast.LENGTH_SHORT).show()
                     },
-                    colors = ButtonDefaults.buttonColors(containerColor = EcoGreen),
-                    modifier = Modifier.fillMaxWidth()
+                    shape = RoundedCornerShape(24.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(48.dp)
                 ) {
-                    Text("Speichern")
+                    Text("Spichere", style = MaterialTheme.typography.labelLarge)
                 }
             }
         }
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Payment Settle
+        // Payment method
         Card(
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
             shape = RoundedCornerShape(16.dp),
@@ -118,9 +141,8 @@ fun ProfileScreen() {
             Column(modifier = Modifier.padding(16.dp)) {
                 Text(
                     text = "Standard-Zahlmittel",
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = ZurichBlue
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.secondary
                 )
                 Spacer(modifier = Modifier.height(12.dp))
 
@@ -128,7 +150,7 @@ fun ProfileScreen() {
                     val isTwint = selectedPayment == "twint_demo"
                     FilterChip(
                         selected = isTwint,
-                        onClick = { 
+                        onClick = {
                             selectedPayment = "twint_demo"
                             RecyclingRepository.updateProfile(name, phone, address, "twint_demo")
                         },
@@ -137,7 +159,7 @@ fun ProfileScreen() {
                     )
                     FilterChip(
                         selected = !isTwint,
-                        onClick = { 
+                        onClick = {
                             selectedPayment = "card"
                             RecyclingRepository.updateProfile(name, phone, address, "card")
                         },
@@ -159,21 +181,21 @@ fun ProfileScreen() {
         ) {
             Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 Text(
-                    text = "ERZ Leitstelle kontaktieren",
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = ZurichBlue
+                    text = "ERZ Leitstell kontaktiere",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.secondary
                 )
                 Text(
-                    text = "Hast du Fragen zur Entsorgung oder deinem Jöppli-Fahrzeug?",
-                    fontSize = 12.sp,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                    text = "Hesch Frage zur Entsorgig oder dim Jöppli-Fahrzüg?",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
 
                 OutlinedTextField(
                     value = supportMessage,
                     onValueChange = { supportMessage = it },
-                    label = { Text("Dine Mitteilung") },
+                    label = { Text("Dini Mitteilig") },
+                    shape = RoundedCornerShape(12.dp),
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(100.dp),
@@ -183,16 +205,25 @@ fun ProfileScreen() {
                 Button(
                     onClick = {
                         if (supportMessage.isNotBlank()) {
-                            Toast.makeText(context, "Meldung gesendet! ERZ wird antworten.", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, "Meldig gsendet! ERZ wird antworte.", Toast.LENGTH_SHORT).show()
                             supportMessage = ""
                         } else {
-                            Toast.makeText(context, "Bitte Nachricht eingeben", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, "Bitte Nachricht igäh", Toast.LENGTH_SHORT).show()
                         }
                     },
-                    colors = ButtonDefaults.buttonColors(containerColor = ZurichBlue),
-                    modifier = Modifier.fillMaxWidth()
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary),
+                    shape = RoundedCornerShape(24.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(48.dp)
                 ) {
-                    Text("Nachricht absenden")
+                    Icon(
+                        Icons.AutoMirrored.Filled.Send,
+                        contentDescription = null,
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Nachricht absende", style = MaterialTheme.typography.labelLarge)
                 }
             }
         }

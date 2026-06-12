@@ -7,22 +7,24 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.filled.Bolt
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.outlined.LocalShipping
+import androidx.compose.material.icons.automirrored.outlined.MenuBook
+import androidx.compose.material.icons.outlined.ManageAccounts
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.example.zuerijoeppli.data.RecyclingRepository
 import com.example.zuerijoeppli.theme.EcoGreen
-import com.example.zuerijoeppli.theme.ZurichBlue
 
 @Composable
 fun HomeScreen(
@@ -42,19 +44,17 @@ fun HomeScreen(
             .padding(bottom = 80.dp) // Avoid overlap with bottom bar
     ) {
         Spacer(modifier = Modifier.height(24.dp))
-        
+
         // Greeting
         Text(
-            text = "Grüezi, ${profile.name}!",
-            fontSize = 28.sp,
-            fontWeight = FontWeight.Bold,
+            text = "Grüezi, ${profile.name.substringBefore(' ')}!",
+            style = MaterialTheme.typography.headlineMedium,
             color = MaterialTheme.colorScheme.onBackground
         )
         Text(
             text = "Parat zum recycle?",
-            fontSize = 16.sp,
-            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f),
-            fontWeight = FontWeight.Medium,
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.padding(top = 4.dp)
         )
 
@@ -68,15 +68,15 @@ fun HomeScreen(
             MiniStatCard(
                 title = "Züri-Karma",
                 value = "${stats.karma}/100",
-                icon = Icons.Default.Star,
+                icon = Icons.Filled.Star,
                 iconColor = EcoGreen,
                 onClick = { onNavigateToTab("STATS") },
                 modifier = Modifier.weight(1f)
             )
             MiniStatCard(
-                title = "CO2 Saved",
+                title = "CO2 gspart",
                 value = "-${stats.co2Saved.toInt()} kg",
-                icon = Icons.Default.Favorite,
+                icon = Icons.Filled.Favorite,
                 iconColor = Color(0xFFE11D48),
                 onClick = { onNavigateToTab("STATS") },
                 modifier = Modifier.weight(1f)
@@ -87,7 +87,7 @@ fun HomeScreen(
 
         // Quick Summon Jöppli Card
         Card(
-            colors = CardDefaults.cardColors(containerColor = EcoGreen),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primary),
             shape = RoundedCornerShape(24.dp),
             modifier = Modifier
                 .fillMaxWidth()
@@ -102,40 +102,42 @@ fun HomeScreen(
             ) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(16.dp)
+                    horizontalArrangement = Arrangement.spacedBy(16.dp),
+                    modifier = Modifier.weight(1f)
                 ) {
                     Box(
                         modifier = Modifier
                             .size(56.dp)
-                            .background(Color.White.copy(alpha = 0.2f), RoundedCornerShape(16.dp)),
+                            .background(
+                                MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.2f),
+                                RoundedCornerShape(16.dp)
+                            ),
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
-                            imageVector = Icons.Default.Refresh,
-                            contentDescription = "Recycle",
-                            tint = Color.White,
-                            modifier = Modifier.size(28.dp)
+                            imageVector = Icons.Filled.Bolt,
+                            contentDescription = "Schnäll Abholig",
+                            tint = MaterialTheme.colorScheme.onPrimary,
+                            modifier = Modifier.size(30.dp)
                         )
                     }
                     Column {
                         Text(
                             text = "Schnäll Abholig",
-                            color = Color.White,
-                            fontSize = 20.sp,
-                            fontWeight = FontWeight.Bold
+                            color = MaterialTheme.colorScheme.onPrimary,
+                            style = MaterialTheme.typography.titleLarge
                         )
                         Text(
-                            text = "Hole mini Favoriten",
-                            color = Color.White.copy(alpha = 0.8f),
-                            fontSize = 14.sp,
-                            fontWeight = FontWeight.Medium
+                            text = "Hole mini Favorite",
+                            color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.85f),
+                            style = MaterialTheme.typography.bodyMedium
                         )
                     }
                 }
                 Icon(
-                    imageVector = Icons.Default.KeyboardArrowRight,
-                    contentDescription = "Go",
-                    tint = Color.White,
+                    imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onPrimary,
                     modifier = Modifier.size(28.dp)
                 )
             }
@@ -149,20 +151,20 @@ fun HomeScreen(
         ) {
             MenuRowCard(
                 title = "Jöppli bestellen",
-                subtitle = "Autonome Abholung rufen",
-                icon = Icons.Default.PlayArrow,
+                subtitle = "Autonomi Abholig planä",
+                icon = Icons.Outlined.LocalShipping,
                 onClick = { onNavigateToTab("ORDER") }
             )
             MenuRowCard(
                 title = "Was chan ich recycle?",
-                subtitle = "Entsorgungs-Wegweiser",
-                icon = Icons.Default.Search,
+                subtitle = "Entsorgigs-Wegwiiser & AI Scanner",
+                icon = Icons.AutoMirrored.Outlined.MenuBook,
                 onClick = { onNavigateToTab("GUIDE") }
             )
             MenuRowCard(
                 title = "Mini Date",
                 subtitle = "Adresse & TWINT",
-                icon = Icons.Default.Person,
+                icon = Icons.Outlined.ManageAccounts,
                 onClick = { onNavigateToTab("PROFILE") }
             )
         }
@@ -194,7 +196,7 @@ fun MiniStatCard(
             Box(
                 modifier = Modifier
                     .size(40.dp)
-                    .background(iconColor.copy(alpha = 0.1f), RoundedCornerShape(12.dp)),
+                    .background(iconColor.copy(alpha = 0.12f), RoundedCornerShape(12.dp)),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
@@ -207,15 +209,13 @@ fun MiniStatCard(
             Column {
                 Text(
                     text = title,
-                    fontSize = 11.sp,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f),
-                    fontWeight = FontWeight.Bold
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 Text(
                     text = value,
-                    fontSize = 16.sp,
-                    color = ZurichBlue,
-                    fontWeight = FontWeight.Bold
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.secondary
                 )
             }
         }
@@ -246,40 +246,42 @@ fun MenuRowCard(
         ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(16.dp)
+                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                modifier = Modifier.weight(1f)
             ) {
                 Box(
                     modifier = Modifier
                         .size(44.dp)
-                        .background(EcoGreen.copy(alpha = 0.1f), RoundedCornerShape(12.dp)),
+                        .background(
+                            MaterialTheme.colorScheme.primaryContainer,
+                            RoundedCornerShape(12.dp)
+                        ),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         imageVector = icon,
                         contentDescription = null,
-                        tint = EcoGreen,
+                        tint = MaterialTheme.colorScheme.onPrimaryContainer,
                         modifier = Modifier.size(22.dp)
                     )
                 }
                 Column {
                     Text(
                         text = title,
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = ZurichBlue
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onSurface
                     )
                     Text(
                         text = subtitle,
-                        fontSize = 12.sp,
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
-                        fontWeight = FontWeight.Medium
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
             Icon(
-                imageVector = Icons.Default.KeyboardArrowRight,
+                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
                 contentDescription = null,
-                tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.15f),
+                tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
                 modifier = Modifier.size(24.dp)
             )
         }

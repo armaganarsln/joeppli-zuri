@@ -22,15 +22,17 @@ import androidx.compose.ui.unit.sp
 import com.example.zuerijoeppli.data.RecyclingRepository
 import com.example.zuerijoeppli.theme.EcoGreen
 import com.example.zuerijoeppli.theme.ZurichBlue
+import com.example.zuerijoeppli.theme.ZurichBlueDark
+import java.util.Locale
 
 @Composable
 fun DashboardScreen(
     onOrderClick: () -> Unit
 ) {
     val stats by RecyclingRepository.stats.collectAsState()
-    val scrollState = verticalScrollState()
+    val scrollState = rememberScrollState()
     val carKm = (stats.co2Saved * 7).toInt()
-    val treesPlanted = String.format("%.1f", stats.co2Saved * 0.05f)
+    val treesPlanted = String.format(Locale.ROOT, "%.1f", stats.co2Saved * 0.05f)
 
     Column(
         modifier = Modifier
@@ -41,24 +43,22 @@ fun DashboardScreen(
             .padding(bottom = 80.dp)
     ) {
         Spacer(modifier = Modifier.height(24.dp))
-        
+
         Text(
             text = "Recycling Dashboard",
-            fontSize = 28.sp,
-            fontWeight = FontWeight.Bold,
+            style = MaterialTheme.typography.headlineMedium,
             color = MaterialTheme.colorScheme.onBackground
         )
         Text(
-            text = "Dein Beitrag zur Zürcher Kreislaufwirtschaft",
-            fontSize = 16.sp,
-            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f),
-            fontWeight = FontWeight.Medium,
+            text = "Din Biitrag zur Zürcher Chreislaufwirtschaft",
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.padding(top = 4.dp)
         )
 
         Spacer(modifier = Modifier.height(20.dp))
 
-        // Züri-Karma Hero Card with Gradient
+        // Züri-Karma Hero Card with Gradient (brand blue — intentional in both themes)
         Card(
             shape = RoundedCornerShape(24.dp),
             modifier = Modifier.fillMaxWidth(),
@@ -69,7 +69,7 @@ fun DashboardScreen(
                     .fillMaxWidth()
                     .background(
                         Brush.linearGradient(
-                            colors = listOf(ZurichBlue, Color(0xFF1A256B))
+                            colors = listOf(ZurichBlue, ZurichBlueDark)
                         )
                     )
                     .padding(24.dp)
@@ -87,8 +87,7 @@ fun DashboardScreen(
                         ) {
                             Text(
                                 text = "ZÜRI-KARMA",
-                                fontSize = 10.sp,
-                                fontWeight = FontWeight.Bold,
+                                style = MaterialTheme.typography.labelSmall,
                                 color = Color.White
                             )
                         }
@@ -103,8 +102,7 @@ fun DashboardScreen(
                             )
                             Text(
                                 text = "/100",
-                                fontSize = 16.sp,
-                                fontWeight = FontWeight.Bold,
+                                style = MaterialTheme.typography.titleMedium,
                                 color = Color.White.copy(alpha = 0.5f),
                                 modifier = Modifier.padding(bottom = 4.dp, start = 2.dp)
                             )
@@ -112,8 +110,7 @@ fun DashboardScreen(
                         Spacer(modifier = Modifier.height(6.dp))
                         Text(
                             text = "Level 4: Quartier-Held",
-                            fontSize = 13.sp,
-                            fontWeight = FontWeight.Bold,
+                            style = MaterialTheme.typography.titleSmall,
                             color = EcoGreen
                         )
                     }
@@ -125,7 +122,7 @@ fun DashboardScreen(
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
-                            imageVector = Icons.Default.Star,
+                            imageVector = Icons.Filled.Star,
                             contentDescription = "Karma badge",
                             tint = EcoGreen,
                             modifier = Modifier.size(44.dp)
@@ -143,18 +140,18 @@ fun DashboardScreen(
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             MetricCard(
-                label = "TOTAL RECYCELT",
-                value = String.format("%.1f kg", stats.totalKg),
+                label = "TOTAL RECYCLET",
+                value = String.format(Locale.ROOT, "%.1f kg", stats.totalKg),
                 modifier = Modifier.weight(1f)
             )
             MetricCard(
-                label = "CO2 ENTSPART",
-                value = String.format("-%.0f kg", stats.co2Saved),
+                label = "CO2 GSPART",
+                value = String.format(Locale.ROOT, "-%.0f kg", stats.co2Saved),
                 valueColor = Color(0xFF10B981),
                 modifier = Modifier.weight(1f)
             )
             MetricCard(
-                label = "SERIE (WOCHEN)",
+                label = "SERIE (WUCHE)",
                 value = "${stats.streakWeeks} W.",
                 modifier = Modifier.weight(1f)
             )
@@ -162,18 +159,17 @@ fun DashboardScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Umwelteffekt Card (Subsidized Ecological values)
+        // Umwelteffekt Card
         Card(
-            colors = CardDefaults.cardColors(containerColor = Color(0xFFF3FBEF)),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
             shape = RoundedCornerShape(16.dp),
             modifier = Modifier.fillMaxWidth()
         ) {
             Column(modifier = Modifier.padding(16.dp)) {
                 Text(
                     text = "Umwelteffekt",
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = ZurichBlue
+                    style = MaterialTheme.typography.titleSmall,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer
                 )
                 Spacer(modifier = Modifier.height(12.dp))
                 Row(
@@ -182,30 +178,26 @@ fun DashboardScreen(
                 ) {
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
-                            text = "AUTOFAHRTEN VERMIEDEN",
-                            fontSize = 9.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
+                            text = "AUTOFAHRTE VERMIEDE",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.6f)
                         )
                         Text(
                             text = "$carKm km Autofahrt",
-                            fontSize = 14.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = ZurichBlue
+                            style = MaterialTheme.typography.titleSmall,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer
                         )
                     }
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
-                            text = "BÄUME GEPFLANZT",
-                            fontSize = 9.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
+                            text = "BÄUM PFLANZT",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.6f)
                         )
                         Text(
-                            text = "$treesPlanted Bäume",
-                            fontSize = 14.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = ZurichBlue
+                            text = "$treesPlanted Bäum",
+                            style = MaterialTheme.typography.titleSmall,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer
                         )
                     }
                 }
@@ -223,13 +215,12 @@ fun DashboardScreen(
         ) {
             Column(modifier = Modifier.padding(16.dp)) {
                 Text(
-                    text = "Wertstoffe Aufgeteilt",
-                    fontSize = 15.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = ZurichBlue
+                    text = "Wertstoff ufteilt",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.secondary
                 )
                 Spacer(modifier = Modifier.height(16.dp))
-                
+
                 val cats = stats.categories
                 CategoryBar("Papier / Karton", cats.cardboard, stats.totalKg, Color(0xFF3B82F6))
                 CategoryBar("Altglas", cats.glass, stats.totalKg, Color(0xFF10B981))
@@ -254,32 +245,30 @@ fun DashboardScreen(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.Top
                 ) {
-                    Column {
+                    Column(modifier = Modifier.weight(1f)) {
                         Text(
-                            text = "Quartier-Meilenstein",
-                            fontSize = 15.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = ZurichBlue
+                            text = "Quartier-Meilestei",
+                            style = MaterialTheme.typography.titleMedium,
+                            color = MaterialTheme.colorScheme.secondary
                         )
                         Text(
-                            text = "Gesammelt im Kreis 4 / 5 diesen Monat",
-                            fontSize = 11.sp,
-                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                            text = "Gsammlet im Kreis 4 / 5 de Monet",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                     val pct = (stats.neighborhoodTotalKg / 5000f * 100).toInt()
                     Text(
                         text = "$pct%",
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = EcoGreen
+                        style = MaterialTheme.typography.titleSmall,
+                        color = MaterialTheme.colorScheme.primary
                     )
                 }
                 Spacer(modifier = Modifier.height(12.dp))
                 LinearProgressIndicator(
                     progress = { stats.neighborhoodTotalKg / 5000f },
-                    color = EcoGreen,
-                    trackColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f),
+                    color = MaterialTheme.colorScheme.primary,
+                    trackColor = MaterialTheme.colorScheme.surfaceContainerHighest,
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(8.dp)
@@ -291,16 +280,14 @@ fun DashboardScreen(
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Text(
-                        text = "${stats.neighborhoodTotalKg.toInt()} kg gesammelt",
-                        fontSize = 11.sp,
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f),
-                        fontWeight = FontWeight.Bold
+                        text = "${stats.neighborhoodTotalKg.toInt()} kg gsammlet",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Text(
                         text = "Ziel: 5'000 kg",
-                        fontSize = 11.sp,
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f),
-                        fontWeight = FontWeight.Bold
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
@@ -311,13 +298,12 @@ fun DashboardScreen(
         // Order Button CTA
         Button(
             onClick = { onOrderClick() },
-            colors = ButtonDefaults.buttonColors(containerColor = EcoGreen),
             shape = RoundedCornerShape(28.dp),
             modifier = Modifier
                 .fillMaxWidth()
                 .height(56.dp)
         ) {
-            Text("Jöppli bestellen", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+            Text("Jöppli bestelle", style = MaterialTheme.typography.labelLarge)
         }
     }
 }
@@ -326,7 +312,7 @@ fun DashboardScreen(
 fun MetricCard(
     label: String,
     value: String,
-    valueColor: Color = ZurichBlue,
+    valueColor: Color = Color.Unspecified,
     modifier: Modifier = Modifier
 ) {
     Card(
@@ -345,14 +331,13 @@ fun MetricCard(
                 text = label,
                 fontSize = 9.sp,
                 fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             Spacer(modifier = Modifier.height(4.dp))
             Text(
                 text = value,
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Bold,
-                color = valueColor
+                style = MaterialTheme.typography.titleMedium,
+                color = if (valueColor == Color.Unspecified) MaterialTheme.colorScheme.secondary else valueColor
             )
         }
     }
@@ -373,22 +358,20 @@ fun CategoryBar(
         ) {
             Text(
                 text = name,
-                fontSize = 12.sp,
-                fontWeight = FontWeight.Bold,
+                style = MaterialTheme.typography.labelMedium,
                 color = MaterialTheme.colorScheme.onSurface
             )
             Text(
-                text = String.format("%.1f kg (%d%%)", value, percentage),
-                fontSize = 11.sp,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
-                fontWeight = FontWeight.Medium
+                text = String.format(Locale.ROOT, "%.1f kg (%d%%)", value, percentage),
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
         Spacer(modifier = Modifier.height(6.dp))
         LinearProgressIndicator(
             progress = { if (total > 0f) value / total else 0f },
             color = barColor,
-            trackColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f),
+            trackColor = MaterialTheme.colorScheme.surfaceContainerHighest,
             modifier = Modifier
                 .fillMaxWidth()
                 .height(6.dp)
@@ -396,6 +379,3 @@ fun CategoryBar(
         )
     }
 }
-
-@Composable
-fun verticalScrollState() = rememberScrollState()

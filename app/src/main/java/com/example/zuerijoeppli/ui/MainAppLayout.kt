@@ -2,27 +2,23 @@ package com.example.zuerijoeppli.ui
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material.icons.filled.Share
+import androidx.compose.material.icons.filled.Recycling
+import androidx.compose.material.icons.outlined.BarChart
+import androidx.compose.material.icons.outlined.CenterFocusWeak
+import androidx.compose.material.icons.outlined.Home
+import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import com.example.zuerijoeppli.theme.EcoGreen
-import com.example.zuerijoeppli.theme.ZurichBlue
 import com.example.zuerijoeppli.ui.screens.*
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -79,68 +75,70 @@ fun CustomBottomBar(
     onTabSelect: (String) -> Unit,
     onQuickPickupClick: () -> Unit
 ) {
-    Surface(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(88.dp),
-        shadowElevation = 8.dp,
-        color = Color.White
-    ) {
-        Row(
+    // 26dp of transparent headroom keeps the floating FAB inside the
+    // composable's bounds (no clipping, full touch target).
+    Box(modifier = Modifier.fillMaxWidth()) {
+        Surface(
             modifier = Modifier
-                .fillMaxSize()
-                .padding(bottom = 12.dp),
-            verticalAlignment = Alignment.Bottom,
-            horizontalArrangement = Arrangement.SpaceAround
+                .fillMaxWidth()
+                .padding(top = 26.dp),
+            shadowElevation = 8.dp,
+            color = MaterialTheme.colorScheme.surfaceContainer
         ) {
-            // Tab 1: HOME
-            BottomTabItem(
-                label = "Start",
-                icon = Icons.Default.Home,
-                selected = activeTab == "HOME",
-                onClick = { onTabSelect("HOME") }
-            )
-
-            // Tab 2: STATS
-            BottomTabItem(
-                label = "Recycling",
-                icon = Icons.Default.Refresh,
-                selected = activeTab == "STATS",
-                onClick = { onTabSelect("STATS") }
-            )
-
-            // Center FAB (Quick summons order)
-            Box(
+            Row(
                 modifier = Modifier
-                    .size(60.dp)
-                    .offset(y = (-14).dp)
-                    .clip(CircleShape)
-                    .background(EcoGreen)
-                    .clickable { onQuickPickupClick() },
-                contentAlignment = Alignment.Center
+                    .fillMaxWidth()
+                    .navigationBarsPadding()
+                    .height(76.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceAround
             ) {
-                Icon(
-                    imageVector = Icons.Default.Share, // Replaces electric truck / summon symbol
-                    contentDescription = "Order Jöppli",
-                    tint = Color.White,
-                    modifier = Modifier.size(28.dp)
+                BottomTabItem(
+                    label = "Start",
+                    icon = Icons.Outlined.Home,
+                    selectedIcon = Icons.Filled.Home,
+                    selected = activeTab == "HOME",
+                    onClick = { onTabSelect("HOME") }
+                )
+                BottomTabItem(
+                    label = "Recycling",
+                    icon = Icons.Outlined.BarChart,
+                    selectedIcon = Icons.Outlined.BarChart,
+                    selected = activeTab == "STATS",
+                    onClick = { onTabSelect("STATS") }
+                )
+                // Space reserved for the centered FAB
+                Spacer(modifier = Modifier.weight(1f))
+                BottomTabItem(
+                    label = "Scannen",
+                    icon = Icons.Outlined.CenterFocusWeak,
+                    selectedIcon = Icons.Outlined.CenterFocusWeak,
+                    selected = activeTab == "GUIDE",
+                    onClick = { onTabSelect("GUIDE") }
+                )
+                BottomTabItem(
+                    label = "Profil",
+                    icon = Icons.Outlined.Person,
+                    selectedIcon = Icons.Filled.Person,
+                    selected = activeTab == "PROFILE",
+                    onClick = { onTabSelect("PROFILE") }
                 )
             }
-
-            // Tab 4: GUIDE
-            BottomTabItem(
-                label = "Scannen",
-                icon = Icons.Default.Menu,
-                selected = activeTab == "GUIDE",
-                onClick = { onTabSelect("GUIDE") }
-            )
-
-            // Tab 5: PROFILE
-            BottomTabItem(
-                label = "Profil",
-                icon = Icons.Default.Person,
-                selected = activeTab == "PROFILE",
-                onClick = { onTabSelect("PROFILE") }
+        }
+        FloatingActionButton(
+            onClick = onQuickPickupClick,
+            shape = CircleShape,
+            containerColor = MaterialTheme.colorScheme.primary,
+            contentColor = MaterialTheme.colorScheme.onPrimary,
+            elevation = FloatingActionButtonDefaults.elevation(defaultElevation = 6.dp),
+            modifier = Modifier
+                .align(Alignment.TopCenter)
+                .size(64.dp)
+        ) {
+            Icon(
+                imageVector = Icons.Filled.Recycling,
+                contentDescription = "Jöppli bestellen",
+                modifier = Modifier.size(30.dp)
             )
         }
     }
@@ -150,29 +148,47 @@ fun CustomBottomBar(
 fun RowScope.BottomTabItem(
     label: String,
     icon: ImageVector,
+    selectedIcon: ImageVector,
     selected: Boolean,
     onClick: () -> Unit
 ) {
+    val contentColor = if (selected) MaterialTheme.colorScheme.onSecondaryContainer
+    else MaterialTheme.colorScheme.onSurfaceVariant
     Column(
         modifier = Modifier
             .weight(1f)
-            .clickable { onClick() }
+            .clickable(
+                interactionSource = remember { MutableInteractionSource() },
+                indication = null,
+                onClick = onClick
+            )
             .padding(vertical = 4.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        Icon(
-            imageVector = icon,
-            contentDescription = label,
-            tint = if (selected) EcoGreen else Color.Gray.copy(alpha = 0.6f),
-            modifier = Modifier.size(24.dp)
-        )
-        Spacer(modifier = Modifier.height(4.dp))
+        Box(
+            modifier = Modifier
+                .size(width = 56.dp, height = 32.dp)
+                .background(
+                    color = if (selected) MaterialTheme.colorScheme.secondaryContainer
+                    else MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0f),
+                    shape = CircleShape
+                ),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = if (selected) selectedIcon else icon,
+                contentDescription = label,
+                tint = contentColor,
+                modifier = Modifier.size(24.dp)
+            )
+        }
+        Spacer(modifier = Modifier.height(2.dp))
         Text(
             text = label,
-            fontSize = 11.sp,
-            fontWeight = FontWeight.Bold,
-            color = if (selected) EcoGreen else Color.Gray.copy(alpha = 0.6f)
+            style = MaterialTheme.typography.labelMedium,
+            color = if (selected) MaterialTheme.colorScheme.onSurface
+            else MaterialTheme.colorScheme.onSurfaceVariant
         )
     }
 }

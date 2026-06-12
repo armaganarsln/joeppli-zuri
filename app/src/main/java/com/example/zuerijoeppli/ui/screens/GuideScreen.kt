@@ -8,19 +8,26 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.outlined.Block
+import androidx.compose.material.icons.outlined.Chair
+import androidx.compose.material.icons.outlined.CenterFocusWeak
+import androidx.compose.material.icons.outlined.Compost
+import androidx.compose.material.icons.outlined.ElectricalServices
+import androidx.compose.material.icons.outlined.Inventory2
+import androidx.compose.material.icons.outlined.Liquor
+import androidx.compose.material.icons.outlined.LocalDrink
+import androidx.compose.material.icons.outlined.Newspaper
+import androidx.compose.material.icons.outlined.Search
+import androidx.compose.material.icons.outlined.WineBar
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import com.example.zuerijoeppli.theme.EcoGreen
-import com.example.zuerijoeppli.theme.ZurichBlue
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 data class MaterialItem(
     val id: String,
@@ -38,18 +45,19 @@ fun GuideScreen() {
     var showScanSheet by remember { mutableStateOf(false) }
     var scanResult by remember { mutableStateOf<String?>(null) }
     var isScanning by remember { mutableStateOf(false) }
+    val scope = rememberCoroutineScope()
 
     val materials = remember {
         listOf(
-            MaterialItem("1", "Zeitung & Magazine", "Papier", true, "Bündle, nöd im Papiersack.", Icons.Default.Menu),
-            MaterialItem("2", "Karton-Schachtle", "Papier", true, "Flach mache und bündle.", Icons.Default.List),
-            MaterialItem("3", "PET Getränkefläsche", "Plastik", true, "Luft usepressen, Deckel druf.", Icons.Default.PlayArrow),
-            MaterialItem("4", "Milchfläsche (PE)", "Plastik", false, "Bitte im Supermarkt abgäh.", Icons.Default.Warning),
-            MaterialItem("5", "Wii-Fläsche & Glas", "Glas", true, "Bitte usspüele. Farbe trenne wenn möglich.", Icons.Default.ShoppingCart),
-            MaterialItem("6", "Aludose", "Metall", true, "Flachdrucke.", Icons.Default.Check),
-            MaterialItem("7", "Biogut & Kompost", "Biogut", true, "Kei Plastiktüte, nur kompostierbare Säcke.", Icons.Default.Build),
-            MaterialItem("8", "Elektroschrott", "Sonderabfall", true, "Kabels, Handys, Computer – Jöppli recycelt es fachgerecht. (Sperrgut-Gebühr)", Icons.Default.Call),
-            MaterialItem("9", "Sperrgut (Möbel, Holz)", "Sperrgut", true, "Möbel, Holz oder grosse Plastikteile bis 30kg. (Sperrgut-Gebühr)", Icons.Default.Home)
+            MaterialItem("1", "Zeitung & Magazine", "Papier", true, "Bündle, nöd im Papiersack.", Icons.Outlined.Newspaper),
+            MaterialItem("2", "Karton-Schachtle", "Papier", true, "Flach mache und bündle.", Icons.Outlined.Inventory2),
+            MaterialItem("3", "PET Getränkefläsche", "Plastik", true, "Luft usepressen, Deckel druf.", Icons.Outlined.Liquor),
+            MaterialItem("4", "Milchfläsche (PE)", "Plastik", false, "Bitte im Supermarkt abgäh.", Icons.Outlined.Block),
+            MaterialItem("5", "Wii-Fläsche & Glas", "Glas", true, "Bitte usspüele. Farbe trenne wenn möglich.", Icons.Outlined.WineBar),
+            MaterialItem("6", "Aludose", "Metall", true, "Flachdrucke.", Icons.Outlined.LocalDrink),
+            MaterialItem("7", "Biogut & Kompost", "Biogut", true, "Kei Plastiktüte, nur kompostierbare Säcke.", Icons.Outlined.Compost),
+            MaterialItem("8", "Elektroschrott", "Sonderabfall", true, "Kabels, Handys, Computer – Jöppli recycelt es fachgerecht. (Sperrgut-Gebühr)", Icons.Outlined.ElectricalServices),
+            MaterialItem("9", "Sperrgut (Möbel, Holz)", "Sperrgut", true, "Möbel, Holz oder grosse Plastikteile bis 30kg. (Sperrgut-Gebühr)", Icons.Outlined.Chair)
         )
     }
 
@@ -68,16 +76,14 @@ fun GuideScreen() {
             Spacer(modifier = Modifier.height(24.dp))
 
             Text(
-                text = "Entsorgungs-Wegweiser",
-                fontSize = 28.sp,
-                fontWeight = FontWeight.Bold,
+                text = "Entsorgigs-Wegwiiser",
+                style = MaterialTheme.typography.headlineMedium,
                 color = MaterialTheme.colorScheme.onBackground
             )
             Text(
-                text = "Was kann entsorgt werden? Frag unseren AI Assistenten.",
-                fontSize = 16.sp,
-                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f),
-                fontWeight = FontWeight.Medium,
+                text = "Was chan entsorgt werde? Frag eusen AI Assistent.",
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(top = 4.dp)
             )
 
@@ -85,7 +91,7 @@ fun GuideScreen() {
 
             // AI Camera Scan Trigger Card
             Card(
-                colors = CardDefaults.cardColors(containerColor = ZurichBlue),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondary),
                 shape = RoundedCornerShape(24.dp),
                 modifier = Modifier
                     .fillMaxWidth()
@@ -99,28 +105,29 @@ fun GuideScreen() {
                     Box(
                         modifier = Modifier
                             .size(52.dp)
-                            .background(Color.White.copy(alpha = 0.15f), RoundedCornerShape(16.dp)),
+                            .background(
+                                MaterialTheme.colorScheme.onSecondary.copy(alpha = 0.18f),
+                                RoundedCornerShape(16.dp)
+                            ),
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
-                            imageVector = Icons.Default.AddCircle,
+                            imageVector = Icons.Outlined.CenterFocusWeak,
                             contentDescription = "AI Scanner",
-                            tint = Color.White,
+                            tint = MaterialTheme.colorScheme.onSecondary,
                             modifier = Modifier.size(28.dp)
                         )
                     }
                     Column {
                         Text(
-                            text = "Wertstoff scannen (AI)",
-                            color = Color.White,
-                            fontSize = 18.sp,
-                            fontWeight = FontWeight.Bold
+                            text = "Wertstoff scanne (AI)",
+                            color = MaterialTheme.colorScheme.onSecondary,
+                            style = MaterialTheme.typography.titleMedium
                         )
                         Text(
-                            text = "Foto machen und Recycling-Kategorie erkennen",
-                            color = Color.White.copy(alpha = 0.8f),
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.Medium
+                            text = "Foto mache und Recycling-Kategorie erkenne",
+                            color = MaterialTheme.colorScheme.onSecondary.copy(alpha = 0.85f),
+                            style = MaterialTheme.typography.bodySmall
                         )
                     }
                 }
@@ -132,14 +139,10 @@ fun GuideScreen() {
             OutlinedTextField(
                 value = searchQuery,
                 onValueChange = { searchQuery = it },
-                label = { Text("Was entsorgst du?") },
-                leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
+                label = { Text("Was entsorgsch du?") },
+                leadingIcon = { Icon(Icons.Outlined.Search, contentDescription = null) },
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = EcoGreen,
-                    unfocusedBorderColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f)
-                )
+                shape = RoundedCornerShape(16.dp)
             )
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -148,7 +151,7 @@ fun GuideScreen() {
             AnimatedVisibility(visible = scanResult != null) {
                 scanResult?.let { result ->
                     Card(
-                        colors = CardDefaults.cardColors(containerColor = Color(0xFFF3FBEF)),
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
                         shape = RoundedCornerShape(16.dp),
                         modifier = Modifier
                             .fillMaxWidth()
@@ -161,15 +164,14 @@ fun GuideScreen() {
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Text(
-                                    text = "AI Entsorgungs-Tipp",
-                                    fontSize = 14.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = EcoGreen
+                                    text = "AI Entsorgigs-Tipp",
+                                    style = MaterialTheme.typography.titleSmall,
+                                    color = MaterialTheme.colorScheme.onPrimaryContainer
                                 )
                                 Icon(
-                                    imageVector = Icons.Default.Close,
-                                    contentDescription = "Close",
-                                    tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f),
+                                    imageVector = Icons.Filled.Close,
+                                    contentDescription = "Schliesse",
+                                    tint = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.6f),
                                     modifier = Modifier
                                         .size(18.dp)
                                         .clickable { scanResult = null }
@@ -178,10 +180,8 @@ fun GuideScreen() {
                             Spacer(modifier = Modifier.height(8.dp))
                             Text(
                                 text = result,
-                                fontSize = 13.sp,
-                                fontWeight = FontWeight.Medium,
-                                color = ZurichBlue,
-                                lineHeight = 18.sp
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer
                             )
                         }
                     }
@@ -214,25 +214,23 @@ fun GuideScreen() {
                 ) {
                     Text(
                         text = "Jöppli AI Vision Scanner",
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = ZurichBlue
+                        style = MaterialTheme.typography.titleLarge,
+                        color = MaterialTheme.colorScheme.secondary
                     )
                     Text(
-                        text = "Wähle einen Gegenstand zum Scannen aus",
-                        fontSize = 14.sp,
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
+                        text = "Wähl en Gegestand zum Scanne us",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.padding(top = 4.dp, bottom = 20.dp)
                     )
 
                     if (isScanning) {
-                        CircularProgressIndicator(color = EcoGreen)
+                        CircularProgressIndicator()
                         Spacer(modifier = Modifier.height(16.dp))
                         Text(
-                            text = "Analysiere Gegenstand...",
-                            fontSize = 14.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = ZurichBlue
+                            text = "Analysiere Gegestand…",
+                            style = MaterialTheme.typography.titleSmall,
+                            color = MaterialTheme.colorScheme.secondary
                         )
                         Spacer(modifier = Modifier.height(24.dp))
                     } else {
@@ -250,18 +248,18 @@ fun GuideScreen() {
                         ) {
                             itemsToScan.forEach { (name, explanation) ->
                                 Card(
-                                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.background),
+                                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow),
                                     shape = RoundedCornerShape(12.dp),
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .clickable {
                                             isScanning = true
-                                            // Simulate delay
-                                            android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
+                                            scope.launch {
+                                                delay(1500)
                                                 isScanning = false
                                                 scanResult = explanation
                                                 showScanSheet = false
-                                            }, 1500)
+                                            }
                                         }
                                 ) {
                                     Row(
@@ -270,15 +268,14 @@ fun GuideScreen() {
                                         horizontalArrangement = Arrangement.spacedBy(12.dp)
                                     ) {
                                         Icon(
-                                            imageVector = Icons.Default.Info,
+                                            imageVector = Icons.Outlined.CenterFocusWeak,
                                             contentDescription = null,
-                                            tint = EcoGreen
+                                            tint = MaterialTheme.colorScheme.primary
                                         )
                                         Text(
                                             text = name,
-                                            fontSize = 14.sp,
-                                            fontWeight = FontWeight.Bold,
-                                            color = MaterialTheme.colorScheme.onBackground
+                                            style = MaterialTheme.typography.titleSmall,
+                                            color = MaterialTheme.colorScheme.onSurface
                                         )
                                     }
                                 }
@@ -308,33 +305,37 @@ fun MaterialRow(item: MaterialItem) {
             ) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    modifier = Modifier.weight(1f)
                 ) {
                     Box(
                         modifier = Modifier
                             .size(36.dp)
-                            .background(EcoGreen.copy(alpha = 0.1f), RoundedCornerShape(10.dp)),
+                            .background(
+                                if (item.accepted) MaterialTheme.colorScheme.primaryContainer
+                                else MaterialTheme.colorScheme.errorContainer,
+                                RoundedCornerShape(10.dp)
+                            ),
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
                             imageVector = item.icon,
                             contentDescription = null,
-                            tint = EcoGreen,
+                            tint = if (item.accepted) MaterialTheme.colorScheme.onPrimaryContainer
+                            else MaterialTheme.colorScheme.onErrorContainer,
                             modifier = Modifier.size(18.dp)
                         )
                     }
                     Column {
                         Text(
                             text = item.name,
-                            fontSize = 14.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = ZurichBlue
+                            style = MaterialTheme.typography.titleSmall,
+                            color = MaterialTheme.colorScheme.onSurface
                         )
                         Text(
                             text = item.category,
-                            fontSize = 11.sp,
-                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f),
-                            fontWeight = FontWeight.Bold
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }
@@ -342,27 +343,25 @@ fun MaterialRow(item: MaterialItem) {
                 if (item.accepted) {
                     Box(
                         modifier = Modifier
-                            .background(EcoGreen.copy(alpha = 0.15f), RoundedCornerShape(6.dp))
+                            .background(MaterialTheme.colorScheme.primaryContainer, RoundedCornerShape(6.dp))
                             .padding(horizontal = 8.dp, vertical = 4.dp)
                     ) {
                         Text(
                             text = "GRATIS",
-                            fontSize = 10.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = EcoGreen
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer
                         )
                     }
                 } else {
                     Box(
                         modifier = Modifier
-                            .background(Color(0xFFEF4444).copy(alpha = 0.1f), RoundedCornerShape(6.dp))
+                            .background(MaterialTheme.colorScheme.errorContainer, RoundedCornerShape(6.dp))
                             .padding(horizontal = 8.dp, vertical = 4.dp)
                     ) {
                         Text(
                             text = "MUSS RETOUR",
-                            fontSize = 10.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color(0xFFEF4444)
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onErrorContainer
                         )
                     }
                 }
@@ -370,9 +369,8 @@ fun MaterialRow(item: MaterialItem) {
             Spacer(modifier = Modifier.height(10.dp))
             Text(
                 text = item.tips,
-                fontSize = 12.sp,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
-                lineHeight = 16.sp
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
     }
