@@ -72,6 +72,7 @@ object RecyclingRepository {
     private val PROFILE = stringPreferencesKey("profile")
     private val STATS = stringPreferencesKey("stats")
     private val LAST_PICKUP = stringPreferencesKey("last_pickup")
+    private val THEME = stringPreferencesKey("theme")
 
     private val json = Json { ignoreUnknownKeys = true }
     private var store: DataStore<Preferences>? = null
@@ -89,6 +90,9 @@ object RecyclingRepository {
     private val _lastPickup = MutableStateFlow<PickupRequest?>(null)
     val lastPickup: StateFlow<PickupRequest?> = _lastPickup.asStateFlow()
 
+    private val _theme = MutableStateFlow("green")
+    val theme: StateFlow<String> = _theme.asStateFlow()
+
     /**
      * Hydrates state from disk. Call once from Application.onCreate, before
      * any Activity draws. The blocking read is a single small file; doing it
@@ -104,6 +108,7 @@ object RecyclingRepository {
         prefs[PROFILE]?.let { decode<UserProfile>(it)?.let { p -> _userProfile.value = p } }
         prefs[STATS]?.let { decode<RecyclingStats>(it)?.let { s -> _stats.value = s } }
         prefs[LAST_PICKUP]?.let { decode<PickupRequest>(it)?.let { p -> _lastPickup.value = p } }
+        prefs[THEME]?.let { _theme.value = it }
     }
 
     private inline fun <reified T> decode(raw: String): T? = try {
@@ -118,11 +123,13 @@ object RecyclingRepository {
         val profile = json.encodeToString(_userProfile.value)
         val stats = json.encodeToString(_stats.value)
         val lastPickup = _lastPickup.value?.let { json.encodeToString(it) }
+        val themeSetting = _theme.value
         persistScope.launch {
             ds.edit { prefs ->
                 prefs[LANGUAGE] = language
                 prefs[PROFILE] = profile
                 prefs[STATS] = stats
+                prefs[THEME] = themeSetting
                 if (lastPickup != null) prefs[LAST_PICKUP] = lastPickup else prefs.remove(LAST_PICKUP)
             }
         }
@@ -173,6 +180,11 @@ object RecyclingRepository {
 
     fun setLanguage(lang: String) {
         _userLanguage.value = lang
+        persist()
+    }
+
+    fun setTheme(newTheme: String) {
+        _theme.value = newTheme
         persist()
     }
 

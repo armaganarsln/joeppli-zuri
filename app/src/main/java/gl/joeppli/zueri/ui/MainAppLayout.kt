@@ -32,8 +32,6 @@ fun MainAppLayout() {
     CompositionLocalProvider(LocalJoeppliStrings provides strings) {
         if (!profile.isLoggedIn) {
             AuthScreen()
-        } else if (profile.homeAddress.isEmpty()) {
-            AddressRegistrationScreen()
         } else {
             MainAppContent()
         }

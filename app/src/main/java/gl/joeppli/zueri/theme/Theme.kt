@@ -5,69 +5,221 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.graphics.Color
+import gl.joeppli.zueri.data.RecyclingRepository
 
-private val DarkColorScheme = darkColorScheme(
-    primary = PrimaryDarkScheme,
-    onPrimary = OnPrimaryDarkScheme,
-    primaryContainer = PrimaryContainerDark,
-    onPrimaryContainer = OnPrimaryContainerDark,
-    secondary = SecondaryDarkScheme,
-    onSecondary = OnSecondaryDarkScheme,
-    secondaryContainer = SecondaryContainerDark,
-    onSecondaryContainer = OnSecondaryContainerDark,
-    tertiary = TertiaryDark,
-    onTertiary = OnTertiaryDark,
-    tertiaryContainer = TertiaryContainerDark,
-    onTertiaryContainer = OnTertiaryContainerDark,
-    error = ErrorDark,
-    onError = OnErrorDark,
-    errorContainer = ErrorContainerDark,
-    onErrorContainer = OnErrorContainerDark,
-    background = LightGreyDark,
-    surface = SurfaceDark,
-    onBackground = LightGrey,
-    onSurface = LightGrey,
-    surfaceVariant = SurfaceVariantDark,
-    onSurfaceVariant = OnSurfaceVariantDark,
-    outline = OutlineDark,
-    outlineVariant = OutlineVariantDark,
-    surfaceContainerLowest = SurfaceContainerLowestDark,
-    surfaceContainerLow = SurfaceContainerLowDark,
-    surfaceContainer = SurfaceContainerDarkTone,
-    surfaceContainerHigh = SurfaceContainerHighDark,
-    surfaceContainerHighest = SurfaceContainerHighestDark
-)
-
-private val LightColorScheme = lightColorScheme(
-    primary = EcoGreen,
+// Green Theme Schemes
+private val GreenLightColorScheme = lightColorScheme(
+    primary = BrandGreen,
     onPrimary = PureWhite,
-    primaryContainer = PrimaryContainerLight,
-    onPrimaryContainer = OnPrimaryContainerLight,
-    secondary = ZurichBlue,
+    primaryContainer = GreenPrimaryContainerLight,
+    onPrimaryContainer = GreenOnPrimaryContainerLight,
+    secondary = BrandBlue,
     onSecondary = PureWhite,
-    secondaryContainer = SecondaryContainerLight,
-    onSecondaryContainer = OnSecondaryContainerLight,
-    tertiary = TertiaryLight,
-    onTertiary = OnTertiaryLight,
-    tertiaryContainer = TertiaryContainerLight,
-    onTertiaryContainer = OnTertiaryContainerLight,
-    error = ErrorLight,
-    onError = PureWhite,
-    errorContainer = ErrorContainerLight,
-    onErrorContainer = OnErrorContainerLight,
-    background = LightGrey,
+    secondaryContainer = Color(0xFFDDE1FF),
+    onSecondaryContainer = Color(0xFF001454),
+    tertiary = BrandYellow,
+    onTertiary = Color(0xFF3A2E00),
+    background = SoftGrey,
     surface = PureWhite,
     onBackground = DarkSlate,
     onSurface = DarkSlate,
-    surfaceVariant = SurfaceVariantLight,
+    surfaceVariant = SoftGrey,
     onSurfaceVariant = OnSurfaceVariantLight,
     outline = OutlineLight,
     outlineVariant = OutlineVariantLight,
-    surfaceContainerLowest = SurfaceContainerLowestLight,
-    surfaceContainerLow = SurfaceContainerLowLight,
-    surfaceContainer = SurfaceContainerLight,
-    surfaceContainerHigh = SurfaceContainerHighLight,
-    surfaceContainerHighest = SurfaceContainerHighestLight
+    surfaceContainerLowest = PureWhite,
+    surfaceContainerLow = PureWhite,
+    surfaceContainer = Color(0xFFF1F2EF),
+    surfaceContainerHigh = Color(0xFFEAEBE8),
+    surfaceContainerHighest = Color(0xFFE4E5E2)
+)
+
+private val GreenDarkColorScheme = darkColorScheme(
+    primary = BrandGreen,
+    onPrimary = PureWhite,
+    primaryContainer = GreenPrimaryContainerDark,
+    onPrimaryContainer = GreenOnPrimaryContainerDark,
+    secondary = BrandBlue,
+    onSecondary = PureWhite,
+    secondaryContainer = Color(0xFF2A3BA0),
+    onSecondaryContainer = Color(0xFFDDE1FF),
+    tertiary = BrandYellow,
+    onTertiary = Color(0xFF3A2E00),
+    background = NeutralDark,
+    surface = SurfaceDarkCard,
+    onBackground = SoftGrey,
+    onSurface = SoftGrey,
+    surfaceVariant = Color(0xFF3E4152),
+    onSurfaceVariant = OnSurfaceVariantDark,
+    outline = OutlineDark,
+    outlineVariant = OutlineVariantDark,
+    surfaceContainerLowest = NeutralDark,
+    surfaceContainerLow = NeutralDark,
+    surfaceContainer = SurfaceDarkCard,
+    surfaceContainerHigh = Color(0xFF45495B),
+    surfaceContainerHighest = Color(0xFF505469)
+)
+
+// Blue Theme Schemes
+private val BlueLightColorScheme = lightColorScheme(
+    primary = BrandBlue,
+    onPrimary = PureWhite,
+    primaryContainer = BluePrimaryContainerLight,
+    onPrimaryContainer = BlueOnPrimaryContainerLight,
+    secondary = BrandGreen,
+    onSecondary = PureWhite,
+    secondaryContainer = GreenPrimaryContainerLight,
+    onSecondaryContainer = GreenOnPrimaryContainerLight,
+    tertiary = BrandYellow,
+    onTertiary = Color(0xFF3A2E00),
+    background = SoftGrey,
+    surface = PureWhite,
+    onBackground = DarkSlate,
+    onSurface = DarkSlate,
+    surfaceVariant = SoftGrey,
+    onSurfaceVariant = OnSurfaceVariantLight,
+    outline = OutlineLight,
+    outlineVariant = OutlineVariantLight,
+    surfaceContainerLowest = PureWhite,
+    surfaceContainerLow = PureWhite,
+    surfaceContainer = Color(0xFFF1F2EF),
+    surfaceContainerHigh = Color(0xFFEAEBE8),
+    surfaceContainerHighest = Color(0xFFE4E5E2)
+)
+
+private val BlueDarkColorScheme = darkColorScheme(
+    primary = Color(0xFF7CA6F9), // Lightened blue for dark mode primary
+    onPrimary = Color(0xFF002B66),
+    primaryContainer = BluePrimaryContainerDark,
+    onPrimaryContainer = BlueOnPrimaryContainerDark,
+    secondary = BrandGreen,
+    onSecondary = PureWhite,
+    secondaryContainer = GreenPrimaryContainerDark,
+    onSecondaryContainer = GreenOnPrimaryContainerDark,
+    tertiary = BrandYellow,
+    onTertiary = Color(0xFF3A2E00),
+    background = NeutralDark,
+    surface = SurfaceDarkCard,
+    onBackground = SoftGrey,
+    onSurface = SoftGrey,
+    surfaceVariant = Color(0xFF3E4152),
+    onSurfaceVariant = OnSurfaceVariantDark,
+    outline = OutlineDark,
+    outlineVariant = OutlineVariantDark,
+    surfaceContainerLowest = NeutralDark,
+    surfaceContainerLow = NeutralDark,
+    surfaceContainer = SurfaceDarkCard,
+    surfaceContainerHigh = Color(0xFF45495B),
+    surfaceContainerHighest = Color(0xFF505469)
+)
+
+// Yellow Theme Schemes
+private val YellowLightColorScheme = lightColorScheme(
+    primary = BrandYellow,
+    onPrimary = DarkSlate,
+    primaryContainer = YellowPrimaryContainerLight,
+    onPrimaryContainer = YellowOnPrimaryContainerLight,
+    secondary = BrandBlue,
+    onSecondary = PureWhite,
+    secondaryContainer = BluePrimaryContainerLight,
+    onSecondaryContainer = BlueOnPrimaryContainerLight,
+    tertiary = BrandGreen,
+    onTertiary = PureWhite,
+    background = SoftGrey,
+    surface = PureWhite,
+    onBackground = DarkSlate,
+    onSurface = DarkSlate,
+    surfaceVariant = SoftGrey,
+    onSurfaceVariant = OnSurfaceVariantLight,
+    outline = OutlineLight,
+    outlineVariant = OutlineVariantLight,
+    surfaceContainerLowest = PureWhite,
+    surfaceContainerLow = PureWhite,
+    surfaceContainer = Color(0xFFF1F2EF),
+    surfaceContainerHigh = Color(0xFFEAEBE8),
+    surfaceContainerHighest = Color(0xFFE4E5E2)
+)
+
+private val YellowDarkColorScheme = darkColorScheme(
+    primary = BrandYellow,
+    onPrimary = DarkSlate,
+    primaryContainer = YellowPrimaryContainerDark,
+    onPrimaryContainer = YellowOnPrimaryContainerDark,
+    secondary = BrandBlue,
+    onSecondary = PureWhite,
+    secondaryContainer = BluePrimaryContainerDark,
+    onSecondaryContainer = BlueOnPrimaryContainerDark,
+    tertiary = BrandGreen,
+    onTertiary = PureWhite,
+    background = NeutralDark,
+    surface = SurfaceDarkCard,
+    onBackground = SoftGrey,
+    onSurface = SoftGrey,
+    surfaceVariant = Color(0xFF3E4152),
+    onSurfaceVariant = OnSurfaceVariantDark,
+    outline = OutlineDark,
+    outlineVariant = OutlineVariantDark,
+    surfaceContainerLowest = NeutralDark,
+    surfaceContainerLow = NeutralDark,
+    surfaceContainer = SurfaceDarkCard,
+    surfaceContainerHigh = Color(0xFF45495B),
+    surfaceContainerHighest = Color(0xFF505469)
+)
+
+// Red Theme Schemes
+private val RedLightColorScheme = lightColorScheme(
+    primary = BrandRed,
+    onPrimary = PureWhite,
+    primaryContainer = RedPrimaryContainerLight,
+    onPrimaryContainer = RedOnPrimaryContainerLight,
+    secondary = BrandBlue,
+    onSecondary = PureWhite,
+    secondaryContainer = BluePrimaryContainerLight,
+    onSecondaryContainer = BlueOnPrimaryContainerLight,
+    tertiary = BrandYellow,
+    onTertiary = Color(0xFF3A2E00),
+    background = SoftGrey,
+    surface = PureWhite,
+    onBackground = DarkSlate,
+    onSurface = DarkSlate,
+    surfaceVariant = SoftGrey,
+    onSurfaceVariant = OnSurfaceVariantLight,
+    outline = OutlineLight,
+    outlineVariant = OutlineVariantLight,
+    surfaceContainerLowest = PureWhite,
+    surfaceContainerLow = PureWhite,
+    surfaceContainer = Color(0xFFF1F2EF),
+    surfaceContainerHigh = Color(0xFFEAEBE8),
+    surfaceContainerHighest = Color(0xFFE4E5E2)
+)
+
+private val RedDarkColorScheme = darkColorScheme(
+    primary = Color(0xFFFFB4AB), // Lightened red for dark mode
+    onPrimary = Color(0xFF690005),
+    primaryContainer = RedPrimaryContainerDark,
+    onPrimaryContainer = RedOnPrimaryContainerDark,
+    secondary = BrandBlue,
+    onSecondary = PureWhite,
+    secondaryContainer = BluePrimaryContainerDark,
+    onSecondaryContainer = BlueOnPrimaryContainerDark,
+    tertiary = BrandYellow,
+    onTertiary = Color(0xFF3A2E00),
+    background = NeutralDark,
+    surface = SurfaceDarkCard,
+    onBackground = SoftGrey,
+    onSurface = SoftGrey,
+    surfaceVariant = Color(0xFF3E4152),
+    onSurfaceVariant = OnSurfaceVariantDark,
+    outline = OutlineDark,
+    outlineVariant = OutlineVariantDark,
+    surfaceContainerLowest = NeutralDark,
+    surfaceContainerLow = NeutralDark,
+    surfaceContainer = SurfaceDarkCard,
+    surfaceContainerHigh = Color(0xFF45495B),
+    surfaceContainerHighest = Color(0xFF505469)
 )
 
 @Composable
@@ -75,7 +227,13 @@ fun ZueriJoeppliTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
     content: @Composable () -> Unit
 ) {
-    val colorScheme = if (darkTheme) DarkColorScheme else LightColorScheme
+    val themeState by RecyclingRepository.theme.collectAsState()
+    val colorScheme = when (themeState) {
+        "blue" -> if (darkTheme) BlueDarkColorScheme else BlueLightColorScheme
+        "yellow" -> if (darkTheme) YellowDarkColorScheme else YellowLightColorScheme
+        "red" -> if (darkTheme) RedDarkColorScheme else RedLightColorScheme
+        else -> if (darkTheme) GreenDarkColorScheme else GreenLightColorScheme
+    }
 
     MaterialTheme(
         colorScheme = colorScheme,

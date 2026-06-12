@@ -58,7 +58,7 @@ fun OrderScreen(
     var currentStep by remember { mutableStateOf(if (prefillQuick) 2 else 1) }
 
     // Form states
-    var address by remember { mutableStateOf("Langstrasse 120, 8004 Zürich") }
+    var address by remember { mutableStateOf("") }
     var selectedDate by remember { mutableStateOf("") }
     var selectedTimeSlot by remember { mutableStateOf("") }
     val selectedMaterials = remember { mutableStateListOf<String>() }
@@ -201,7 +201,19 @@ fun OrderStep1(
 ) {
     val strings = LocalJoeppliStrings.current
     val lang by RecyclingRepository.userLanguage.collectAsState()
-    Column(modifier = Modifier.padding(16.dp)) {
+    val quickAddresses = listOf(
+        "Langstrasse 120, 8004 Zürich",
+        "Badenerstrasse 350, 8003 Zürich",
+        "Limmatquai 50, 8001 Zürich",
+        "Schaffhauserstrasse 100, 8057 Zürich"
+    )
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp)
+            .verticalScroll(rememberScrollState())
+    ) {
         Spacer(modifier = Modifier.height(16.dp))
         Text(
             if (lang == "en") "Where should the Jöppli vehicle arrive?" else "Wo soll s'Jöppli-Fahrzeug vorfahre?",
@@ -218,9 +230,62 @@ fun OrderStep1(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(16.dp)
         )
+
         Spacer(modifier = Modifier.height(24.dp))
 
-        WizardCta(if (lang == "en") "Continue" else "Weiter", enabled = address.isNotBlank(), onClick = onNext)
+        Text(
+            text = strings.addressRegQuick,
+            style = MaterialTheme.typography.titleSmall,
+            color = MaterialTheme.colorScheme.secondary,
+            modifier = Modifier.padding(bottom = 8.dp)
+        )
+
+        quickAddresses.forEach { addr ->
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 4.dp)
+                    .clickable {
+                        onAddressChange(addr)
+                    },
+                colors = CardDefaults.cardColors(
+                    containerColor = if (address == addr) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface
+                ),
+                shape = RoundedCornerShape(12.dp),
+                border = androidx.compose.foundation.BorderStroke(
+                    width = 1.dp,
+                    color = if (address == addr) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant
+                )
+            ) {
+                Row(
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Outlined.LocationOn,
+                        contentDescription = null,
+                        tint = if (address == addr) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.secondary
+                    )
+                    Text(
+                        text = addr,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(32.dp))
+
+        WizardCta(
+            if (lang == "en") "Continue" else "Weiter",
+            enabled = address.isNotBlank(),
+            onClick = {
+                RecyclingRepository.registerAddress(address)
+                onNext()
+            }
+        )
     }
 }
 

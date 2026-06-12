@@ -16,8 +16,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.sp
 import gl.joeppli.zueri.data.RecyclingRepository
 import gl.joeppli.zueri.ui.LocalJoeppliStrings
+import gl.joeppli.zueri.theme.BrandGreen
+import gl.joeppli.zueri.theme.BrandBlue
+import gl.joeppli.zueri.theme.BrandYellow
+import gl.joeppli.zueri.theme.BrandRed
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -169,6 +176,66 @@ fun ProfileScreen() {
 
         Spacer(modifier = Modifier.height(16.dp))
 
+        // Theme settings card
+        Card(
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+            shape = RoundedCornerShape(16.dp),
+            elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Column(modifier = Modifier.padding(16.dp)) {
+                val currentTheme by RecyclingRepository.theme.collectAsState()
+                Text(
+                    text = if (activeLang == "en") "App Color Theme" else "App-Farbschema",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.secondary
+                )
+                Spacer(modifier = Modifier.height(12.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    ThemeOptionButton(
+                        label = if (activeLang == "en") "Green" else "Grü",
+                        color = BrandGreen,
+                        selected = currentTheme == "green",
+                        onClick = { RecyclingRepository.setTheme("green") },
+                        modifier = Modifier.weight(1f)
+                    )
+                    ThemeOptionButton(
+                        label = if (activeLang == "en") "Blue" else "Blau",
+                        color = BrandBlue,
+                        selected = currentTheme == "blue",
+                        onClick = { RecyclingRepository.setTheme("blue") },
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+                Spacer(modifier = Modifier.height(8.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    ThemeOptionButton(
+                        label = if (activeLang == "en") "Yellow" else "Gälb",
+                        color = BrandYellow,
+                        selected = currentTheme == "yellow",
+                        onClick = { RecyclingRepository.setTheme("yellow") },
+                        modifier = Modifier.weight(1f)
+                    )
+                    ThemeOptionButton(
+                        label = if (activeLang == "en") "Red" else "Rot",
+                        color = BrandRed,
+                        selected = currentTheme == "red",
+                        onClick = { RecyclingRepository.setTheme("red") },
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
         // Payment method
         Card(
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
@@ -281,5 +348,42 @@ fun ProfileScreen() {
         ) {
             Text(strings.profileLogout, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onError)
         }
+    }
+}
+
+@Composable
+fun ThemeOptionButton(
+    label: String,
+    color: Color,
+    selected: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    OutlinedButton(
+        onClick = onClick,
+        colors = ButtonDefaults.outlinedButtonColors(
+            containerColor = if (selected) color.copy(alpha = 0.15f) else Color.Transparent,
+            contentColor = if (selected) color else MaterialTheme.colorScheme.onSurfaceVariant
+        ),
+        border = androidx.compose.foundation.BorderStroke(
+            width = if (selected) 2.dp else 1.dp,
+            color = if (selected) color else MaterialTheme.colorScheme.outlineVariant
+        ),
+        shape = RoundedCornerShape(12.dp),
+        modifier = modifier.height(44.dp),
+        contentPadding = PaddingValues(horizontal = 8.dp)
+    ) {
+        Box(
+            modifier = Modifier
+                .size(12.dp)
+                .background(color, CircleShape)
+        )
+        Spacer(modifier = Modifier.width(6.dp))
+        Text(
+            text = label,
+            fontSize = 12.sp,
+            fontWeight = FontWeight.Bold,
+            style = MaterialTheme.typography.labelMedium
+        )
     }
 }
