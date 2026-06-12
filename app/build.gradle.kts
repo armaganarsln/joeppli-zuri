@@ -130,7 +130,11 @@ dependencies {
 }
 
 play {
-  serviceAccountCredentials.set(file("play-service-key.json"))
+  // Only active when the (git-ignored) service key is present, so plain
+  // release builds — e.g. the CI R8 check — work without Play credentials.
+  val serviceKey = file("play-service-key.json")
+  enabled.set(serviceKey.exists())
+  serviceAccountCredentials.set(serviceKey)
   track.set("alpha") // Upload directly to the Closed Testing (Alpha) track
   resolutionStrategy.set(ResolutionStrategy.AUTO)
 }

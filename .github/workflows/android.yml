@@ -36,6 +36,19 @@ jobs:
       - name: Unit tests
         run: ./gradlew testDebugUnitTest --no-daemon
 
+      # Exercises R8 minification and the signing path on every push so a
+      # Proguard breakage surfaces here, not on publish day. The keystore is
+      # a throwaway generated per run — real releases use the local one.
+      - name: Build minified release (R8) with throwaway key
+        run: |
+          keytool -genkeypair -keystore ci-release.jks -storepass ci-throwaway -keypass ci-throwaway \
+            -alias upload -keyalg RSA -keysize 2048 -validity 1 -dname "CN=CI throwaway, O=joeppli"
+          ./gradlew assembleRelease --no-daemon --stacktrace
+        env:
+          KEYSTORE_PATH: ci-release.jks
+          STORE_PASSWORD: ci-throwaway
+          KEY_PASSWORD: ci-throwaway
+
       - name: Android lint (debug)
         run: ./gradlew lintDebug --no-daemon
         continue-on-error: true
