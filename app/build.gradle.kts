@@ -1,7 +1,38 @@
+import java.io.FileInputStream
+import java.util.Properties
+import com.github.triplet.gradle.androidpublisher.ResolutionStrategy
+
 plugins {
   alias(libs.plugins.android.application)
   alias(libs.plugins.compose.compiler)
   alias(libs.plugins.kotlin.serialization)
+  alias(libs.plugins.play)
+}
+
+// Release signing secrets live in keystore.properties at the repo root (git-
+// ignored) so they never touch source control. Env vars are kept as a fallback
+// for CI. If neither is present, release builds will fail to sign — which is
+// the desired safety behaviour.
+val keystorePropertiesFile = rootProject.file("keystore.properties")
+val keystoreProperties = Properties().apply {
+  if (keystorePropertiesFile.exists()) {
+    FileInputStream(keystorePropertiesFile).use { load(it) }
+  }
+}
+
+// versionCode is derived from the git commit count so every release is
+// uniquely newer than the last with zero manual edits. Falls back to 1 when
+// git isn't available (e.g. a source export).
+val gitVersionCode: Int = if (rootProject.file(".git").exists()) {
+  try {
+    providers.exec {
+      commandLine("git", "rev-list", "--count", "HEAD")
+    }.standardOutput.asText.get().trim().toInt()
+  } catch (e: Exception) {
+    1
+  }
+} else {
+  1
 }
 
 android {
@@ -11,14 +42,28 @@ android {
         applicationId = "com.example.zuerijoeppli"
         minSdk = 24
         targetSdk = 36
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = gitVersionCode
+        versionName = "1.0.$gitVersionCode"
+    }
+
+    signingConfigs {
+        create("release") {
+            val keystorePath = keystoreProperties.getProperty("storeFile")
+                ?: System.getenv("KEYSTORE_PATH")
+                ?: "${rootDir}/joeppli-upload-key.jks"
+            storeFile = rootProject.file(keystorePath)
+            storePassword = keystoreProperties.getProperty("storePassword") ?: System.getenv("STORE_PASSWORD")
+            keyAlias = keystoreProperties.getProperty("keyAlias") ?: "upload"
+            keyPassword = keystoreProperties.getProperty("keyPassword") ?: System.getenv("KEY_PASSWORD")
+        }
     }
 
     buildTypes {
         release {
-            isMinifyEnabled = false
+            isMinifyEnabled = true
+            isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+            signingConfig = signingConfigs.getByName("release")
         }
     }
     compileOptions {
@@ -82,4 +127,10 @@ dependencies {
   implementation(libs.androidx.navigation3.ui)
   implementation(libs.androidx.navigation3.runtime)
   implementation(libs.androidx.lifecycle.viewmodel.navigation3)
+}
+
+play {
+  serviceAccountCredentials.set(file("play-service-key.json"))
+  track.set("alpha") // Upload directly to the Closed Testing (Alpha) track
+  resolutionStrategy.set(ResolutionStrategy.AUTO)
 }

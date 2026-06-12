@@ -13,3 +13,13 @@
 .externalNativeBuild
 .cxx
 local.properties
+
+# Release signing & Play publishing secrets
+*.jks
+*.keystore
+keystore.properties
+app/play-service-key.json
+
+# Windows / Google Drive artifacts
+desktop.ini
+Thumbs.db

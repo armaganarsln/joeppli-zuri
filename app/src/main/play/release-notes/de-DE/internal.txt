@@ -1,0 +1,1 @@
+Erste interne Testversion: Abholung bestellen (Ort/Zeit/Wertstoffe/TWINT-Demo), Live-Tracker ab Werkhof Hardau, Entsorgungs-Wegweiser mit AI Scanner, Züri-Karma Dashboard und Profil.

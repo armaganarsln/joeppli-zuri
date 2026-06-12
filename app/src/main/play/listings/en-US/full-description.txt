@@ -1,0 +1,16 @@
+Züri Jöppli is your autonomous recycling robot for the city of Zurich. Order a pickup and the electric Jöppli vehicle collects paper, cardboard, glass, aluminium, organic waste and more right at your doorstep – clean, quiet, and powered by 100% renewable energy.
+
+HOW IT WORKS
+• Choose the pickup spot – your Zurich address, saved for next time.
+• Choose the time – today, tomorrow or a preferred date with a time window (morning, afternoon, evening). With Express, the Jöppli sets off immediately.
+• Sort your materials – standard goods (paper/cardboard, glass, aluminium/metal, organics) are free. E-waste and bulky goods cost a flat CHF 8.
+• Pay – conveniently with TWINT (currently a demo payment).
+• Track live – watch your Jöppli travel from the ERZ depot Hardau through Kreis 4/5 to your door.
+
+RECYCLING GUIDE & AI SCANNER
+Not sure where something goes? The built-in guide shows what the Jöppli accepts – including preparation tips. Or scan an item with the AI Vision Scanner and instantly get the right recycling category.
+
+ZÜRI-KARMA
+Earn karma points with every pickup and track your recycled weight, CO2 savings and the neighborhood milestone for Kreis 4/5 – your contribution to Zurich's circular economy, made visible.
+
+Note: This is an early test version. Payments are demo payments; nothing will be charged.

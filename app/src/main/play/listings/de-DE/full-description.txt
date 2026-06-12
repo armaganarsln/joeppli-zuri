@@ -1,0 +1,16 @@
+Züri Jöppli ist dein autonomer Recycling-Roboter für die Stadt Zürich. Bestelle eine Abholung, und das elektrische Jöppli-Fahrzeug holt Papier, Karton, Glas, Alu, Biogut und mehr direkt bei dir ab – sauber, leise und mit 100% Ökostrom.
+
+SO FUNKTIONIERT'S
+• Abholort wählen – deine Zürcher Adresse, gespeichert für das nächste Mal.
+• Zeit wählen – heute, morgen oder Wunschtermin mit Zeitfenster (Vormittag, Nachmittag, Feierabend). Mit Express startet der Jöppli sofort.
+• Wertstoffe sortieren – Standardgut (Papier/Karton, Altglas, Alu/Metall, Biogut) ist gratis. Elektroschrott und Sperrgut kosten CHF 8.– pauschal.
+• Bezahlen – bequem per TWINT (aktuell Demo-Zahlung).
+• Live verfolgen – schau zu, wie dein Jöppli vom ERZ Werkhof Hardau durch den Kreis 4/5 zu dir unterwegs ist.
+
+ENTSORGUNGS-WEGWEISER & AI SCANNER
+Nicht sicher, was wohin gehört? Der integrierte Wegweiser zeigt dir, was der Jöppli mitnimmt – inklusive Vorbereitungstipps. Oder scanne einen Gegenstand mit dem AI Vision Scanner und erhalte sofort die richtige Recycling-Kategorie.
+
+ZÜRI-KARMA
+Sammle Karma-Punkte mit jeder Abholung, verfolge dein recyceltes Gewicht, dein eingespartes CO2 und den Quartier-Meilenstein im Kreis 4/5 – dein Beitrag zur Zürcher Kreislaufwirtschaft, sichtbar gemacht.
+
+Hinweis: Dies ist eine frühe Testversion. Zahlungen sind Demo-Zahlungen, es wird nichts verrechnet.
