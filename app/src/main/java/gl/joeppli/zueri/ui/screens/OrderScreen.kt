@@ -1,5 +1,9 @@
 package gl.joeppli.zueri.ui.screens
 
+import android.Manifest
+import android.os.Build
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
@@ -30,9 +34,11 @@ import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.PathMeasure
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import gl.joeppli.zueri.data.RecyclingRepository
+import gl.joeppli.zueri.notify.OrderNotifications
 import gl.joeppli.zueri.theme.EcoGreen
 import gl.joeppli.zueri.theme.ZurichBlue
 import gl.joeppli.zueri.theme.TwintCyan
@@ -622,6 +628,18 @@ fun JöppliTrackerScreen(
         }
     }
 
+    // Ask for notification permission right when there is an active order —
+    // the one moment the value of notifications is obvious to the user.
+    val context = LocalContext.current
+    val permissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { /* declining just means no tray updates */ }
+    LaunchedEffect(Unit) {
+        if (Build.VERSION.SDK_INT >= 33 && !OrderNotifications.hasPermission(context)) {
+            permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+        }
+    }
+
     LaunchedEffect(Unit) {
         progress.animateTo(
             targetValue = 1f,
@@ -629,11 +647,26 @@ fun JöppliTrackerScreen(
         )
     }
 
+    // delay() keeps ticking while the app is backgrounded (unlike the frame-
+    // clock animation above), so these notifications reach the tray even when
+    // the user switches away mid-delivery.
     LaunchedEffect(Unit) {
+        OrderNotifications.notifyStatus(context, lang, statusMessages[0])
         while (statusIndex < statusMessages.size - 1) {
             delay(2500)
             statusIndex++
+            if (statusIndex == statusMessages.size - 2) {
+                OrderNotifications.notifyStatus(context, lang, statusMessages[statusIndex])
+            }
         }
+        delay(2500)
+        OrderNotifications.notifyStatus(
+            context,
+            lang,
+            if (lang == "en") "I am here! Please place your recycling outside your door."
+            else "Ich bi da! Bitte stell dis Recycling vor d'Tür.",
+            arrived = true
+        )
     }
 
     val isArrived = progress.value >= 1f
