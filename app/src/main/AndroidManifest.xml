@@ -12,6 +12,7 @@
         android:theme="@style/Theme.ZueriJoeppli">
         <activity
             android:name=".MainActivity"
+            android:theme="@style/Theme.ZueriJoeppli.Starting"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

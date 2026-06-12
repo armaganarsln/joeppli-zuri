@@ -1,5 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
+    <color name="eco_green">#6DBA32</color>
+
     <style name="Theme.ZueriJoeppli" parent="android:Theme.Material.Light.NoActionBar" />
+
+    <!-- Cold-start splash: robot mark on EcoGreen instead of a white flash.
+         Hands off to the real theme once the first frame is ready. -->
+    <style name="Theme.ZueriJoeppli.Starting" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">@color/eco_green</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/ic_launcher_foreground</item>
+        <item name="postSplashScreenTheme">@style/Theme.ZueriJoeppli</item>
+    </style>
 </resources>
