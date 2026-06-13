@@ -2,6 +2,7 @@ package gl.joeppli.zueri.ui.screens
 
 import android.Manifest
 import android.os.Build
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.core.*
@@ -90,6 +91,15 @@ fun OrderScreen(
     var price = 0f
     if (hasPaidMaterial) price += 8f
     if (isExpress) price += 4.5f
+
+    // Hardware Back mirrors the wizard's on-screen back arrow: step back
+    // through 2..5, and leave to Home from the first step or the tracker.
+    BackHandler {
+        when (currentStep) {
+            in 2..5 -> currentStep--
+            else -> onNavigateHome()
+        }
+    }
 
     Column(
         modifier = Modifier

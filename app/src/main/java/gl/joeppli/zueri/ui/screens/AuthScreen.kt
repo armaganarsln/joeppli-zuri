@@ -1,6 +1,7 @@
 package gl.joeppli.zueri.ui.screens
 
 import android.widget.Toast
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -58,6 +59,21 @@ fun AuthScreen() {
     // 6-digit OTP focus coordinates
     val otpFocusRequester = remember { FocusRequester() }
     var isOtpFocused by remember { mutableStateOf(false) }
+
+    // Back steps within the auth flow instead of exiting: OTP -> phone entry,
+    // a chosen method -> the method picker. On the picker it's disabled so the
+    // system handles back (exit).
+    BackHandler(enabled = loginMethod != null) {
+        if (showOtpScreen) {
+            showOtpScreen = false
+            otpInput = ""
+        } else {
+            loginMethod = null
+            showGoogleAccounts = false
+            isLoading = false
+            otpInput = ""
+        }
+    }
 
     Column(
         modifier = Modifier

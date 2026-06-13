@@ -1,5 +1,6 @@
 package gl.joeppli.zueri.ui
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -43,6 +44,15 @@ fun MainAppLayout() {
 fun MainAppContent() {
     var activeTab by remember { mutableStateOf("HOME") }
     var prefillQuickOrder by remember { mutableStateOf(false) }
+
+    // From any tab other than Home, Back returns to Home rather than exiting
+    // the app. On Home it stays disabled so the system handles back (exit).
+    // The Order tab registers its own BackHandler for in-wizard steps, which
+    // takes precedence while it's shown.
+    BackHandler(enabled = activeTab != "HOME") {
+        prefillQuickOrder = false
+        activeTab = "HOME"
+    }
 
     Scaffold(
         bottomBar = {
