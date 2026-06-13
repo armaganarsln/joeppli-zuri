@@ -1,5 +1,6 @@
 package gl.joeppli.zueri.ui.screens
 
+import android.util.Patterns
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.BorderStroke
@@ -34,6 +35,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import gl.joeppli.zueri.data.RecyclingRepository
 import gl.joeppli.zueri.ui.LocalJoeppliStrings
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -57,6 +60,15 @@ fun AuthScreen() {
     var isPasswordVisible by rememberSaveable { mutableStateOf(false) }
     val context = LocalContext.current
     val scrollState = rememberScrollState()
+    // Coroutine scope for the simulated login delays — cancels with the
+    // screen, so a callback can't fire on a composable that's already gone.
+    val scope = rememberCoroutineScope()
+
+    // Inline field errors (transient; re-validated on submit)
+    var nameError by remember { mutableStateOf<String?>(null) }
+    var emailError by remember { mutableStateOf<String?>(null) }
+    var passwordError by remember { mutableStateOf<String?>(null) }
+    var phoneError by remember { mutableStateOf<String?>(null) }
 
     // 6-digit OTP focus coordinates
     val otpFocusRequester = remember { FocusRequester() }
@@ -298,12 +310,14 @@ fun AuthScreen() {
                                     .background(MaterialTheme.colorScheme.background)
                                     .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(12.dp))
                                     .clickable {
+                                        if (isLoading) return@clickable
                                         isLoading = true
-                                        android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
+                                        scope.launch {
+                                            delay(1000)
                                             isLoading = false
                                             RecyclingRepository.loginWithGoogle(name, email)
                                             Toast.makeText(context, if (activeLang == "en") "Successfully logged in as $name" else "Erfolgreich angemeldet als $name", Toast.LENGTH_SHORT).show()
-                                        }, 1000)
+                                        }
                                     }
                                     .padding(12.dp),
                                 verticalAlignment = Alignment.CenterVertically
@@ -328,30 +342,37 @@ fun AuthScreen() {
                         // Email + Password form
                         OutlinedTextField(
                             value = nameInput,
-                            onValueChange = { nameInput = it },
+                            onValueChange = { nameInput = it; nameError = null },
                             label = { Text(strings.authEmailName) },
                             placeholder = { Text(strings.authEmailNamePlaceholder) },
                             modifier = Modifier.fillMaxWidth(),
-                            singleLine = true
+                            singleLine = true,
+                            isError = nameError != null,
+                            supportingText = nameError?.let { { Text(it) } }
                         )
 
                         OutlinedTextField(
                             value = emailInput,
-                            onValueChange = { emailInput = it },
+                            onValueChange = { emailInput = it; emailError = null },
                             label = { Text(strings.authEmailMail) },
                             placeholder = { Text("ueli@example.ch") },
                             modifier = Modifier.fillMaxWidth(),
-                            singleLine = true
+                            singleLine = true,
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+                            isError = emailError != null,
+                            supportingText = emailError?.let { { Text(it) } }
                         )
 
                         OutlinedTextField(
                             value = passwordInput,
-                            onValueChange = { passwordInput = it },
+                            onValueChange = { passwordInput = it; passwordError = null },
                             label = { Text(strings.authEmailPassword) },
                             placeholder = { Text(strings.authEmailPasswordPlaceholder) },
                             modifier = Modifier.fillMaxWidth(),
                             singleLine = true,
                             visualTransformation = if (isPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                            isError = passwordError != null,
+                            supportingText = passwordError?.let { { Text(it) } },
                             trailingIcon = {
                                 IconButton(onClick = { isPasswordVisible = !isPasswordVisible }) {
                                     Icon(
@@ -364,15 +385,19 @@ fun AuthScreen() {
 
                         Button(
                             onClick = {
-                                if (emailInput.isBlank() || nameInput.isBlank() || passwordInput.length < 6) {
-                                    Toast.makeText(context, strings.authEmailErrorFill, Toast.LENGTH_SHORT).show()
-                                    return@Button
-                                }
+                                nameError = if (nameInput.isBlank())
+                                    (if (activeLang == "en") "Please enter your name" else "Bitte gib din Name ih") else null
+                                emailError = if (!Patterns.EMAIL_ADDRESS.matcher(emailInput.trim()).matches())
+                                    (if (activeLang == "en") "Enter a valid email address" else "Gib e gültigi E-Mail ih") else null
+                                passwordError = if (passwordInput.length < 6)
+                                    (if (activeLang == "en") "Password must be at least 6 characters" else "Passwort mues mindestens 6 Zeiche ha") else null
+                                if (nameError != null || emailError != null || passwordError != null) return@Button
                                 isLoading = true
-                                android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
+                                scope.launch {
+                                    delay(1000)
                                     isLoading = false
                                     RecyclingRepository.loginWithEmail(nameInput, emailInput)
-                                }, 1000)
+                                }
                             },
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = MaterialTheme.colorScheme.secondary,
@@ -395,25 +420,28 @@ fun AuthScreen() {
                             // Phone input field
                             OutlinedTextField(
                                 value = phoneInput,
-                                onValueChange = { phoneInput = it },
+                                onValueChange = { phoneInput = it; phoneError = null },
                                 label = { Text(strings.authPhoneEnter) },
                                 placeholder = { Text(strings.authPhoneEnterPlaceholder) },
                                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
                                 modifier = Modifier.fillMaxWidth(),
-                                singleLine = true
+                                singleLine = true,
+                                isError = phoneError != null,
+                                supportingText = phoneError?.let { { Text(it) } }
                             )
 
                             Button(
                                 onClick = {
-                                    if (phoneInput.isBlank() || phoneInput.length < 9) {
-                                        Toast.makeText(context, strings.authPhoneErrorValid, Toast.LENGTH_SHORT).show()
-                                        return@Button
-                                    }
+                                    // Validate on digits only, so spaces / +41 formatting pass
+                                    phoneError = if (phoneInput.count { it.isDigit() } < 9)
+                                        (if (activeLang == "en") "Enter a valid phone number" else "Gib e gültigi Telefonnummere ih") else null
+                                    if (phoneError != null) return@Button
                                     isLoading = true
-                                    android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
+                                    scope.launch {
+                                        delay(1200)
                                         isLoading = false
                                         showOtpScreen = true
-                                    }, 1200)
+                                    }
                                 },
                                 colors = ButtonDefaults.buttonColors(
                                     containerColor = MaterialTheme.colorScheme.primary,
@@ -499,11 +527,12 @@ fun AuthScreen() {
                                         return@Button
                                     }
                                     isLoading = true
-                                    android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
+                                    scope.launch {
+                                        delay(1000)
                                         isLoading = false
                                         RecyclingRepository.loginWithPhone(phoneInput)
                                         Toast.makeText(context, strings.authPhoneOtpVerifyToast, Toast.LENGTH_SHORT).show()
-                                    }, 1000)
+                                    }
                                 },
                                 colors = ButtonDefaults.buttonColors(
                                     containerColor = MaterialTheme.colorScheme.primary,
