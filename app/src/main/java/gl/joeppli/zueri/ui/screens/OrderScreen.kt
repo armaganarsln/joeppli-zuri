@@ -28,7 +28,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.PathMeasure
@@ -39,8 +38,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import gl.joeppli.zueri.data.RecyclingRepository
 import gl.joeppli.zueri.notify.OrderNotifications
-import gl.joeppli.zueri.theme.EcoGreen
-import gl.joeppli.zueri.theme.ZurichBlue
 import gl.joeppli.zueri.theme.TwintCyan
 import gl.joeppli.zueri.ui.LocalJoeppliStrings
 import kotlinx.coroutines.delay
@@ -795,6 +792,8 @@ fun JöppliTrackerScreen(
         val depotColor = MaterialTheme.colorScheme.secondary
         val destColor = MaterialTheme.colorScheme.error
         val puckCenter = MaterialTheme.colorScheme.onPrimary
+        val trailStart = MaterialTheme.colorScheme.secondary
+        val trailEnd = MaterialTheme.colorScheme.primary
 
         Box(
             modifier = Modifier
@@ -833,16 +832,16 @@ fun JöppliTrackerScreen(
                 // Full route (faded)
                 drawPath(route, color = routeTrack, style = Stroke(width = 10f, cap = StrokeCap.Round))
 
-                // Travelled portion (Gradient trail, brand green to brand blue)
+                // Travelled portion (gradient trail following the active theme)
                 val measure = PathMeasure()
                 measure.setPath(route, false)
                 val travelled = Path()
                 measure.getSegment(0f, measure.length * progress.value, travelled, true)
-                
+
                 val trailBrush = Brush.linearGradient(
                     colors = listOf(
-                        ZurichBlue,
-                        EcoGreen
+                        trailStart,
+                        trailEnd
                     ),
                     start = start,
                     end = end
