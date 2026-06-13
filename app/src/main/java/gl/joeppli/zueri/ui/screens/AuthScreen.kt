@@ -1,6 +1,7 @@
 package gl.joeppli.zueri.ui.screens
 
 import android.widget.Toast
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -21,7 +22,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -31,8 +31,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import gl.joeppli.zueri.data.RecyclingRepository
-import gl.joeppli.zueri.theme.EcoGreen
-import gl.joeppli.zueri.theme.ZurichBlue
 import gl.joeppli.zueri.ui.LocalJoeppliStrings
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -65,6 +63,7 @@ fun AuthScreen() {
         modifier = Modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
+            .systemBarsPadding()
             .verticalScroll(scrollState)
             .padding(24.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -81,14 +80,14 @@ fun AuthScreen() {
             Text(
                 text = if (activeLang == "en") "Language: " else "Sprache: ",
                 fontSize = 12.sp,
-                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f),
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 fontWeight = FontWeight.Medium
             )
             Spacer(modifier = Modifier.width(4.dp))
             TextButton(
                 onClick = { RecyclingRepository.setLanguage("de") },
                 colors = ButtonDefaults.textButtonColors(
-                    contentColor = if (activeLang == "de") EcoGreen else MaterialTheme.colorScheme.onBackground.copy(alpha = 0.4f)
+                    contentColor = if (activeLang == "de") MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
                 ),
                 modifier = Modifier.height(32.dp),
                 contentPadding = PaddingValues(horizontal = 6.dp)
@@ -99,7 +98,7 @@ fun AuthScreen() {
             TextButton(
                 onClick = { RecyclingRepository.setLanguage("en") },
                 colors = ButtonDefaults.textButtonColors(
-                    contentColor = if (activeLang == "en") EcoGreen else MaterialTheme.colorScheme.onBackground.copy(alpha = 0.4f)
+                    contentColor = if (activeLang == "en") MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
                 ),
                 modifier = Modifier.height(32.dp),
                 contentPadding = PaddingValues(horizontal = 6.dp)
@@ -112,29 +111,29 @@ fun AuthScreen() {
         Box(
             modifier = Modifier
                 .size(80.dp)
-                .background(EcoGreen.copy(alpha = 0.15f), CircleShape),
+                .background(MaterialTheme.colorScheme.primaryContainer, CircleShape),
             contentAlignment = Alignment.Center
         ) {
             Icon(
-                imageVector = Icons.Default.Refresh,
+                imageVector = Icons.Default.SmartToy,
                 contentDescription = null,
-                tint = EcoGreen,
+                tint = MaterialTheme.colorScheme.onPrimaryContainer,
                 modifier = Modifier.size(44.dp)
             )
         }
-        
+
         Spacer(modifier = Modifier.height(16.dp))
-        
+
         Text(
             text = strings.appName,
             fontSize = 28.sp,
             fontWeight = FontWeight.Bold,
-            color = ZurichBlue
+            color = MaterialTheme.colorScheme.secondary
         )
         Text(
             text = if (activeLang == "en") "Autonomous Waste Collection & Recycling" else "Autonome Abholung & Recycling",
             fontSize = 14.sp,
-            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f),
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
             fontWeight = FontWeight.Medium,
             modifier = Modifier.padding(top = 4.dp)
         )
@@ -158,11 +157,12 @@ fun AuthScreen() {
                         text = strings.authSelectTitle,
                         fontSize = 15.sp,
                         fontWeight = FontWeight.Bold,
-                        color = ZurichBlue
+                        color = MaterialTheme.colorScheme.secondary
                     )
                     Spacer(modifier = Modifier.height(8.dp))
 
-                    // Google login trigger button
+                    // Google login trigger button — neutral surface like the
+                    // official sign-in button, not a brand color
                     Button(
                         onClick = {
                             loginMethod = "GOOGLE"
@@ -171,11 +171,15 @@ fun AuthScreen() {
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(52.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFEA4335)),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
+                            contentColor = MaterialTheme.colorScheme.onSurface
+                        ),
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
                         shape = RoundedCornerShape(12.dp)
                     ) {
                         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                            Icon(Icons.Default.AccountCircle, contentDescription = null, tint = Color.White)
+                            Icon(Icons.Default.AccountCircle, contentDescription = null)
                             Text(strings.authGoogleBtn, fontSize = 14.sp, fontWeight = FontWeight.Bold)
                         }
                     }
@@ -186,11 +190,14 @@ fun AuthScreen() {
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(52.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = ZurichBlue),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.secondary,
+                            contentColor = MaterialTheme.colorScheme.onSecondary
+                        ),
                         shape = RoundedCornerShape(12.dp)
                     ) {
                         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                            Icon(Icons.Default.Email, contentDescription = null, tint = Color.White)
+                            Icon(Icons.Default.Email, contentDescription = null)
                             Text(strings.authEmailBtn, fontSize = 14.sp, fontWeight = FontWeight.Bold)
                         }
                     }
@@ -201,11 +208,14 @@ fun AuthScreen() {
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(52.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = EcoGreen),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.primary,
+                            contentColor = MaterialTheme.colorScheme.onPrimary
+                        ),
                         shape = RoundedCornerShape(12.dp)
                     ) {
                         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                            Icon(Icons.Default.Phone, contentDescription = null, tint = Color.White)
+                            Icon(Icons.Default.Phone, contentDescription = null)
                             Text(strings.authPhoneBtn, fontSize = 14.sp, fontWeight = FontWeight.Bold)
                         }
                     }
@@ -236,7 +246,7 @@ fun AuthScreen() {
                             },
                             fontSize = 16.sp,
                             fontWeight = FontWeight.Bold,
-                            color = ZurichBlue
+                            color = MaterialTheme.colorScheme.secondary
                         )
                         TextButton(onClick = {
                             loginMethod = null
@@ -245,7 +255,7 @@ fun AuthScreen() {
                             isLoading = false
                             otpInput = ""
                         }) {
-                            Text(strings.authBackBtn, color = EcoGreen, fontWeight = FontWeight.Bold)
+                            Text(strings.authBackBtn, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
                         }
                     }
 
@@ -268,7 +278,7 @@ fun AuthScreen() {
                                     .fillMaxWidth()
                                     .clip(RoundedCornerShape(12.dp))
                                     .background(MaterialTheme.colorScheme.background)
-                                    .border(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f), RoundedCornerShape(12.dp))
+                                    .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(12.dp))
                                     .clickable {
                                         isLoading = true
                                         android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
@@ -284,10 +294,10 @@ fun AuthScreen() {
                                     modifier = Modifier
                                         .size(36.dp)
                                         .clip(CircleShape)
-                                        .background(ZurichBlue.copy(alpha = 0.1f)),
+                                        .background(MaterialTheme.colorScheme.secondaryContainer),
                                     contentAlignment = Alignment.Center
                                 ) {
-                                    Text(name.take(1), fontWeight = FontWeight.Bold, color = ZurichBlue)
+                                    Text(name.take(1), fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSecondaryContainer)
                                 }
                                 Spacer(modifier = Modifier.width(12.dp))
                                 Column {
@@ -346,7 +356,10 @@ fun AuthScreen() {
                                     RecyclingRepository.loginWithEmail(nameInput, emailInput)
                                 }, 1000)
                             },
-                            colors = ButtonDefaults.buttonColors(containerColor = ZurichBlue),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.secondary,
+                                contentColor = MaterialTheme.colorScheme.onSecondary
+                            ),
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .height(48.dp),
@@ -354,7 +367,7 @@ fun AuthScreen() {
                             enabled = !isLoading
                         ) {
                             if (isLoading) {
-                                CircularProgressIndicator(modifier = Modifier.size(20.dp), color = Color.White, strokeWidth = 2.dp)
+                                CircularProgressIndicator(modifier = Modifier.size(20.dp), color = LocalContentColor.current, strokeWidth = 2.dp)
                             } else {
                                 Text(strings.authEmailRegister, fontSize = 14.sp, fontWeight = FontWeight.Bold)
                             }
@@ -384,7 +397,10 @@ fun AuthScreen() {
                                         showOtpScreen = true
                                     }, 1200)
                                 },
-                                colors = ButtonDefaults.buttonColors(containerColor = EcoGreen),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = MaterialTheme.colorScheme.primary,
+                                    contentColor = MaterialTheme.colorScheme.onPrimary
+                                ),
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .height(48.dp),
@@ -392,7 +408,7 @@ fun AuthScreen() {
                                 enabled = !isLoading
                             ) {
                                 if (isLoading) {
-                                    CircularProgressIndicator(modifier = Modifier.size(20.dp), color = Color.White, strokeWidth = 2.dp)
+                                    CircularProgressIndicator(modifier = Modifier.size(20.dp), color = LocalContentColor.current, strokeWidth = 2.dp)
                                 } else {
                                     Text(strings.authPhoneSendOtp, fontSize = 14.sp, fontWeight = FontWeight.Bold)
                                 }
@@ -438,7 +454,7 @@ fun AuthScreen() {
                                             .size(44.dp, 48.dp)
                                             .border(
                                                 width = if (isFocusedBox) 2.dp else 1.dp,
-                                                color = if (isFocusedBox) EcoGreen else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f),
+                                                color = if (isFocusedBox) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant,
                                                 shape = RoundedCornerShape(8.dp)
                                             )
                                             .background(
@@ -451,7 +467,7 @@ fun AuthScreen() {
                                             text = char,
                                             fontSize = 20.sp,
                                             fontWeight = FontWeight.Bold,
-                                            color = ZurichBlue,
+                                            color = MaterialTheme.colorScheme.onSurface,
                                             textAlign = TextAlign.Center
                                         )
                                     }
@@ -471,7 +487,10 @@ fun AuthScreen() {
                                         Toast.makeText(context, strings.authPhoneOtpVerifyToast, Toast.LENGTH_SHORT).show()
                                     }, 1000)
                                 },
-                                colors = ButtonDefaults.buttonColors(containerColor = EcoGreen),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = MaterialTheme.colorScheme.primary,
+                                    contentColor = MaterialTheme.colorScheme.onPrimary
+                                ),
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .height(48.dp),
@@ -479,7 +498,7 @@ fun AuthScreen() {
                                 enabled = !isLoading
                             ) {
                                 if (isLoading) {
-                                    CircularProgressIndicator(modifier = Modifier.size(20.dp), color = Color.White, strokeWidth = 2.dp)
+                                    CircularProgressIndicator(modifier = Modifier.size(20.dp), color = LocalContentColor.current, strokeWidth = 2.dp)
                                 } else {
                                     Text(strings.authPhoneOtpVerify, fontSize = 14.sp, fontWeight = FontWeight.Bold)
                                 }
