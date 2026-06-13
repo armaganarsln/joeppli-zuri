@@ -18,15 +18,12 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import gl.joeppli.zueri.data.RecyclingRepository
-import gl.joeppli.zueri.theme.EcoGreen
-import gl.joeppli.zueri.theme.ZurichBlue
 import gl.joeppli.zueri.ui.LocalJoeppliStrings
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -48,6 +45,7 @@ fun AddressRegistrationScreen() {
         modifier = Modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
+            .systemBarsPadding()
             .verticalScroll(scrollState)
             .padding(24.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -57,13 +55,13 @@ fun AddressRegistrationScreen() {
         Box(
             modifier = Modifier
                 .size(90.dp)
-                .background(ZurichBlue.copy(alpha = 0.12f), CircleShape),
+                .background(MaterialTheme.colorScheme.secondaryContainer, CircleShape),
             contentAlignment = Alignment.Center
         ) {
             Icon(
                 imageVector = Icons.Default.LocationOn,
                 contentDescription = null,
-                tint = ZurichBlue,
+                tint = MaterialTheme.colorScheme.onSecondaryContainer,
                 modifier = Modifier.size(48.dp)
             )
         }
@@ -75,14 +73,14 @@ fun AddressRegistrationScreen() {
             text = strings.addressRegTitle,
             fontSize = 24.sp,
             fontWeight = FontWeight.Bold,
-            color = ZurichBlue,
+            color = MaterialTheme.colorScheme.secondary,
             textAlign = TextAlign.Center
         )
         Spacer(modifier = Modifier.height(8.dp))
         Text(
             text = strings.addressRegSubtitle,
             fontSize = 14.sp,
-            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f),
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center,
             lineHeight = 20.sp,
             modifier = Modifier.padding(horizontal = 16.dp)
@@ -104,7 +102,7 @@ fun AddressRegistrationScreen() {
                     text = strings.addressRegCustom,
                     fontSize = 15.sp,
                     fontWeight = FontWeight.Bold,
-                    color = ZurichBlue
+                    color = MaterialTheme.colorScheme.secondary
                 )
 
                 // Custom Address input field
@@ -116,12 +114,12 @@ fun AddressRegistrationScreen() {
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(12.dp),
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = EcoGreen,
-                        unfocusedBorderColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f)
+                        focusedBorderColor = MaterialTheme.colorScheme.primary,
+                        unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant
                     ),
                     singleLine = true,
                     leadingIcon = {
-                        Icon(imageVector = Icons.Default.Home, contentDescription = null, tint = ZurichBlue.copy(alpha = 0.7f))
+                        Icon(imageVector = Icons.Default.Home, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                 )
 
@@ -130,7 +128,7 @@ fun AddressRegistrationScreen() {
                     text = strings.addressRegQuick,
                     fontSize = 12.sp,
                     fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(top = 8.dp)
                 )
 
@@ -144,7 +142,7 @@ fun AddressRegistrationScreen() {
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .clip(RoundedCornerShape(12.dp))
-                                .background(MaterialTheme.colorScheme.background)
+                                .background(MaterialTheme.colorScheme.surfaceContainerHighest)
                                 .clickable {
                                     addressInput = addr
                                 }
@@ -160,7 +158,7 @@ fun AddressRegistrationScreen() {
                                 Icon(
                                     imageVector = Icons.Default.LocationOn,
                                     contentDescription = null,
-                                    tint = EcoGreen,
+                                    tint = MaterialTheme.colorScheme.primary,
                                     modifier = Modifier.size(18.dp)
                                 )
                                 Text(
@@ -173,7 +171,7 @@ fun AddressRegistrationScreen() {
                             Icon(
                                 imageVector = Icons.AutoMirrored.Filled.NavigateNext,
                                 contentDescription = null,
-                                tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f),
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
                                 modifier = Modifier.size(20.dp)
                             )
                         }
@@ -195,14 +193,16 @@ fun AddressRegistrationScreen() {
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(52.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = EcoGreen),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.primary,
+                        contentColor = MaterialTheme.colorScheme.onPrimary
+                    ),
                     shape = RoundedCornerShape(12.dp)
                 ) {
                     Text(
                         text = strings.addressRegSubmit,
                         fontSize = 15.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.White
+                        fontWeight = FontWeight.Bold
                     )
                 }
 
