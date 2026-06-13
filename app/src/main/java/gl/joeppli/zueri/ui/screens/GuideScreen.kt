@@ -138,7 +138,7 @@ fun GuideScreen() {
                     ) {
                         Icon(
                             imageVector = Icons.Outlined.CenterFocusWeak,
-                            contentDescription = "AI Scanner",
+                            contentDescription = null,
                             tint = MaterialTheme.colorScheme.onSecondary,
                             modifier = Modifier.size(28.dp)
                         )
@@ -300,7 +300,7 @@ fun GuideScreen() {
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Text(
-                        text = "Jöppli AI Vision Scanner",
+                        text = strings.guideScannerTitle,
                         style = MaterialTheme.typography.titleLarge,
                         color = MaterialTheme.colorScheme.secondary
                     )

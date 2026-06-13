@@ -165,7 +165,7 @@ fun HomeScreen(
             )
             MenuRowCard(
                 title = if (lang == "en") "What can I recycle?" else "Was chan ich recycle?",
-                subtitle = if (lang == "en") "Disposal guide & AI Scanner" else "Entsorgigs-Wegwiiser & AI Scanner",
+                subtitle = if (lang == "en") "Disposal guide & scanner demo" else "Entsorgigs-Wegwiiser & Scanner-Demo",
                 icon = Icons.AutoMirrored.Outlined.MenuBook,
                 onClick = { onNavigateToTab("GUIDE") }
             )
