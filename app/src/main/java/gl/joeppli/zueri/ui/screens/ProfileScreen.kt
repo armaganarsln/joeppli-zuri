@@ -1,5 +1,8 @@
 package gl.joeppli.zueri.ui.screens
 
+import android.content.ActivityNotFoundException
+import android.content.Intent
+import android.net.Uri
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -310,11 +313,33 @@ fun ProfileScreen() {
 
                 Button(
                     onClick = {
-                        if (supportMessage.isNotBlank()) {
-                            Toast.makeText(context, strings.profileSupportToast, Toast.LENGTH_SHORT).show()
-                            supportMessage = ""
-                        } else {
+                        if (supportMessage.isBlank()) {
                             Toast.makeText(context, strings.profileSupportError, Toast.LENGTH_SHORT).show()
+                            return@Button
+                        }
+                        val emailIntent = Intent(Intent.ACTION_SENDTO).apply {
+                            data = Uri.parse("mailto:")
+                            putExtra(Intent.EXTRA_EMAIL, arrayOf("support@joeppli.gl"))
+                            putExtra(
+                                Intent.EXTRA_SUBJECT,
+                                if (activeLang == "en") "Jöppli Support Request" else "Jöppli Support-Aafrog"
+                            )
+                            putExtra(Intent.EXTRA_TEXT, supportMessage)
+                        }
+                        try {
+                            context.startActivity(
+                                Intent.createChooser(
+                                    emailIntent,
+                                    if (activeLang == "en") "Send email" else "E-Mail sände"
+                                )
+                            )
+                            supportMessage = ""
+                        } catch (e: ActivityNotFoundException) {
+                            Toast.makeText(
+                                context,
+                                if (activeLang == "en") "No email app found" else "Kei E-Mail-App gfunde",
+                                Toast.LENGTH_SHORT
+                            ).show()
                         }
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary),
