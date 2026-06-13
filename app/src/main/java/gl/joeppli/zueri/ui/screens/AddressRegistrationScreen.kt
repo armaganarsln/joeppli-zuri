@@ -1,8 +1,8 @@
 package gl.joeppli.zueri.ui.screens
 
 import android.widget.Toast
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -10,7 +10,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.NavigateNext
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material3.*
@@ -18,7 +17,6 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -134,48 +132,48 @@ fun AddressRegistrationScreen() {
                     modifier = Modifier.padding(top = 8.dp)
                 )
 
-                // Quick select buttons
+                // Quick select cards — same selectable style as the order wizard
                 Column(
                     verticalArrangement = Arrangement.spacedBy(8.dp),
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     quickAddresses.forEach { addr ->
-                        Row(
+                        val selected = addressInput == addr
+                        Card(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .clip(RoundedCornerShape(12.dp))
-                                .background(MaterialTheme.colorScheme.surfaceContainerHighest)
-                                .clickable {
-                                    addressInput = addr
-                                }
-                                .padding(horizontal = 16.dp, vertical = 12.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.SpaceBetween
+                                .clickable { addressInput = addr },
+                            colors = CardDefaults.cardColors(
+                                containerColor = if (selected) MaterialTheme.colorScheme.primaryContainer
+                                else MaterialTheme.colorScheme.surfaceContainerHighest
+                            ),
+                            shape = RoundedCornerShape(12.dp),
+                            border = BorderStroke(
+                                width = 1.dp,
+                                color = if (selected) MaterialTheme.colorScheme.primary
+                                else MaterialTheme.colorScheme.outlineVariant
+                            )
                         ) {
                             Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 16.dp, vertical = 12.dp),
                                 verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                                modifier = Modifier.weight(1f)
+                                horizontalArrangement = Arrangement.spacedBy(12.dp)
                             ) {
                                 Icon(
                                     imageVector = Icons.Default.LocationOn,
                                     contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.primary,
-                                    modifier = Modifier.size(18.dp)
+                                    tint = if (selected) MaterialTheme.colorScheme.primary
+                                    else MaterialTheme.colorScheme.secondary,
+                                    modifier = Modifier.size(20.dp)
                                 )
                                 Text(
                                     text = addr,
-                                    fontSize = 13.sp,
-                                    fontWeight = FontWeight.Medium,
+                                    style = MaterialTheme.typography.bodyMedium,
                                     color = MaterialTheme.colorScheme.onSurface
                                 )
                             }
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Filled.NavigateNext,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                                modifier = Modifier.size(20.dp)
-                            )
                         }
                     }
                 }
