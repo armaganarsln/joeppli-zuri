@@ -37,7 +37,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import gl.joeppli.zueri.data.RecyclingRepository
-import gl.joeppli.zueri.theme.EcoGreen
 import gl.joeppli.zueri.ui.LocalJoeppliStrings
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -248,8 +247,9 @@ fun GuideScreen() {
                     SwipeToDismissBox(
                         state = dismissState,
                         backgroundContent = {
+                            val addColor = MaterialTheme.colorScheme.primary
                             val color = if (dismissState.dismissDirection == SwipeToDismissBoxValue.EndToStart) {
-                                EcoGreen.copy(alpha = 0.8f)
+                                addColor.copy(alpha = 0.8f)
                             } else {
                                 Color.Transparent
                             }
@@ -265,7 +265,7 @@ fun GuideScreen() {
                                     Icon(
                                         imageVector = Icons.Default.Add,
                                         contentDescription = null,
-                                        tint = Color.White
+                                        tint = MaterialTheme.colorScheme.onPrimary
                                     )
                                 }
                             }
@@ -494,7 +494,7 @@ fun MaterialRow(
                 Text(
                     text = if (lang == "en") "💡 Swipe left to add directly to pickup order" else "💡 Nach links wische zum direkt Hinzufüge",
                     style = MaterialTheme.typography.labelSmall,
-                    color = EcoGreen,
+                    color = MaterialTheme.colorScheme.primary,
                     fontWeight = FontWeight.Medium
                 )
             }

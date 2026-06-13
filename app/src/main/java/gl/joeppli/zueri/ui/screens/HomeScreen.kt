@@ -24,7 +24,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import gl.joeppli.zueri.data.RecyclingRepository
-import gl.joeppli.zueri.theme.EcoGreen
 import gl.joeppli.zueri.ui.LocalJoeppliStrings
 
 @Composable
@@ -78,7 +77,7 @@ fun HomeScreen(
                 title = strings.statKarma,
                 value = "${stats.karma}/100",
                 icon = Icons.Filled.Star,
-                iconColor = EcoGreen,
+                iconColor = MaterialTheme.colorScheme.primary,
                 onClick = { onNavigateToTab("STATS") },
                 modifier = Modifier.weight(1f)
             )
@@ -86,7 +85,7 @@ fun HomeScreen(
                 title = strings.statCo2,
                 value = "-${stats.co2Saved.toInt()} kg",
                 icon = Icons.Filled.Favorite,
-                iconColor = Color(0xFFE11D48),
+                iconColor = Color(0xFFE11D48), // semantic CO2/heart accent, intentionally fixed across themes
                 onClick = { onNavigateToTab("STATS") },
                 modifier = Modifier.weight(1f)
             )
