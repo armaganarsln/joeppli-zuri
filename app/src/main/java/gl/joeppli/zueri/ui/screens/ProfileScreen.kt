@@ -130,10 +130,10 @@ fun ProfileScreen() {
                         RecyclingRepository.updateProfile(name, phone, address, selectedPayment)
                         Toast.makeText(context, strings.profileSaveToast, Toast.LENGTH_SHORT).show()
                     },
-                    shape = RoundedCornerShape(24.dp),
+                    shape = RoundedCornerShape(28.dp),
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(48.dp)
+                        .height(56.dp)
                 ) {
                     Text(strings.profileSave, style = MaterialTheme.typography.labelLarge)
                 }
@@ -318,10 +318,10 @@ fun ProfileScreen() {
                         }
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary),
-                    shape = RoundedCornerShape(24.dp),
+                    shape = RoundedCornerShape(28.dp),
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(48.dp)
+                        .height(56.dp)
                 ) {
                     Icon(
                         Icons.AutoMirrored.Filled.Send,
@@ -342,10 +342,10 @@ fun ProfileScreen() {
                 Toast.makeText(context, strings.profileLogoutToast, Toast.LENGTH_SHORT).show()
             },
             colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
-            shape = RoundedCornerShape(24.dp),
+            shape = RoundedCornerShape(28.dp),
             modifier = Modifier
                 .fillMaxWidth()
-                .height(48.dp)
+                .height(56.dp)
         ) {
             Text(strings.profileLogout, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onError)
         }

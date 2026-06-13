@@ -200,13 +200,13 @@ fun AuthScreen() {
                         },
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(52.dp),
+                            .height(56.dp),
                         colors = ButtonDefaults.buttonColors(
                             containerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
                             contentColor = MaterialTheme.colorScheme.onSurface
                         ),
                         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
-                        shape = RoundedCornerShape(12.dp)
+                        shape = RoundedCornerShape(28.dp)
                     ) {
                         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                             Icon(Icons.Default.AccountCircle, contentDescription = null)
@@ -219,12 +219,12 @@ fun AuthScreen() {
                         onClick = { loginMethod = "EMAIL" },
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(52.dp),
+                            .height(56.dp),
                         colors = ButtonDefaults.buttonColors(
                             containerColor = MaterialTheme.colorScheme.secondary,
                             contentColor = MaterialTheme.colorScheme.onSecondary
                         ),
-                        shape = RoundedCornerShape(12.dp)
+                        shape = RoundedCornerShape(28.dp)
                     ) {
                         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                             Icon(Icons.Default.Email, contentDescription = null)
@@ -237,12 +237,12 @@ fun AuthScreen() {
                         onClick = { loginMethod = "PHONE" },
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(52.dp),
+                            .height(56.dp),
                         colors = ButtonDefaults.buttonColors(
                             containerColor = MaterialTheme.colorScheme.primary,
                             contentColor = MaterialTheme.colorScheme.onPrimary
                         ),
-                        shape = RoundedCornerShape(12.dp)
+                        shape = RoundedCornerShape(28.dp)
                     ) {
                         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                             Icon(Icons.Default.Phone, contentDescription = null)
@@ -405,8 +405,8 @@ fun AuthScreen() {
                             ),
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .height(48.dp),
-                            shape = RoundedCornerShape(12.dp),
+                                .height(56.dp),
+                            shape = RoundedCornerShape(28.dp),
                             enabled = !isLoading
                         ) {
                             if (isLoading) {
@@ -449,8 +449,8 @@ fun AuthScreen() {
                                 ),
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .height(48.dp),
-                                shape = RoundedCornerShape(12.dp),
+                                    .height(56.dp),
+                                shape = RoundedCornerShape(28.dp),
                                 enabled = !isLoading
                             ) {
                                 if (isLoading) {
@@ -540,8 +540,8 @@ fun AuthScreen() {
                                 ),
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .height(48.dp),
-                                shape = RoundedCornerShape(12.dp),
+                                    .height(56.dp),
+                                shape = RoundedCornerShape(28.dp),
                                 enabled = !isLoading
                             ) {
                                 if (isLoading) {
