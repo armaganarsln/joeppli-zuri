@@ -51,7 +51,7 @@ fun HomeScreen(
             .padding(16.dp)
             .padding(bottom = 80.dp) // Avoid overlap with bottom bar
     ) {
-        Spacer(modifier = Modifier.height(24.dp))
+        Spacer(modifier = Modifier.height(8.dp))
 
         // Greeting
         Text(

@@ -61,7 +61,7 @@ fun DashboardScreen(
             .padding(16.dp)
             .padding(bottom = 80.dp)
     ) {
-        Spacer(modifier = Modifier.height(24.dp))
+        Spacer(modifier = Modifier.height(8.dp))
 
         Text(
             text = if (lang == "en") "Recycling Dashboard" else "Recycling Dashboard",
