@@ -38,7 +38,7 @@ fun HomeScreen(
     val lang by RecyclingRepository.userLanguage.collectAsState()
 
     val firstName = if (profile.name.isBlank()) {
-        if (lang == "en") "Recycler" else "Recycler"
+        if (lang == "en") "Recycler" else "Sammler"
     } else {
         profile.name.substringBefore(' ')
     }
