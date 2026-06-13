@@ -7,6 +7,8 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.BarChart
+import androidx.compose.material.icons.filled.CenterFocusStrong
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Recycling
@@ -132,7 +134,7 @@ fun CustomBottomBar(
                 BottomTabItem(
                     label = strings.bottomRecycling,
                     icon = Icons.Outlined.BarChart,
-                    selectedIcon = Icons.Outlined.BarChart,
+                    selectedIcon = Icons.Filled.BarChart,
                     selected = activeTab == "STATS",
                     onClick = { onTabSelect("STATS") }
                 )
@@ -141,7 +143,7 @@ fun CustomBottomBar(
                 BottomTabItem(
                     label = strings.bottomScanner,
                     icon = Icons.Outlined.CenterFocusWeak,
-                    selectedIcon = Icons.Outlined.CenterFocusWeak,
+                    selectedIcon = Icons.Filled.CenterFocusStrong,
                     selected = activeTab == "GUIDE",
                     onClick = { onTabSelect("GUIDE") }
                 )
