@@ -291,12 +291,12 @@ fun AuthScreen() {
 
                     if (loginMethod == "GOOGLE" && showGoogleAccounts) {
                         Text(
-                            text = strings.authGoogleSelect,
+                            text = if (activeLang == "en") "Demo accounts (prototype — not real Google sign-in):" else "Demo-Konti (Prototyp — kei echti Google-Aamäldig):",
                             fontSize = 12.sp,
-                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
 
-                        // Google mock accounts list
+                        // Demo accounts list (prototype — no real Google auth)
                         val mockAccounts = listOf(
                             "ueli.maurer@gmail.com" to "Ueli Maurer",
                             "armag.business@gmail.com" to "Armag Arslan"
@@ -332,9 +332,21 @@ fun AuthScreen() {
                                     Text(name.take(1), fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSecondaryContainer)
                                 }
                                 Spacer(modifier = Modifier.width(12.dp))
-                                Column {
+                                Column(modifier = Modifier.weight(1f)) {
                                     Text(name, fontSize = 13.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
                                     Text(email, fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f))
+                                }
+                                Box(
+                                    modifier = Modifier
+                                        .background(MaterialTheme.colorScheme.tertiary, RoundedCornerShape(6.dp))
+                                        .padding(horizontal = 8.dp, vertical = 2.dp)
+                                ) {
+                                    Text(
+                                        "DEMO",
+                                        fontSize = 10.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.onTertiary
+                                    )
                                 }
                             }
                         }
