@@ -31,6 +31,7 @@ import gl.joeppli.zueri.ui.LocalJoeppliStrings
 @Composable
 fun AddressRegistrationScreen() {
     val strings = LocalJoeppliStrings.current
+    val lang by RecyclingRepository.userLanguage.collectAsState()
     var addressInput by rememberSaveable { mutableStateOf("") }
     val context = LocalContext.current
     val scrollState = rememberScrollState()
@@ -185,7 +186,7 @@ fun AddressRegistrationScreen() {
                 Button(
                     onClick = {
                         if (addressInput.isBlank()) {
-                            Toast.makeText(context, if (strings.appName == "Züri-Jöppli" && strings.bottomStart == "Start") "Bitte gib dini Adresse ih" else "Please enter your address", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, if (lang == "en") "Please enter your address" else "Bitte gib dini Adresse ih", Toast.LENGTH_SHORT).show()
                             return@Button
                         }
                         RecyclingRepository.registerAddress(addressInput)
