@@ -15,6 +15,7 @@ import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -30,7 +31,7 @@ import gl.joeppli.zueri.ui.LocalJoeppliStrings
 @Composable
 fun AddressRegistrationScreen() {
     val strings = LocalJoeppliStrings.current
-    var addressInput by remember { mutableStateOf("") }
+    var addressInput by rememberSaveable { mutableStateOf("") }
     val context = LocalContext.current
     val scrollState = rememberScrollState()
 

@@ -12,6 +12,7 @@ import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -35,12 +36,12 @@ fun ProfileScreen() {
     val context = LocalContext.current
     val scrollState = rememberScrollState()
 
-    var name by remember(profile.name) { mutableStateOf(profile.name) }
-    var phone by remember(profile.phone) { mutableStateOf(profile.phone) }
-    var address by remember(profile.homeAddress) { mutableStateOf(profile.homeAddress) }
+    var name by rememberSaveable(profile.name) { mutableStateOf(profile.name) }
+    var phone by rememberSaveable(profile.phone) { mutableStateOf(profile.phone) }
+    var address by rememberSaveable(profile.homeAddress) { mutableStateOf(profile.homeAddress) }
 
-    var supportMessage by remember { mutableStateOf("") }
-    var selectedPayment by remember(profile.defaultPaymentMethod) { mutableStateOf(profile.defaultPaymentMethod) }
+    var supportMessage by rememberSaveable { mutableStateOf("") }
+    var selectedPayment by rememberSaveable(profile.defaultPaymentMethod) { mutableStateOf(profile.defaultPaymentMethod) }
 
     Column(
         modifier = Modifier

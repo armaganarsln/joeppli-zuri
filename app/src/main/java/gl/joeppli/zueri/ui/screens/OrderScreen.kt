@@ -24,6 +24,8 @@ import androidx.compose.material.icons.outlined.LocationOn
 import androidx.compose.material.icons.outlined.PhoneIphone
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.listSaver
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -53,14 +55,19 @@ fun OrderScreen(
     val strings = LocalJoeppliStrings.current
     val lang by RecyclingRepository.userLanguage.collectAsState()
     
-    var currentStep by remember { mutableStateOf(if (prefillQuick) 2 else 1) }
+    var currentStep by rememberSaveable { mutableStateOf(if (prefillQuick) 2 else 1) }
 
-    // Form states
-    var address by remember { mutableStateOf("") }
-    var selectedDate by remember { mutableStateOf("") }
-    var selectedTimeSlot by remember { mutableStateOf("") }
-    val selectedMaterials = remember { mutableStateListOf<String>() }
-    var isExpress by remember { mutableStateOf(prefillQuick) }
+    // Form states — saveable so an in-progress order survives rotation
+    var address by rememberSaveable { mutableStateOf("") }
+    var selectedDate by rememberSaveable { mutableStateOf("") }
+    var selectedTimeSlot by rememberSaveable { mutableStateOf("") }
+    val selectedMaterials = rememberSaveable(
+        saver = listSaver(
+            save = { it.toList() },
+            restore = { it.toMutableStateList() }
+        )
+    ) { mutableStateListOf<String>() }
+    var isExpress by rememberSaveable { mutableStateOf(prefillQuick) }
 
     val profile by RecyclingRepository.userProfile.collectAsState()
 

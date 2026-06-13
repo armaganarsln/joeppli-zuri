@@ -17,6 +17,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -40,19 +41,20 @@ fun AuthScreen() {
     val strings = LocalJoeppliStrings.current
     val activeLang by RecyclingRepository.userLanguage.collectAsState()
 
-    var loginMethod by remember { mutableStateOf<String?>(null) } // "GOOGLE", "EMAIL", "PHONE"
-    var showGoogleAccounts by remember { mutableStateOf(false) }
-    var showOtpScreen by remember { mutableStateOf(false) }
+    var loginMethod by rememberSaveable { mutableStateOf<String?>(null) } // "GOOGLE", "EMAIL", "PHONE"
+    var showGoogleAccounts by rememberSaveable { mutableStateOf(false) }
+    var showOtpScreen by rememberSaveable { mutableStateOf(false) }
+    // Transient: a simulated login in flight shouldn't survive rotation
     var isLoading by remember { mutableStateOf(false) }
 
-    // Forms fields
-    var nameInput by remember { mutableStateOf("") }
-    var emailInput by remember { mutableStateOf("") }
-    var passwordInput by remember { mutableStateOf("") }
-    var phoneInput by remember { mutableStateOf("") }
-    var otpInput by remember { mutableStateOf("") }
-    
-    var isPasswordVisible by remember { mutableStateOf(false) }
+    // Form fields — saveable so typed input survives rotation
+    var nameInput by rememberSaveable { mutableStateOf("") }
+    var emailInput by rememberSaveable { mutableStateOf("") }
+    var passwordInput by rememberSaveable { mutableStateOf("") }
+    var phoneInput by rememberSaveable { mutableStateOf("") }
+    var otpInput by rememberSaveable { mutableStateOf("") }
+
+    var isPasswordVisible by rememberSaveable { mutableStateOf(false) }
     val context = LocalContext.current
     val scrollState = rememberScrollState()
 

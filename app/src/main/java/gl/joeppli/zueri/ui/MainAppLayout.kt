@@ -16,6 +16,7 @@ import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -42,8 +43,8 @@ fun MainAppLayout() {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainAppContent() {
-    var activeTab by remember { mutableStateOf("HOME") }
-    var prefillQuickOrder by remember { mutableStateOf(false) }
+    var activeTab by rememberSaveable { mutableStateOf("HOME") }
+    var prefillQuickOrder by rememberSaveable { mutableStateOf(false) }
 
     // From any tab other than Home, Back returns to Home rather than exiting
     // the app. On Home it stays disabled so the system handles back (exit).
