@@ -193,12 +193,13 @@ private fun WizardHeader(
 private fun WizardCta(
     label: String,
     enabled: Boolean = true,
+    modifier: Modifier = Modifier,
     onClick: () -> Unit
 ) {
     Button(
         onClick = onClick,
         enabled = enabled,
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .height(56.dp),
         shape = RoundedCornerShape(28.dp)
@@ -222,13 +223,15 @@ fun OrderStep1(
         "Schaffhauserstrasse 100, 8057 Zürich"
     )
 
+    Column(modifier = Modifier.fillMaxSize()) {
     Column(
         modifier = Modifier
-            .fillMaxSize()
+            .weight(1f)
+            .fillMaxWidth()
             .padding(16.dp)
             .verticalScroll(rememberScrollState())
     ) {
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(8.dp))
         Text(
             if (lang == "en") "Where should the Jöppli vehicle arrive?" else "Wo soll s'Jöppli-Fahrzeug vorfahre?",
             style = MaterialTheme.typography.bodyLarge,
@@ -290,11 +293,12 @@ fun OrderStep1(
             }
         }
 
-        Spacer(modifier = Modifier.height(32.dp))
-
+        Spacer(modifier = Modifier.height(16.dp))
+        }
         WizardCta(
             if (lang == "en") "Continue" else "Weiter",
             enabled = address.isNotBlank(),
+            modifier = Modifier.padding(16.dp),
             onClick = {
                 RecyclingRepository.registerAddress(address)
                 onNext()
@@ -334,8 +338,11 @@ fun OrderStep2(
         strings.orderSlotEvening
     )
 
+    Column(modifier = Modifier.fillMaxSize()) {
     Column(
         modifier = Modifier
+            .weight(1f)
+            .fillMaxWidth()
             .padding(16.dp)
             .verticalScroll(rememberScrollState())
     ) {
@@ -418,11 +425,12 @@ fun OrderStep2(
             }
         }
 
-        Spacer(modifier = Modifier.height(24.dp))
-
+        Spacer(modifier = Modifier.height(16.dp))
+        }
         WizardCta(
             if (lang == "en") "Continue" else "Weiter",
             enabled = selectedDate.isNotEmpty() && selectedTimeSlot.isNotEmpty(),
+            modifier = Modifier.padding(16.dp),
             onClick = onNext
         )
     }
@@ -443,8 +451,11 @@ fun OrderStep3(
         Pair(if (lang == "en") "Bulky Waste (Furniture, Wood)" else "Sperrgut (Möbel, Holz)", false)
     )
 
+    Column(modifier = Modifier.fillMaxSize()) {
     Column(
         modifier = Modifier
+            .weight(1f)
+            .fillMaxWidth()
             .padding(16.dp)
             .verticalScroll(rememberScrollState())
     ) {
@@ -505,9 +516,9 @@ fun OrderStep3(
             }
         }
 
-        Spacer(modifier = Modifier.height(24.dp))
-
-        WizardCta(if (lang == "en") "Continue to Checkout" else "Weiter zur Kasse", enabled = selectedMaterials.isNotEmpty(), onClick = onNext)
+        Spacer(modifier = Modifier.height(16.dp))
+        }
+        WizardCta(if (lang == "en") "Continue to Checkout" else "Weiter zur Kasse", enabled = selectedMaterials.isNotEmpty(), modifier = Modifier.padding(16.dp), onClick = onNext)
     }
 }
 
@@ -523,8 +534,11 @@ fun OrderStep4(
 ) {
     val strings = LocalJoeppliStrings.current
     val lang by RecyclingRepository.userLanguage.collectAsState()
+    Column(modifier = Modifier.fillMaxSize()) {
     Column(
         modifier = Modifier
+            .weight(1f)
+            .fillMaxWidth()
             .padding(16.dp)
             .verticalScroll(rememberScrollState())
     ) {
@@ -580,14 +594,14 @@ fun OrderStep4(
             }
         }
 
-        Spacer(modifier = Modifier.height(32.dp))
-
+        Spacer(modifier = Modifier.height(16.dp))
+        }
         val ctaText = if (price == 0f) {
             if (lang == "en") "Confirm Order" else "Bestellig bestätige"
         } else {
             if (lang == "en") "Pay with TWINT" else "Zahle mit TWINT"
         }
-        WizardCta(ctaText, onClick = onNext)
+        WizardCta(ctaText, modifier = Modifier.padding(16.dp), onClick = onNext)
     }
 }
 
