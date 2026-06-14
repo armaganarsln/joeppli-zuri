@@ -71,6 +71,7 @@ data class JoeppliStrings(
     val authErrInvalidEmail: String,
     val authErrNetwork: String,
     val authErrUnknown: String,
+    val authErrNoGoogleAccount: String,
 
     // Additional UI terms for Guide & Order screens
     val orderAddressTitle: String,
@@ -188,6 +189,7 @@ val EnStrings = JoeppliStrings(
     authErrInvalidEmail = "Enter a valid email address.",
     authErrNetwork = "No connection — check your internet and try again.",
     authErrUnknown = "Sign-in failed. Please try again.",
+    authErrNoGoogleAccount = "No Google account found on this device.",
     
     orderAddressTitle = "Pickup Address",
     orderDateSlotTitle = "Date & Time Slot",
@@ -304,6 +306,7 @@ val DeStrings = JoeppliStrings(
     authErrInvalidEmail = "Gib e gültigi E-Mail ih.",
     authErrNetwork = "Kei Verbindig — prüef dis Internet und probier nomal.",
     authErrUnknown = "Aamäldig fehlgschlage. Probier nomal.",
+    authErrNoGoogleAccount = "Kei Google-Konto uf dem Grät gfunde.",
     
     orderAddressTitle = "Abholadresse",
     orderDateSlotTitle = "Datum & Zeitfenster",

@@ -51,6 +51,8 @@ private fun authErrorMessage(error: AuthManager.AuthError, strings: JoeppliStrin
     AuthManager.AuthError.WEAK_PASSWORD -> strings.authErrWeakPassword
     AuthManager.AuthError.INVALID_EMAIL -> strings.authErrInvalidEmail
     AuthManager.AuthError.NETWORK -> strings.authErrNetwork
+    AuthManager.AuthError.NO_GOOGLE_ACCOUNT -> strings.authErrNoGoogleAccount
+    AuthManager.AuthError.CANCELLED -> "" // user dismissed the picker; not shown
     AuthManager.AuthError.UNKNOWN -> strings.authErrUnknown
 }
 
@@ -308,8 +310,44 @@ fun AuthScreen() {
                     }
 
                     if (loginMethod == "GOOGLE" && showGoogleAccounts) {
+                        // Real Google sign-in: Credential Manager -> Google ID token -> Firebase
+                        Button(
+                            onClick = {
+                                if (isLoading) return@Button
+                                isLoading = true
+                                scope.launch {
+                                    val result = AuthManager.signInWithGoogle(context)
+                                    isLoading = false
+                                    if (result is AuthManager.AuthResult.Failure &&
+                                        result.error != AuthManager.AuthError.CANCELLED
+                                    ) {
+                                        Toast.makeText(context, authErrorMessage(result.error, strings), Toast.LENGTH_LONG).show()
+                                    }
+                                }
+                            },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(56.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
+                                contentColor = MaterialTheme.colorScheme.onSurface
+                            ),
+                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+                            shape = RoundedCornerShape(28.dp),
+                            enabled = !isLoading
+                        ) {
+                            if (isLoading) {
+                                CircularProgressIndicator(modifier = Modifier.size(20.dp), color = LocalContentColor.current, strokeWidth = 2.dp)
+                            } else {
+                                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                                    Icon(Icons.Default.AccountCircle, contentDescription = null)
+                                    Text(strings.authGoogleBtn, fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                                }
+                            }
+                        }
+
                         Text(
-                            text = if (activeLang == "en") "Demo accounts (prototype — not real Google sign-in):" else "Demo-Konti (Prototyp — kei echti Google-Aamäldig):",
+                            text = if (activeLang == "en") "or use a demo account (prototype):" else "oder es Demo-Konto bruche (Prototyp):",
                             fontSize = 12.sp,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
