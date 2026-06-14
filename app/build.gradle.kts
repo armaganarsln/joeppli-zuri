@@ -7,6 +7,7 @@ plugins {
   alias(libs.plugins.compose.compiler)
   alias(libs.plugins.kotlin.serialization)
   alias(libs.plugins.play)
+  alias(libs.plugins.google.services)
 }
 
 // Release signing secrets live in keystore.properties at the repo root (git-
@@ -106,6 +107,18 @@ dependencies {
   // Persistence
   implementation(libs.androidx.datastore.preferences)
   implementation(libs.kotlinx.serialization.json)
+
+  // Firebase: Auth (Google / Email / Phone sign-in) + Firestore (cloud profile).
+  // Versions are governed by the BoM, so the individual artifacts are unpinned.
+  implementation(platform(libs.firebase.bom))
+  implementation(libs.firebase.auth)
+  implementation(libs.firebase.firestore)
+
+  // Credential Manager + Google ID — the modern Google Sign-In stack that
+  // returns a Google ID token to exchange for a Firebase credential.
+  implementation(libs.androidx.credentials)
+  implementation(libs.androidx.credentials.play.services.auth)
+  implementation(libs.googleid)
 
   // Compose
   implementation(libs.androidx.compose.ui)
