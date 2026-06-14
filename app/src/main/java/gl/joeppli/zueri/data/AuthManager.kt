@@ -2,6 +2,7 @@ package gl.joeppli.zueri.data
 
 import android.app.Activity
 import android.content.Context
+import androidx.credentials.ClearCredentialStateRequest
 import androidx.credentials.CredentialManager
 import androidx.credentials.CustomCredential
 import androidx.credentials.GetCredentialRequest
@@ -21,6 +22,12 @@ import com.google.firebase.auth.PhoneAuthCredential
 import com.google.firebase.auth.PhoneAuthOptions
 import com.google.firebase.auth.PhoneAuthProvider
 import com.google.firebase.auth.UserProfileChangeRequest
+import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.SetOptions
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
 import java.util.concurrent.TimeUnit
 import kotlin.coroutines.resume
@@ -43,6 +50,8 @@ import kotlin.coroutines.resumeWithException
  */
 object AuthManager {
     private val auth: FirebaseAuth by lazy { FirebaseAuth.getInstance() }
+    private val firestore: FirebaseFirestore by lazy { FirebaseFirestore.getInstance() }
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     // OAuth Web client ID from the Firebase project. Placeholder until the real
     // google-services.json + console setup land; real Google sign-in needs this
@@ -63,23 +72,19 @@ object AuthManager {
         user.updateProfile(
             UserProfileChangeRequest.Builder().setDisplayName(name.trim()).build()
         ).await()
-        RecyclingRepository.setAuthenticatedUser(
-            uid = user.uid,
-            name = name.trim(),
-            email = user.email ?: email.trim(),
-            authType = "EMAIL"
-        )
+        finishSignIn(user.uid, name.trim(), user.email ?: email.trim(), phone = "", authType = "EMAIL")
     }
 
     /** Signs in to an existing email/password account. */
     suspend fun signInWithEmail(email: String, password: String): AuthResult = runAuth {
         val signedIn = auth.signInWithEmailAndPassword(email.trim(), password).await()
         val user = requireNotNull(signedIn.user)
-        RecyclingRepository.setAuthenticatedUser(
+        finishSignIn(
             uid = user.uid,
             name = user.displayName?.takeIf { it.isNotBlank() }
                 ?: user.email?.substringBefore("@").orEmpty(),
             email = user.email ?: email.trim(),
+            phone = "",
             authType = "EMAIL"
         )
     }
@@ -108,11 +113,12 @@ object AuthManager {
         val firebaseCredential = GoogleAuthProvider.getCredential(googleIdToken, null)
         val signedIn = auth.signInWithCredential(firebaseCredential).await()
         val user = requireNotNull(signedIn.user)
-        RecyclingRepository.setAuthenticatedUser(
+        finishSignIn(
             uid = user.uid,
             name = user.displayName?.takeIf { it.isNotBlank() }
                 ?: user.email?.substringBefore("@").orEmpty(),
             email = user.email.orEmpty(),
+            phone = "",
             authType = "GOOGLE"
         )
     }
@@ -173,7 +179,8 @@ object AuthManager {
         val verificationId = phoneVerificationId ?: error("No phone verification in progress")
         val credential = PhoneAuthProvider.getCredential(verificationId, code)
         val signedIn = auth.signInWithCredential(credential).await()
-        applyPhoneUser(requireNotNull(signedIn.user), phoneE164)
+        val user = requireNotNull(signedIn.user)
+        finishSignIn(user.uid, user.displayName.orEmpty(), user.email.orEmpty(), user.phoneNumber ?: phoneE164, "PHONE")
         phoneVerificationId = null
     }
 
@@ -185,6 +192,62 @@ object AuthManager {
             phone = user.phoneNumber ?: phoneE164,
             authType = "PHONE"
         )
+    }
+
+    /**
+     * After a successful Firebase sign-in: load the user's profile document from
+     * Firestore (the cloud is the source of truth on login) or create it for a
+     * new account. Falls back to a local-only profile if Firestore is
+     * unreachable, so sign-in is never blocked by a network hiccup.
+     */
+    private suspend fun finishSignIn(uid: String, name: String, email: String, phone: String, authType: String) {
+        val docRef = firestore.collection("users").document(uid)
+        val snap = runCatching { docRef.get().await() }.getOrNull()
+        if (snap != null && snap.exists()) {
+            RecyclingRepository.applyRemoteProfile(
+                uid = uid,
+                name = snap.getString("name").takeUnless { it.isNullOrBlank() } ?: name,
+                email = snap.getString("email").takeUnless { it.isNullOrBlank() } ?: email,
+                phone = snap.getString("phone").takeUnless { it.isNullOrBlank() } ?: phone,
+                homeAddress = snap.getString("homeAddress").orEmpty(),
+                invoiceAddress = snap.getString("invoiceAddress").orEmpty(),
+                invoiceSameAsHome = snap.getBoolean("invoiceSameAsHome") ?: true,
+                defaultPaymentMethod = snap.getString("defaultPaymentMethod") ?: "twint_demo",
+                authType = authType
+            )
+        } else {
+            RecyclingRepository.setAuthenticatedUser(uid, name, email, phone, authType)
+            runCatching {
+                docRef.set(profileMap(RecyclingRepository.userProfile.value), SetOptions.merge()).await()
+            }
+        }
+    }
+
+    /** Pushes the durable profile fields to the signed-in user's doc (no-op for demo sessions). */
+    fun pushProfileToCloud() {
+        val uid = runCatching { auth.currentUser?.uid }.getOrNull() ?: return
+        scope.launch {
+            runCatching {
+                firestore.collection("users").document(uid)
+                    .set(profileMap(RecyclingRepository.userProfile.value), SetOptions.merge()).await()
+            }
+        }
+    }
+
+    private fun profileMap(p: UserProfile): Map<String, Any> = mapOf(
+        "name" to p.name,
+        "email" to p.email,
+        "phone" to p.phone,
+        "homeAddress" to p.homeAddress,
+        "invoiceAddress" to p.invoiceAddress,
+        "invoiceSameAsHome" to p.invoiceSameAsHome,
+        "defaultPaymentMethod" to p.defaultPaymentMethod
+    )
+
+    /** Signs out of Firebase and clears the saved credential selection. */
+    suspend fun signOut(context: Context) {
+        runCatching { auth.signOut() }
+        runCatching { CredentialManager.create(context).clearCredentialState(ClearCredentialStateRequest()) }
     }
 
     private suspend fun runAuth(block: suspend () -> Unit): AuthResult = try {

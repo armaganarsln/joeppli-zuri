@@ -22,6 +22,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import gl.joeppli.zueri.data.AuthManager
 import gl.joeppli.zueri.data.RecyclingRepository
 import gl.joeppli.zueri.ui.LocalJoeppliStrings
 
@@ -188,6 +189,7 @@ fun AddressRegistrationScreen() {
                             return@Button
                         }
                         RecyclingRepository.registerAddress(addressInput)
+                        AuthManager.pushProfileToCloud()
                         Toast.makeText(context, strings.addressRegToast, Toast.LENGTH_SHORT).show()
                     },
                     modifier = Modifier

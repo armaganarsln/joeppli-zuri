@@ -23,8 +23,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
+import gl.joeppli.zueri.data.AuthManager
 import gl.joeppli.zueri.data.RecyclingRepository
 import gl.joeppli.zueri.ui.LocalJoeppliStrings
+import kotlinx.coroutines.launch
 import gl.joeppli.zueri.theme.BrandGreen
 import gl.joeppli.zueri.theme.BrandBlue
 import gl.joeppli.zueri.theme.BrandYellow
@@ -39,6 +41,7 @@ fun ProfileScreen() {
     val strings = LocalJoeppliStrings.current
     val context = LocalContext.current
     val scrollState = rememberScrollState()
+    val scope = rememberCoroutineScope()
 
     var name by rememberSaveable(profile.name) { mutableStateOf(profile.name) }
     var phone by rememberSaveable(profile.phone) { mutableStateOf(profile.phone) }
@@ -132,6 +135,7 @@ fun ProfileScreen() {
                 Button(
                     onClick = {
                         RecyclingRepository.updateProfile(name, phone, address, selectedPayment)
+                        AuthManager.pushProfileToCloud()
                         Toast.makeText(context, strings.profileSaveToast, Toast.LENGTH_SHORT).show()
                     },
                     shape = RoundedCornerShape(28.dp),
@@ -263,6 +267,7 @@ fun ProfileScreen() {
                         onClick = {
                             selectedPayment = "twint_demo"
                             RecyclingRepository.updateProfile(name, phone, address, "twint_demo")
+                            AuthManager.pushProfileToCloud()
                         },
                         label = { Text("TWINT (Standard)") },
                         modifier = Modifier.weight(1f)
@@ -272,6 +277,7 @@ fun ProfileScreen() {
                         onClick = {
                             selectedPayment = "card"
                             RecyclingRepository.updateProfile(name, phone, address, "card")
+                            AuthManager.pushProfileToCloud()
                         },
                         label = { Text(if (activeLang == "en") "Credit Card" else "Kreditkarte") },
                         modifier = Modifier.weight(1f)
@@ -364,7 +370,10 @@ fun ProfileScreen() {
 
         Button(
             onClick = {
+                // Reset local state immediately (navigates to the auth screen),
+                // then end the Firebase session and clear the saved credential.
                 RecyclingRepository.logout()
+                scope.launch { AuthManager.signOut(context) }
                 Toast.makeText(context, strings.profileLogoutToast, Toast.LENGTH_SHORT).show()
             },
             colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),

@@ -186,6 +186,36 @@ object RecyclingRepository {
         persist()
     }
 
+    /**
+     * Replaces the local profile with the authoritative copy loaded from the
+     * cloud (Firestore) on sign-in. Marks the session as logged in.
+     */
+    fun applyRemoteProfile(
+        uid: String,
+        name: String,
+        email: String,
+        phone: String,
+        homeAddress: String,
+        invoiceAddress: String,
+        invoiceSameAsHome: Boolean,
+        defaultPaymentMethod: String,
+        authType: String
+    ) {
+        _userProfile.value = UserProfile(
+            id = uid,
+            name = name,
+            email = email,
+            phone = phone,
+            homeAddress = homeAddress,
+            invoiceAddress = invoiceAddress,
+            invoiceSameAsHome = invoiceSameAsHome,
+            defaultPaymentMethod = defaultPaymentMethod,
+            isLoggedIn = true,
+            authType = authType
+        )
+        persist()
+    }
+
     fun registerAddress(homeAddr: String) {
         val current = _userProfile.value
         _userProfile.value = current.copy(
