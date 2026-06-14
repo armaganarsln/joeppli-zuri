@@ -1,5 +1,6 @@
 package gl.joeppli.zueri.data
 
+import android.app.Activity
 import android.content.Context
 import androidx.credentials.CredentialManager
 import androidx.credentials.CustomCredential
@@ -10,12 +11,18 @@ import androidx.credentials.exceptions.NoCredentialException
 import com.google.android.gms.tasks.Task
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
+import com.google.firebase.FirebaseException
 import com.google.firebase.FirebaseNetworkException
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseAuthException
+import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.GoogleAuthProvider
+import com.google.firebase.auth.PhoneAuthCredential
+import com.google.firebase.auth.PhoneAuthOptions
+import com.google.firebase.auth.PhoneAuthProvider
 import com.google.firebase.auth.UserProfileChangeRequest
 import kotlinx.coroutines.suspendCancellableCoroutine
+import java.util.concurrent.TimeUnit
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 
@@ -42,7 +49,7 @@ object AuthManager {
     // value set and an SHA-1 fingerprint registered for the app.
     private const val WEB_CLIENT_ID = "REPLACE_WITH_FIREBASE_WEB_CLIENT_ID.apps.googleusercontent.com"
 
-    enum class AuthError { EMAIL_IN_USE, INVALID_CREDENTIALS, WEAK_PASSWORD, INVALID_EMAIL, NETWORK, NO_GOOGLE_ACCOUNT, CANCELLED, UNKNOWN }
+    enum class AuthError { EMAIL_IN_USE, INVALID_CREDENTIALS, WEAK_PASSWORD, INVALID_EMAIL, INVALID_CODE, NETWORK, NO_GOOGLE_ACCOUNT, CANCELLED, UNKNOWN }
 
     sealed interface AuthResult {
         object Success : AuthResult
@@ -110,6 +117,76 @@ object AuthManager {
         )
     }
 
+    // Holds the verification id between sendPhoneCode() and verifyPhoneCode().
+    @Volatile
+    private var phoneVerificationId: String? = null
+
+    sealed interface PhoneSendResult {
+        /** SMS dispatched; collect the code and call [verifyPhoneCode]. */
+        object CodeSent : PhoneSendResult
+        /** Instant verification signed the user in already; no code needed. */
+        object AutoVerified : PhoneSendResult
+        data class Failure(val error: AuthError) : PhoneSendResult
+    }
+
+    /**
+     * Starts Firebase phone verification: triggers an SMS to [phoneE164] and,
+     * on some devices, auto-retrieves the code. [activity] is required for the
+     * reCAPTCHA / Play Integrity check.
+     */
+    suspend fun sendPhoneCode(activity: Activity, phoneE164: String): PhoneSendResult =
+        suspendCancellableCoroutine { cont ->
+            val callbacks = object : PhoneAuthProvider.OnVerificationStateChangedCallbacks() {
+                override fun onVerificationCompleted(credential: PhoneAuthCredential) {
+                    // Instant / auto-retrieval: sign in straight away.
+                    auth.signInWithCredential(credential).addOnCompleteListener { task ->
+                        if (!cont.isActive) return@addOnCompleteListener
+                        if (task.isSuccessful) {
+                            task.result.user?.let { applyPhoneUser(it, phoneE164) }
+                            cont.resume(PhoneSendResult.AutoVerified)
+                        } else {
+                            cont.resume(PhoneSendResult.Failure(mapError(task.exception ?: IllegalStateException())))
+                        }
+                    }
+                }
+
+                override fun onVerificationFailed(e: FirebaseException) {
+                    if (cont.isActive) cont.resume(PhoneSendResult.Failure(mapError(e)))
+                }
+
+                override fun onCodeSent(verificationId: String, token: PhoneAuthProvider.ForceResendingToken) {
+                    phoneVerificationId = verificationId
+                    if (cont.isActive) cont.resume(PhoneSendResult.CodeSent)
+                }
+            }
+            val options = PhoneAuthOptions.newBuilder(auth)
+                .setPhoneNumber(phoneE164)
+                .setTimeout(60L, TimeUnit.SECONDS)
+                .setActivity(activity)
+                .setCallbacks(callbacks)
+                .build()
+            PhoneAuthProvider.verifyPhoneNumber(options)
+        }
+
+    /** Verifies the SMS [code] the user typed against the sent verification. */
+    suspend fun verifyPhoneCode(code: String, phoneE164: String): AuthResult = runAuth {
+        val verificationId = phoneVerificationId ?: error("No phone verification in progress")
+        val credential = PhoneAuthProvider.getCredential(verificationId, code)
+        val signedIn = auth.signInWithCredential(credential).await()
+        applyPhoneUser(requireNotNull(signedIn.user), phoneE164)
+        phoneVerificationId = null
+    }
+
+    private fun applyPhoneUser(user: FirebaseUser, phoneE164: String) {
+        RecyclingRepository.setAuthenticatedUser(
+            uid = user.uid,
+            name = user.displayName.orEmpty(),
+            email = user.email.orEmpty(),
+            phone = user.phoneNumber ?: phoneE164,
+            authType = "PHONE"
+        )
+    }
+
     private suspend fun runAuth(block: suspend () -> Unit): AuthResult = try {
         block()
         AuthResult.Success
@@ -127,6 +204,8 @@ object AuthManager {
             "ERROR_EMAIL_ALREADY_IN_USE" -> AuthError.EMAIL_IN_USE
             "ERROR_WEAK_PASSWORD" -> AuthError.WEAK_PASSWORD
             "ERROR_INVALID_EMAIL" -> AuthError.INVALID_EMAIL
+            "ERROR_INVALID_VERIFICATION_CODE",
+            "ERROR_SESSION_EXPIRED" -> AuthError.INVALID_CODE
             "ERROR_WRONG_PASSWORD",
             "ERROR_INVALID_CREDENTIAL",
             "ERROR_USER_NOT_FOUND",

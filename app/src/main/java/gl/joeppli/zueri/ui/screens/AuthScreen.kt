@@ -52,6 +52,7 @@ private fun authErrorMessage(error: AuthManager.AuthError, strings: JoeppliStrin
     AuthManager.AuthError.INVALID_EMAIL -> strings.authErrInvalidEmail
     AuthManager.AuthError.NETWORK -> strings.authErrNetwork
     AuthManager.AuthError.NO_GOOGLE_ACCOUNT -> strings.authErrNoGoogleAccount
+    AuthManager.AuthError.INVALID_CODE -> strings.authErrInvalidCode
     AuthManager.AuthError.CANCELLED -> "" // user dismissed the picker; not shown
     AuthManager.AuthError.UNKNOWN -> strings.authErrUnknown
 }
@@ -78,6 +79,9 @@ fun AuthScreen() {
     var isPasswordVisible by rememberSaveable { mutableStateOf(false) }
     // Email card: true = create a new account, false = sign in to an existing one
     var isRegisterMode by rememberSaveable { mutableStateOf(true) }
+    // Phone OTP: true when a real SMS send wasn't possible and we fall back to
+    // the demo code path (keeps the app usable before the real Firebase project).
+    var otpDemoMode by rememberSaveable { mutableStateOf(false) }
     val context = LocalContext.current
     val scrollState = rememberScrollState()
     // Coroutine scope for the simulated login delays — cancels with the
@@ -555,9 +559,25 @@ fun AuthScreen() {
                                     if (phoneError != null) return@Button
                                     isLoading = true
                                     scope.launch {
-                                        delay(1200)
+                                        val activity = context as android.app.Activity
+                                        when (AuthManager.sendPhoneCode(activity, phoneInput.trim())) {
+                                            is AuthManager.PhoneSendResult.CodeSent -> {
+                                                otpDemoMode = false
+                                                otpInput = ""
+                                                showOtpScreen = true
+                                            }
+                                            is AuthManager.PhoneSendResult.AutoVerified -> {
+                                                // Instant verification signed the user in; app navigates away.
+                                            }
+                                            is AuthManager.PhoneSendResult.Failure -> {
+                                                // Real SMS unavailable (e.g. backend not configured
+                                                // yet) — fall back to the demo code path.
+                                                otpDemoMode = true
+                                                otpInput = ""
+                                                showOtpScreen = true
+                                            }
+                                        }
                                         isLoading = false
-                                        showOtpScreen = true
                                     }
                                 },
                                 colors = ButtonDefaults.buttonColors(
@@ -584,12 +604,14 @@ fun AuthScreen() {
                                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
                                 lineHeight = 16.sp
                             )
-                            Text(
-                                text = if (activeLang == "en") "Demo code: $DEMO_OTP" else "Demo-Code: $DEMO_OTP",
-                                fontSize = 12.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.primary
-                            )
+                            if (otpDemoMode) {
+                                Text(
+                                    text = if (activeLang == "en") "Demo code: $DEMO_OTP" else "Demo-Code: $DEMO_OTP",
+                                    fontSize = 12.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                            }
 
                             // Hidden BasicTextField driving state
                             BasicTextField(
@@ -645,16 +667,33 @@ fun AuthScreen() {
 
                             Button(
                                 onClick = {
-                                    if (otpInput != DEMO_OTP) {
-                                        Toast.makeText(context, if (activeLang == "en") "Wrong code — enter the demo code $DEMO_OTP" else "Falsche Code — gib de Demo-Code $DEMO_OTP ih", Toast.LENGTH_SHORT).show()
-                                        return@Button
-                                    }
-                                    isLoading = true
-                                    scope.launch {
-                                        delay(1000)
-                                        isLoading = false
-                                        RecyclingRepository.loginWithPhone(phoneInput)
-                                        Toast.makeText(context, strings.authPhoneOtpVerifyToast, Toast.LENGTH_SHORT).show()
+                                    if (otpDemoMode) {
+                                        if (otpInput != DEMO_OTP) {
+                                            Toast.makeText(context, if (activeLang == "en") "Wrong code — enter the demo code $DEMO_OTP" else "Falsche Code — gib de Demo-Code $DEMO_OTP ih", Toast.LENGTH_SHORT).show()
+                                            return@Button
+                                        }
+                                        isLoading = true
+                                        scope.launch {
+                                            delay(1000)
+                                            isLoading = false
+                                            RecyclingRepository.loginWithPhone(phoneInput)
+                                            Toast.makeText(context, strings.authPhoneOtpVerifyToast, Toast.LENGTH_SHORT).show()
+                                        }
+                                    } else {
+                                        if (otpInput.length < 6) {
+                                            Toast.makeText(context, strings.authPhoneErrorOtp, Toast.LENGTH_SHORT).show()
+                                            return@Button
+                                        }
+                                        isLoading = true
+                                        scope.launch {
+                                            val result = AuthManager.verifyPhoneCode(otpInput, phoneInput.trim())
+                                            isLoading = false
+                                            if (result is AuthManager.AuthResult.Failure) {
+                                                Toast.makeText(context, authErrorMessage(result.error, strings), Toast.LENGTH_LONG).show()
+                                            } else {
+                                                Toast.makeText(context, strings.authPhoneOtpVerifyToast, Toast.LENGTH_SHORT).show()
+                                            }
+                                        }
                                     }
                                 },
                                 colors = ButtonDefaults.buttonColors(
