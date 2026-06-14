@@ -45,6 +45,17 @@ android {
         targetSdk = 36
         versionCode = gitVersionCode
         versionName = "1.0.$gitVersionCode"
+
+        val localPropertiesFile = rootProject.file("local.properties")
+        val localProperties = Properties().apply {
+            if (localPropertiesFile.exists()) {
+                localPropertiesFile.inputStream().use { load(it) }
+            }
+        }
+        val mapsApiKey = localProperties.getProperty("MAPS_API_KEY") 
+            ?: System.getenv("MAPS_API_KEY") 
+            ?: "AIzaSyDummyKeyPlaceholder12345"
+        manifestPlaceholders["MAPS_API_KEY"] = mapsApiKey
     }
 
     signingConfigs {
@@ -125,6 +136,10 @@ dependencies {
   implementation(libs.androidx.compose.ui.tooling.preview)
   implementation(libs.androidx.compose.material3)
   implementation("androidx.compose.material:material-icons-extended")
+
+  // Google Maps SDK & Compose Integration
+  implementation(libs.google.maps.compose)
+  implementation(libs.play.services.maps)
   // Tooling
   debugImplementation(libs.androidx.compose.ui.tooling)
   // Instrumented tests

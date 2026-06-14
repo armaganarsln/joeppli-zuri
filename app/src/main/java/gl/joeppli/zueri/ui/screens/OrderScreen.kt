@@ -36,9 +36,15 @@ import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.PathMeasure
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.google.android.gms.maps.model.LatLng
+import com.google.android.gms.maps.model.CameraPosition
+import com.google.android.gms.maps.model.MapStyleOptions
+import com.google.android.gms.maps.model.BitmapDescriptorFactory
+import com.google.maps.android.compose.*
 import gl.joeppli.zueri.data.RecyclingRepository
 import gl.joeppli.zueri.notify.OrderNotifications
 import gl.joeppli.zueri.theme.TwintCyan
@@ -833,86 +839,215 @@ fun JöppliTrackerScreen(
                 .clip(RoundedCornerShape(24.dp))
                 .background(mapBg)
         ) {
-            Canvas(modifier = Modifier.fillMaxSize()) {
-                val w = size.width
-                val h = size.height
+            val systemDark = isSystemInDarkTheme()
+            val themeState by RecyclingRepository.theme.collectAsState()
+            val isDarkTheme = themeState == "dark" || (themeState == "system" && systemDark)
 
-                // Zurich street grid mockup
-                for (i in 1..6) {
-                    drawLine(roadColor, Offset(w * i / 7f, 0f), Offset(w * i / 7f, h), strokeWidth = 8f)
-                    drawLine(roadColor, Offset(0f, h * i / 7f), Offset(w, h * i / 7f), strokeWidth = 8f)
+            val mapProperties = remember(isDarkTheme) {
+                MapProperties(
+                    mapType = MapType.NORMAL,
+                    mapStyleOptions = if (isDarkTheme) {
+                        MapStyleOptions(
+                            """
+                            [
+                              {
+                                "elementType": "geometry",
+                                "stylers": [
+                                  {
+                                    "color": "#242f3e"
+                                  }
+                                ]
+                              },
+                              {
+                                "elementType": "labels.text.fill",
+                                "stylers": [
+                                  {
+                                    "color": "#746855"
+                                  }
+                                ]
+                              },
+                              {
+                                "elementType": "labels.text.stroke",
+                                "stylers": [
+                                  {
+                                    "color": "#242f3e"
+                                  }
+                                ]
+                              },
+                              {
+                                "featureType": "administrative.locality",
+                                "elementType": "labels.text.fill",
+                                "stylers": [
+                                  {
+                                    "color": "#d59563"
+                                  }
+                                ]
+                              },
+                              {
+                                "featureType": "poi",
+                                "elementType": "labels.text.fill",
+                                "stylers": [
+                                  {
+                                    "color": "#d59563"
+                                  }
+                                ]
+                              },
+                              {
+                                "featureType": "road",
+                                "elementType": "geometry",
+                                "stylers": [
+                                  {
+                                    "color": "#38414e"
+                                  }
+                                ]
+                              },
+                              {
+                                "featureType": "road",
+                                "elementType": "geometry.stroke",
+                                "stylers": [
+                                  {
+                                    "color": "#212a37"
+                                  }
+                                ]
+                              },
+                              {
+                                "featureType": "road",
+                                "elementType": "labels.text.fill",
+                                "stylers": [
+                                  {
+                                    "color": "#9ca5b3"
+                                  }
+                                ]
+                              },
+                              {
+                                "featureType": "road.highway",
+                                "elementType": "geometry",
+                                "stylers": [
+                                  {
+                                    "color": "#746855"
+                                  }
+                                ]
+                              },
+                              {
+                                "featureType": "water",
+                                "elementType": "geometry",
+                                "stylers": [
+                                  {
+                                    "color": "#17263c"
+                                  }
+                                ]
+                              }
+                            ]
+                            """.trimIndent()
+                        )
+                    } else null
+                )
+            }
+
+            // Real route coordinates in Alt Wiedikon, Zurich:
+            // Werkhof Hardau (Origin) -> Seebahnstrasse -> Schmiede Wiedikon -> Wiedikon Station -> Alt Wiedikon home
+            val routeCoords = remember {
+                listOf(
+                    LatLng(47.3820, 8.5135), // Werkhof Hardau (Origin)
+                    LatLng(47.3795, 8.5144), // Seebahnstrasse North
+                    LatLng(47.3770, 8.5152), // Seebahnstrasse Mid
+                    LatLng(47.3735, 8.5165), // Schmiede Wiedikon area
+                    LatLng(47.3695, 8.5170), // Wiedikon Station area
+                    LatLng(47.3672, 8.5125), // Alt Wiedikon junction (Birmensdorferstrasse)
+                    LatLng(47.3662, 8.5134)  // Destination in Alt Wiedikon (Goldbrunnenplatz area)
+                )
+            }
+
+            // Interpolate the vehicle position based on animated progress (0.0 to 1.0)
+            val truckPos = remember(progress.value) {
+                val progressVal = progress.value.coerceIn(0f, 1f)
+                if (progressVal >= 1f) {
+                    routeCoords.last()
+                } else {
+                    val totalPoints = routeCoords.size
+                    val segmentCount = totalPoints - 1
+                    val exactIndex = progressVal * segmentCount
+                    val index = exactIndex.toInt()
+                    val fraction = exactIndex - index
+                    val startCoord = routeCoords[index]
+                    val endCoord = routeCoords[index + 1]
+                    val lat = startCoord.latitude + (endCoord.latitude - startCoord.latitude) * fraction
+                    val lng = startCoord.longitude + (endCoord.longitude - startCoord.longitude) * fraction
+                    LatLng(lat, lng)
                 }
+            }
 
-                // Curved route: Werkhof Hardau (bottom left) → home (top right)
-                val start = Offset(w * 0.15f, h * 0.82f)
-                val end = Offset(w * 0.82f, h * 0.18f)
-                val route = Path().apply {
-                    moveTo(start.x, start.y)
-                    cubicTo(
-                        w * 0.10f, h * 0.45f,
-                        w * 0.50f, h * 0.70f,
-                        w * 0.57f, h * 0.43f
-                    )
-                    cubicTo(
-                        w * 0.63f, h * 0.22f,
-                        w * 0.72f, h * 0.32f,
-                        end.x, end.y
-                    )
-                }
+            val cameraPositionState = rememberCameraPositionState {
+                position = CameraPosition.fromLatLngZoom(LatLng(47.3740, 8.5150), 14.5f) // center Wiedikon
+            }
 
-                // Full route (faded)
-                drawPath(route, color = routeTrack, style = Stroke(width = 10f, cap = StrokeCap.Round))
-
-                // Travelled portion (gradient trail following the active theme)
-                val measure = PathMeasure()
-                measure.setPath(route, false)
-                val travelled = Path()
-                measure.getSegment(0f, measure.length * progress.value, travelled, true)
-
-                val trailBrush = Brush.linearGradient(
-                    colors = listOf(
-                        trailStart,
-                        trailEnd
-                    ),
-                    start = start,
-                    end = end
+            GoogleMap(
+                modifier = Modifier.fillMaxSize(),
+                cameraPositionState = cameraPositionState,
+                properties = mapProperties,
+                uiSettings = MapUiSettings(zoomControlsEnabled = false, myLocationButtonEnabled = false)
+            ) {
+                // Polyline representing the total route (faded)
+                Polyline(
+                    points = routeCoords,
+                    color = routeColor.copy(alpha = 0.35f),
+                    width = 10f
                 )
 
-                drawPath(
-                    travelled,
-                    brush = trailBrush,
-                    style = Stroke(
-                        width = 10f,
-                        cap = StrokeCap.Round,
-                        pathEffect = PathEffect.dashPathEffect(floatArrayOf(15f, 15f), 0f)
-                    )
+                // Polyline representing the traveled portion
+                val traveledCoords = remember(truckPos) {
+                    val idx = routeCoords.indexOfFirst { it.latitude == truckPos.latitude && it.longitude == truckPos.longitude }
+                    if (idx != -1) {
+                        routeCoords.take(idx + 1)
+                    } else {
+                        val totalPoints = routeCoords.size
+                        val segmentCount = totalPoints - 1
+                        val progressVal = progress.value.coerceIn(0f, 1f)
+                        val exactIndex = progressVal * segmentCount
+                        val index = exactIndex.toInt()
+                        routeCoords.take(index + 1) + truckPos
+                    }
+                }
+                Polyline(
+                    points = traveledCoords,
+                    color = routeColor,
+                    width = 12f
                 )
 
-                // Werkhof Hardau node
-                drawCircle(color = depotColor, radius = 20f, center = start)
-                drawCircle(color = roadColor, radius = 8f, center = start)
+                // Origin Depot Marker
+                Marker(
+                    state = MarkerState(position = routeCoords.first()),
+                    title = if (lang == "en") "Werkhof Hardau" else "ERZ Werkhof Hardau",
+                    snippet = if (lang == "en") "Start" else "Abfahrtsort",
+                    icon = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE)
+                )
 
-                // Home node
-                drawCircle(color = destColor, radius = 20f, center = end)
-                drawCircle(color = roadColor, radius = 8f, center = end)
+                // Destination Home Marker
+                Marker(
+                    state = MarkerState(position = routeCoords.last()),
+                    title = if (lang == "en") "Destination" else "Zieladresse",
+                    snippet = address,
+                    icon = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED)
+                )
 
-                // Robot marker along the curve
-                val robotPos = measure.getPosition(measure.length * progress.value.coerceIn(0f, 1f))
-                
-                // Pulsing radar ring
-                val maxRadarRadius = 60f
-                val currentRadarRadius = 24f + (maxRadarRadius - 24f) * pulseProgress
+                // Pulse Effect / Radar Around the Moving Truck
+                val pulseRadius = 60.0 * (1.0 + pulseProgress * 1.5)
                 val radarAlpha = 1f - pulseProgress
-                drawCircle(
-                    color = routeColor.copy(alpha = radarAlpha * 0.45f),
-                    radius = currentRadarRadius,
-                    center = robotPos
+                Circle(
+                    center = truckPos,
+                    radius = pulseRadius,
+                    fillColor = routeColor.copy(alpha = radarAlpha * 0.25f),
+                    strokeColor = routeColor.copy(alpha = radarAlpha * 0.45f),
+                    strokeWidth = 2f
                 )
 
-                // Truck puck layers
-                drawCircle(color = puckCenter, radius = 28f, center = robotPos)
-                drawCircle(color = routeColor, radius = 24f, center = robotPos)
-                drawCircle(color = puckCenter, radius = 10f, center = robotPos)
+                // Jöppli Vehicle Marker
+                Marker(
+                    state = MarkerState(position = truckPos),
+                    title = if (lang == "en") "Jöppli vehicle" else "Jöppli-Fahrzeug",
+                    snippet = if (isArrived) (if (lang == "en") "Arrived" else "Haustür erreicht") else (if (lang == "en") "Moving..." else "Unterwegs..."),
+                    icon = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN)
+                )
             }
         }
 
