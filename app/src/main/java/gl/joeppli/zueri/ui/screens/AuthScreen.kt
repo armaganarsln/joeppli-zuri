@@ -33,7 +33,9 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import gl.joeppli.zueri.data.AuthManager
 import gl.joeppli.zueri.data.RecyclingRepository
+import gl.joeppli.zueri.ui.JoeppliStrings
 import gl.joeppli.zueri.ui.LocalJoeppliStrings
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -41,6 +43,16 @@ import kotlinx.coroutines.launch
 // Prototype OTP: no SMS is sent, so the demo verifies against this fixed code
 // (shown on screen) instead of silently accepting any 6 digits.
 private const val DEMO_OTP = "123456"
+
+/** Maps an [AuthManager.AuthError] to a localized, user-facing message. */
+private fun authErrorMessage(error: AuthManager.AuthError, strings: JoeppliStrings): String = when (error) {
+    AuthManager.AuthError.EMAIL_IN_USE -> strings.authErrEmailInUse
+    AuthManager.AuthError.INVALID_CREDENTIALS -> strings.authErrInvalidCreds
+    AuthManager.AuthError.WEAK_PASSWORD -> strings.authErrWeakPassword
+    AuthManager.AuthError.INVALID_EMAIL -> strings.authErrInvalidEmail
+    AuthManager.AuthError.NETWORK -> strings.authErrNetwork
+    AuthManager.AuthError.UNKNOWN -> strings.authErrUnknown
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -62,6 +74,8 @@ fun AuthScreen() {
     var otpInput by rememberSaveable { mutableStateOf("") }
 
     var isPasswordVisible by rememberSaveable { mutableStateOf(false) }
+    // Email card: true = create a new account, false = sign in to an existing one
+    var isRegisterMode by rememberSaveable { mutableStateOf(true) }
     val context = LocalContext.current
     val scrollState = rememberScrollState()
     // Coroutine scope for the simulated login delays — cancels with the
@@ -355,17 +369,55 @@ fun AuthScreen() {
                             }
                         }
                     } else if (loginMethod == "EMAIL") {
-                        // Email + Password form
-                        OutlinedTextField(
-                            value = nameInput,
-                            onValueChange = { nameInput = it; nameError = null },
-                            label = { Text(strings.authEmailName) },
-                            placeholder = { Text(strings.authEmailNamePlaceholder) },
-                            modifier = Modifier.fillMaxWidth(),
-                            singleLine = true,
-                            isError = nameError != null,
-                            supportingText = nameError?.let { { Text(it) } }
-                        )
+                        // Sign in / Register segmented toggle
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(28.dp))
+                                .background(MaterialTheme.colorScheme.surfaceContainerHighest)
+                                .padding(4.dp),
+                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            listOf(
+                                false to strings.authEmailSignInTab,
+                                true to strings.authEmailRegisterTab
+                            ).forEach { (regMode, label) ->
+                                val selected = isRegisterMode == regMode
+                                Box(
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .clip(RoundedCornerShape(24.dp))
+                                        .background(if (selected) MaterialTheme.colorScheme.primary else androidx.compose.ui.graphics.Color.Transparent)
+                                        .clickable {
+                                            isRegisterMode = regMode
+                                            nameError = null; emailError = null; passwordError = null
+                                        }
+                                        .padding(vertical = 10.dp),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text(
+                                        label,
+                                        fontSize = 13.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = if (selected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                            }
+                        }
+
+                        // Display name only needed when creating a new account
+                        if (isRegisterMode) {
+                            OutlinedTextField(
+                                value = nameInput,
+                                onValueChange = { nameInput = it; nameError = null },
+                                label = { Text(strings.authEmailName) },
+                                placeholder = { Text(strings.authEmailNamePlaceholder) },
+                                modifier = Modifier.fillMaxWidth(),
+                                singleLine = true,
+                                isError = nameError != null,
+                                supportingText = nameError?.let { { Text(it) } }
+                            )
+                        }
 
                         OutlinedTextField(
                             value = emailInput,
@@ -401,7 +453,7 @@ fun AuthScreen() {
 
                         Button(
                             onClick = {
-                                nameError = if (nameInput.isBlank())
+                                nameError = if (isRegisterMode && nameInput.isBlank())
                                     (if (activeLang == "en") "Please enter your name" else "Bitte gib din Name ih") else null
                                 emailError = if (!Patterns.EMAIL_ADDRESS.matcher(emailInput.trim()).matches())
                                     (if (activeLang == "en") "Enter a valid email address" else "Gib e gültigi E-Mail ih") else null
@@ -410,9 +462,16 @@ fun AuthScreen() {
                                 if (nameError != null || emailError != null || passwordError != null) return@Button
                                 isLoading = true
                                 scope.launch {
-                                    delay(1000)
+                                    val result = if (isRegisterMode)
+                                        AuthManager.registerWithEmail(nameInput, emailInput, passwordInput)
+                                    else
+                                        AuthManager.signInWithEmail(emailInput, passwordInput)
                                     isLoading = false
-                                    RecyclingRepository.loginWithEmail(nameInput, emailInput)
+                                    // Success flips isLoggedIn in the repository and the app
+                                    // navigates automatically; only failures need surfacing.
+                                    if (result is AuthManager.AuthResult.Failure) {
+                                        Toast.makeText(context, authErrorMessage(result.error, strings), Toast.LENGTH_LONG).show()
+                                    }
                                 }
                             },
                             colors = ButtonDefaults.buttonColors(
@@ -428,7 +487,11 @@ fun AuthScreen() {
                             if (isLoading) {
                                 CircularProgressIndicator(modifier = Modifier.size(20.dp), color = LocalContentColor.current, strokeWidth = 2.dp)
                             } else {
-                                Text(strings.authEmailRegister, fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                                Text(
+                                    if (isRegisterMode) strings.authEmailRegister else strings.authEmailSignInBtn,
+                                    fontSize = 14.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
                             }
                         }
                     } else if (loginMethod == "PHONE") {

@@ -163,6 +163,29 @@ object RecyclingRepository {
         persist()
     }
 
+    /**
+     * Sets the signed-in profile after a real (Firebase) authentication, using
+     * the provider's uid as the stable account id. Used by [AuthManager]; the
+     * loginWith* helpers above remain for the demo paths and unit tests.
+     */
+    fun setAuthenticatedUser(
+        uid: String,
+        name: String,
+        email: String,
+        phone: String = "",
+        authType: String
+    ) {
+        _userProfile.value = UserProfile(
+            id = uid,
+            name = name,
+            email = email,
+            phone = phone,
+            isLoggedIn = true,
+            authType = authType
+        )
+        persist()
+    }
+
     fun registerAddress(homeAddr: String) {
         val current = _userProfile.value
         _userProfile.value = current.copy(
