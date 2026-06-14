@@ -38,6 +38,10 @@ import gl.joeppli.zueri.ui.LocalJoeppliStrings
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
+// Prototype OTP: no SMS is sent, so the demo verifies against this fixed code
+// (shown on screen) instead of silently accepting any 6 digits.
+private const val DEMO_OTP = "123456"
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AuthScreen() {
@@ -479,6 +483,12 @@ fun AuthScreen() {
                                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
                                 lineHeight = 16.sp
                             )
+                            Text(
+                                text = if (activeLang == "en") "Demo code: $DEMO_OTP" else "Demo-Code: $DEMO_OTP",
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.primary
+                            )
 
                             // Hidden BasicTextField driving state
                             BasicTextField(
@@ -534,8 +544,8 @@ fun AuthScreen() {
 
                             Button(
                                 onClick = {
-                                    if (otpInput.length != 6) {
-                                        Toast.makeText(context, strings.authPhoneErrorOtp, Toast.LENGTH_SHORT).show()
+                                    if (otpInput != DEMO_OTP) {
+                                        Toast.makeText(context, if (activeLang == "en") "Wrong code — enter the demo code $DEMO_OTP" else "Falsche Code — gib de Demo-Code $DEMO_OTP ih", Toast.LENGTH_SHORT).show()
                                         return@Button
                                     }
                                     isLoading = true
