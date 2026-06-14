@@ -191,11 +191,6 @@ fun DashboardScreen(
                 valueColor = Color(0xFF10B981),
                 modifier = Modifier.weight(1f)
             )
-            MetricCard(
-                label = if (lang == "en") "STREAK (WEEKS)" else "SERIE (WUCHE)",
-                value = "${stats.streakWeeks} ${if (lang == "en") "W." else "W."}",
-                modifier = Modifier.weight(1f)
-            )
         }
 
         Spacer(modifier = Modifier.height(16.dp))

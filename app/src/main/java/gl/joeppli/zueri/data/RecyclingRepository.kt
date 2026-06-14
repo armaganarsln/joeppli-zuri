@@ -51,7 +51,6 @@ data class RecyclingStats(
     val categories: CategoryBreakdown = CategoryBreakdown(),
     val karma: Int = 85,
     val co2Saved: Float = 198.4f,
-    val streakWeeks: Int = 4,
     val neighborhoodTotalKg: Float = 4230f
 )
 
