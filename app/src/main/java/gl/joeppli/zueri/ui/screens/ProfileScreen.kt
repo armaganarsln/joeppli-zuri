@@ -209,10 +209,10 @@ fun ProfileScreen() {
                         modifier = Modifier.weight(1f)
                     )
                     ThemeOptionButton(
-                        label = if (activeLang == "en") "Green (Light)" else "Grün (Hell)",
-                        color = BrandGreen,
-                        selected = currentTheme == "green",
-                        onClick = { RecyclingRepository.setTheme("green") },
+                        label = if (activeLang == "en") "Red (Light)" else "Rot (Hell)",
+                        color = BrandRed,
+                        selected = currentTheme == "red",
+                        onClick = { RecyclingRepository.setTheme("red") },
                         modifier = Modifier.weight(1f)
                     )
                 }

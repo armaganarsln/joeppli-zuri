@@ -37,16 +37,16 @@ private val BlueLightColorScheme = lightColorScheme(
     surfaceContainerHighest = Color(0xFFE4E5E2)
 )
 
-// 2. Green Theme Scheme (Light)
-private val GreenLightColorScheme = lightColorScheme(
-    primary = BrandGreen,
+// 2. Red Theme Scheme (Light)
+private val RedLightColorScheme = lightColorScheme(
+    primary = BrandRed,
     onPrimary = PureWhite,
-    primaryContainer = GreenPrimaryContainerLight,
-    onPrimaryContainer = GreenOnPrimaryContainerLight,
+    primaryContainer = RedPrimaryContainerLight,
+    onPrimaryContainer = RedOnPrimaryContainerLight,
     secondary = BrandBlue,
     onSecondary = PureWhite,
-    secondaryContainer = Color(0xFFDDE1FF),
-    onSecondaryContainer = Color(0xFF001454),
+    secondaryContainer = BluePrimaryContainerLight,
+    onSecondaryContainer = BlueOnPrimaryContainerLight,
     tertiary = BrandYellow,
     onTertiary = Color(0xFF3A2E00),
     background = SoftGrey,
@@ -125,7 +125,7 @@ fun ZueriJoeppliTheme(
 ) {
     val themeState by RecyclingRepository.theme.collectAsState()
     val colorScheme = when (themeState) {
-        "green" -> GreenLightColorScheme
+        "red" -> RedLightColorScheme
         "yellow" -> YellowLightColorScheme
         "dark" -> DarkColorScheme
         else -> BlueLightColorScheme // default
