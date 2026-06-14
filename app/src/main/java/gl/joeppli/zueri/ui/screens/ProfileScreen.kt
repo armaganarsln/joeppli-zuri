@@ -29,6 +29,7 @@ import gl.joeppli.zueri.theme.BrandGreen
 import gl.joeppli.zueri.theme.BrandBlue
 import gl.joeppli.zueri.theme.BrandYellow
 import gl.joeppli.zueri.theme.BrandRed
+import gl.joeppli.zueri.theme.NeutralDark
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -201,17 +202,17 @@ fun ProfileScreen() {
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     ThemeOptionButton(
-                        label = if (activeLang == "en") "Green" else "Grü",
-                        color = BrandGreen,
-                        selected = currentTheme == "green",
-                        onClick = { RecyclingRepository.setTheme("green") },
-                        modifier = Modifier.weight(1f)
-                    )
-                    ThemeOptionButton(
-                        label = if (activeLang == "en") "Blue" else "Blau",
+                        label = if (activeLang == "en") "Blue (Light)" else "Blau (Hell)",
                         color = BrandBlue,
                         selected = currentTheme == "blue",
                         onClick = { RecyclingRepository.setTheme("blue") },
+                        modifier = Modifier.weight(1f)
+                    )
+                    ThemeOptionButton(
+                        label = if (activeLang == "en") "Green (Light)" else "Grün (Hell)",
+                        color = BrandGreen,
+                        selected = currentTheme == "green",
+                        onClick = { RecyclingRepository.setTheme("green") },
                         modifier = Modifier.weight(1f)
                     )
                 }
@@ -221,17 +222,17 @@ fun ProfileScreen() {
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     ThemeOptionButton(
-                        label = if (activeLang == "en") "Yellow" else "Gälb",
+                        label = if (activeLang == "en") "Yellow (Light)" else "Gelb (Hell)",
                         color = BrandYellow,
                         selected = currentTheme == "yellow",
                         onClick = { RecyclingRepository.setTheme("yellow") },
                         modifier = Modifier.weight(1f)
                     )
                     ThemeOptionButton(
-                        label = if (activeLang == "en") "Red" else "Rot",
-                        color = BrandRed,
-                        selected = currentTheme == "red",
-                        onClick = { RecyclingRepository.setTheme("red") },
+                        label = if (activeLang == "en") "Dark (Dark)" else "Dunkel (Dunkel)",
+                        color = NeutralDark,
+                        selected = currentTheme == "dark",
+                        onClick = { RecyclingRepository.setTheme("dark") },
                         modifier = Modifier.weight(1f)
                     )
                 }

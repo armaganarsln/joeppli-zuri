@@ -89,7 +89,7 @@ object RecyclingRepository {
     private val _lastPickup = MutableStateFlow<PickupRequest?>(null)
     val lastPickup: StateFlow<PickupRequest?> = _lastPickup.asStateFlow()
 
-    private val _theme = MutableStateFlow("green")
+    private val _theme = MutableStateFlow("blue")
     val theme: StateFlow<String> = _theme.asStateFlow()
 
     /**
