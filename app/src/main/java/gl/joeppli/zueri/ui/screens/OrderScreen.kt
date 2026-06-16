@@ -1,6 +1,7 @@
 package gl.joeppli.zueri.ui.screens
 
 import android.Manifest
+import android.location.Geocoder
 import android.os.Build
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -49,7 +50,9 @@ import gl.joeppli.zueri.data.RecyclingRepository
 import gl.joeppli.zueri.notify.OrderNotifications
 import gl.joeppli.zueri.theme.TwintCyan
 import gl.joeppli.zueri.ui.LocalJoeppliStrings
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.withContext
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -949,18 +952,35 @@ fun JöppliTrackerScreen(
                 )
             }
 
+            // Geocode the saved pickup address so the final destination reflects
+            // the user's real address; falls back to the Alt-Wiedikon centre
+            // (Goldbrunnenplatz) when geocoding is unavailable.
+            var geocodedDest by remember { mutableStateOf<LatLng?>(null) }
+            LaunchedEffect(address) {
+                geocodedDest = withContext(Dispatchers.IO) {
+                    runCatching {
+                        if (address.isNotBlank() && Geocoder.isPresent()) {
+                            @Suppress("DEPRECATION")
+                            Geocoder(context, Locale.GERMAN)
+                                .getFromLocationName("$address, Zürich, Switzerland", 1)
+                                ?.firstOrNull()
+                                ?.let { LatLng(it.latitude, it.longitude) }
+                        } else null
+                    }.getOrNull()
+                }
+            }
+
             // Real route coordinates in Alt Wiedikon, Zurich:
-            // Werkhof Hardau (Origin) -> Seebahnstrasse -> Schmiede Wiedikon -> Wiedikon Station -> Alt Wiedikon home
-            val routeCoords = remember {
+            // Werkhof Hardau (Origin) -> Seebahnstrasse -> Schmiede Wiedikon -> Wiedikon Station -> real destination
+            val routeCoords = remember(geocodedDest) {
                 listOf(
                     LatLng(47.3820, 8.5135), // Werkhof Hardau (Origin)
                     LatLng(47.3795, 8.5144), // Seebahnstrasse North
                     LatLng(47.3770, 8.5152), // Seebahnstrasse Mid
                     LatLng(47.3735, 8.5165), // Schmiede Wiedikon area
                     LatLng(47.3695, 8.5170), // Wiedikon Station area
-                    LatLng(47.3672, 8.5125), // Alt Wiedikon junction (Birmensdorferstrasse)
-                    LatLng(47.3662, 8.5134)  // Destination in Alt Wiedikon (Goldbrunnenplatz area)
-                )
+                    LatLng(47.3672, 8.5125)  // Alt Wiedikon junction (Birmensdorferstrasse)
+                ) + (geocodedDest ?: LatLng(47.3662, 8.5134)) // real address, else Goldbrunnenplatz
             }
 
             // Interpolate the vehicle position based on animated progress (0.0 to 1.0)
