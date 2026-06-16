@@ -829,16 +829,9 @@ fun JöppliTrackerScreen(
 
         Spacer(modifier = Modifier.height(20.dp))
 
-        // Stylized animated route map
+        // Live route map (depot → destination)
         val mapBg = MaterialTheme.colorScheme.surfaceContainerHigh
-        val roadColor = MaterialTheme.colorScheme.surface
-        val routeTrack = MaterialTheme.colorScheme.secondary.copy(alpha = 0.25f)
         val routeColor = MaterialTheme.colorScheme.primary
-        val depotColor = MaterialTheme.colorScheme.secondary
-        val destColor = MaterialTheme.colorScheme.error
-        val puckCenter = MaterialTheme.colorScheme.onPrimary
-        val trailStart = MaterialTheme.colorScheme.secondary
-        val trailEnd = MaterialTheme.colorScheme.primary
 
         Box(
             modifier = Modifier
