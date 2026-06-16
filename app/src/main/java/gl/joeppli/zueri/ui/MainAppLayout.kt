@@ -47,6 +47,7 @@ fun MainAppLayout() {
 fun MainAppContent() {
     var activeTab by rememberSaveable { mutableStateOf("HOME") }
     var prefillQuickOrder by rememberSaveable { mutableStateOf(false) }
+    var openTracker by rememberSaveable { mutableStateOf(false) }
 
     // From any tab other than Home, Back returns to Home rather than exiting
     // the app. On Home it stays disabled so the system handles back (exit).
@@ -54,6 +55,7 @@ fun MainAppContent() {
     // takes precedence while it's shown.
     BackHandler(enabled = activeTab != "HOME") {
         prefillQuickOrder = false
+        openTracker = false
         activeTab = "HOME"
     }
 
@@ -63,10 +65,12 @@ fun MainAppContent() {
                 activeTab = activeTab,
                 onTabSelect = { tab ->
                     prefillQuickOrder = false
+                    openTracker = false
                     activeTab = tab
                 },
                 onQuickPickupClick = {
                     prefillQuickOrder = true
+                    openTracker = false
                     activeTab = "ORDER"
                 }
             )
@@ -79,9 +83,19 @@ fun MainAppContent() {
         ) {
             when (activeTab) {
                 "HOME" -> HomeScreen(
-                    onNavigateToTab = { tab -> activeTab = tab },
+                    onNavigateToTab = { tab ->
+                        prefillQuickOrder = false
+                        openTracker = false
+                        activeTab = tab
+                    },
                     onQuickPickupClick = {
                         prefillQuickOrder = true
+                        openTracker = false
+                        activeTab = "ORDER"
+                    },
+                    onTrackPickup = {
+                        prefillQuickOrder = false
+                        openTracker = true
                         activeTab = "ORDER"
                     }
                 )
@@ -89,8 +103,12 @@ fun MainAppContent() {
                     onOrderClick = { activeTab = "ORDER" }
                 )
                 "ORDER" -> OrderScreen(
-                    onNavigateHome = { activeTab = "HOME" },
-                    prefillQuick = prefillQuickOrder
+                    onNavigateHome = {
+                        openTracker = false
+                        activeTab = "HOME"
+                    },
+                    prefillQuick = prefillQuickOrder,
+                    startAtTracker = openTracker
                 )
                 "GUIDE" -> GuideScreen()
                 "PROFILE" -> ProfileScreen()

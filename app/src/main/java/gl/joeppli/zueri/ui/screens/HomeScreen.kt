@@ -12,6 +12,7 @@ import androidx.compose.material.icons.filled.Bolt
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.LocalShipping
+import androidx.compose.material.icons.outlined.LocationOn
 import androidx.compose.material.icons.automirrored.outlined.MenuBook
 import androidx.compose.material.icons.outlined.ManageAccounts
 import androidx.compose.material3.*
@@ -22,6 +23,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import gl.joeppli.zueri.data.RecyclingRepository
 import gl.joeppli.zueri.ui.LocalJoeppliStrings
@@ -29,10 +31,12 @@ import gl.joeppli.zueri.ui.LocalJoeppliStrings
 @Composable
 fun HomeScreen(
     onNavigateToTab: (String) -> Unit,
-    onQuickPickupClick: () -> Unit
+    onQuickPickupClick: () -> Unit,
+    onTrackPickup: () -> Unit
 ) {
     val stats by RecyclingRepository.stats.collectAsState()
     val profile by RecyclingRepository.userProfile.collectAsState()
+    val lastPickup by RecyclingRepository.lastPickup.collectAsState()
     val scrollState = rememberScrollState()
     val strings = LocalJoeppliStrings.current
     val lang by RecyclingRepository.userLanguage.collectAsState()
@@ -152,6 +156,74 @@ fun HomeScreen(
         }
 
         Spacer(modifier = Modifier.height(24.dp))
+
+        // Active / last pickup — lets the user return to the live tracker
+        lastPickup?.let { pickup ->
+            Card(
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer),
+                shape = RoundedCornerShape(20.dp),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Outlined.LocalShipping,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onSecondaryContainer,
+                            modifier = Modifier.size(20.dp)
+                        )
+                        Text(
+                            text = if (lang == "en") "Your last pickup" else "Dini letschti Abholig",
+                            style = MaterialTheme.typography.titleSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSecondaryContainer
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = pickup.address,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSecondaryContainer
+                    )
+                    Text(
+                        text = "${pickup.dateString} · ${pickup.timeSlot}",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.8f)
+                    )
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = if (pickup.price == 0f) (if (lang == "en") "Free" else "Gratis")
+                            else "CHF %.2f".format(pickup.price),
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSecondaryContainer
+                        )
+                        Button(
+                            onClick = onTrackPickup,
+                            shape = RoundedCornerShape(28.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Outlined.LocationOn,
+                                contentDescription = null,
+                                modifier = Modifier.size(18.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(if (lang == "en") "Track" else "Verfolge")
+                        }
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
+        }
 
         // Menu Options List
         Column(

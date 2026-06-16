@@ -56,12 +56,13 @@ import java.util.*
 @Composable
 fun OrderScreen(
     onNavigateHome: () -> Unit,
-    prefillQuick: Boolean = false
+    prefillQuick: Boolean = false,
+    startAtTracker: Boolean = false
 ) {
     val strings = LocalJoeppliStrings.current
     val lang by RecyclingRepository.userLanguage.collectAsState()
     
-    var currentStep by rememberSaveable { mutableStateOf(if (prefillQuick) 2 else 1) }
+    var currentStep by rememberSaveable { mutableStateOf(if (startAtTracker) 6 else if (prefillQuick) 2 else 1) }
 
     // Form states — saveable so an in-progress order survives rotation
     var address by rememberSaveable { mutableStateOf("") }
@@ -76,11 +77,15 @@ fun OrderScreen(
     var isExpress by rememberSaveable { mutableStateOf(prefillQuick) }
 
     val profile by RecyclingRepository.userProfile.collectAsState()
+    val lastPickup by RecyclingRepository.lastPickup.collectAsState()
 
-    // Initializer
-    LaunchedEffect(profile) {
-        if (profile.homeAddress.isNotEmpty()) {
-            address = profile.homeAddress
+    // Initializer — when resuming the tracker, show the saved pickup's address;
+    // otherwise prefill the user's registered home address.
+    LaunchedEffect(profile, startAtTracker) {
+        val resumeAddress = if (startAtTracker) lastPickup?.address else null
+        when {
+            resumeAddress != null -> address = resumeAddress
+            profile.homeAddress.isNotEmpty() -> address = profile.homeAddress
         }
     }
 
