@@ -487,7 +487,7 @@ fun AuthScreen() {
                                 IconButton(onClick = { isPasswordVisible = !isPasswordVisible }) {
                                     Icon(
                                         imageVector = if (isPasswordVisible) Icons.Default.Info else Icons.Default.Lock,
-                                        contentDescription = "Passwort anzeigen"
+                                        contentDescription = if (activeLang == "en") "Show password" else "Passwort aazeige"
                                     )
                                 }
                             }

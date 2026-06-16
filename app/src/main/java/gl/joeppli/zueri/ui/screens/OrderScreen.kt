@@ -176,7 +176,7 @@ private fun WizardHeader(
                 .padding(horizontal = 4.dp, vertical = 4.dp)
         ) {
             IconButton(onClick = onBack) {
-                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Zurück")
+                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = if (lang == "en") "Back" else "Zurück")
             }
             Column(modifier = Modifier.weight(1f)) {
                 Text(
@@ -822,7 +822,7 @@ fun JöppliTrackerScreen(
         }
         Spacer(modifier = Modifier.height(4.dp))
         Text(
-            "Ziel: $address",
+            text = if (lang == "en") "Destination: $address" else "Ziel: $address",
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
