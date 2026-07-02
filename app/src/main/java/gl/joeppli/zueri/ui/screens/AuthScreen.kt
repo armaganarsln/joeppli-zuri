@@ -12,6 +12,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -22,11 +23,15 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
@@ -83,6 +88,7 @@ fun AuthScreen() {
     // the demo code path (keeps the app usable before the real Firebase project).
     var otpDemoMode by rememberSaveable { mutableStateOf(false) }
     val context = LocalContext.current
+    val focusManager = LocalFocusManager.current
     val scrollState = rememberScrollState()
     // Coroutine scope for the simulated login delays — cancels with the
     // screen, so a callback can't fire on a composable that's already gone.
@@ -411,6 +417,31 @@ fun AuthScreen() {
                             }
                         }
                     } else if (loginMethod == "EMAIL") {
+                        // Shared by the CTA button and the keyboard's Done action
+                        val submitEmailForm = fun() {
+                            if (isLoading) return
+                            nameError = if (isRegisterMode && nameInput.isBlank())
+                                (if (activeLang == "en") "Please enter your name" else "Bitte gib din Name ih") else null
+                            emailError = if (!Patterns.EMAIL_ADDRESS.matcher(emailInput.trim()).matches())
+                                (if (activeLang == "en") "Enter a valid email address" else "Gib e gültigi E-Mail ih") else null
+                            passwordError = if (passwordInput.length < 6)
+                                (if (activeLang == "en") "Password must be at least 6 characters" else "Passwort mues mindestens 6 Zeiche ha") else null
+                            if (nameError != null || emailError != null || passwordError != null) return
+                            isLoading = true
+                            scope.launch {
+                                val result = if (isRegisterMode)
+                                    AuthManager.registerWithEmail(nameInput, emailInput, passwordInput)
+                                else
+                                    AuthManager.signInWithEmail(emailInput, passwordInput)
+                                isLoading = false
+                                // Success flips isLoggedIn in the repository and the app
+                                // navigates automatically; only failures need surfacing.
+                                if (result is AuthManager.AuthResult.Failure) {
+                                    Toast.makeText(context, authErrorMessage(result.error, strings), Toast.LENGTH_LONG).show()
+                                }
+                            }
+                        }
+
                         // Sign in / Register segmented toggle
                         Row(
                             modifier = Modifier
@@ -456,6 +487,8 @@ fun AuthScreen() {
                                 placeholder = { Text(strings.authEmailNamePlaceholder) },
                                 modifier = Modifier.fillMaxWidth(),
                                 singleLine = true,
+                                keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Words, imeAction = ImeAction.Next),
+                                keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Down) }),
                                 isError = nameError != null,
                                 supportingText = nameError?.let { { Text(it) } }
                             )
@@ -468,7 +501,8 @@ fun AuthScreen() {
                             placeholder = { Text("ueli@example.ch") },
                             modifier = Modifier.fillMaxWidth(),
                             singleLine = true,
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email, imeAction = ImeAction.Next),
+                            keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Down) }),
                             isError = emailError != null,
                             supportingText = emailError?.let { { Text(it) } }
                         )
@@ -481,6 +515,11 @@ fun AuthScreen() {
                             modifier = Modifier.fillMaxWidth(),
                             singleLine = true,
                             visualTransformation = if (isPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password, imeAction = ImeAction.Done),
+                            keyboardActions = KeyboardActions(onDone = {
+                                focusManager.clearFocus()
+                                submitEmailForm()
+                            }),
                             isError = passwordError != null,
                             supportingText = passwordError?.let { { Text(it) } },
                             trailingIcon = {
@@ -498,28 +537,7 @@ fun AuthScreen() {
                         )
 
                         Button(
-                            onClick = {
-                                nameError = if (isRegisterMode && nameInput.isBlank())
-                                    (if (activeLang == "en") "Please enter your name" else "Bitte gib din Name ih") else null
-                                emailError = if (!Patterns.EMAIL_ADDRESS.matcher(emailInput.trim()).matches())
-                                    (if (activeLang == "en") "Enter a valid email address" else "Gib e gültigi E-Mail ih") else null
-                                passwordError = if (passwordInput.length < 6)
-                                    (if (activeLang == "en") "Password must be at least 6 characters" else "Passwort mues mindestens 6 Zeiche ha") else null
-                                if (nameError != null || emailError != null || passwordError != null) return@Button
-                                isLoading = true
-                                scope.launch {
-                                    val result = if (isRegisterMode)
-                                        AuthManager.registerWithEmail(nameInput, emailInput, passwordInput)
-                                    else
-                                        AuthManager.signInWithEmail(emailInput, passwordInput)
-                                    isLoading = false
-                                    // Success flips isLoggedIn in the repository and the app
-                                    // navigates automatically; only failures need surfacing.
-                                    if (result is AuthManager.AuthResult.Failure) {
-                                        Toast.makeText(context, authErrorMessage(result.error, strings), Toast.LENGTH_LONG).show()
-                                    }
-                                }
-                            },
+                            onClick = submitEmailForm,
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = MaterialTheme.colorScheme.secondary,
                                 contentColor = MaterialTheme.colorScheme.onSecondary
@@ -541,6 +559,38 @@ fun AuthScreen() {
                             }
                         }
                     } else if (loginMethod == "PHONE") {
+                        // Shared by the send button, the keyboard's Done action,
+                        // and the resend option on the OTP screen.
+                        val sendCodeAction = fun() {
+                            if (isLoading) return
+                            // Validate on digits only, so spaces / +41 formatting pass
+                            phoneError = if (phoneInput.count { it.isDigit() } < 9)
+                                (if (activeLang == "en") "Enter a valid phone number" else "Gib e gültigi Telefonnummere ih") else null
+                            if (phoneError != null) return
+                            isLoading = true
+                            scope.launch {
+                                val activity = context as android.app.Activity
+                                when (AuthManager.sendPhoneCode(activity, phoneInput.trim())) {
+                                    is AuthManager.PhoneSendResult.CodeSent -> {
+                                        otpDemoMode = false
+                                        otpInput = ""
+                                        showOtpScreen = true
+                                    }
+                                    is AuthManager.PhoneSendResult.AutoVerified -> {
+                                        // Instant verification signed the user in; app navigates away.
+                                    }
+                                    is AuthManager.PhoneSendResult.Failure -> {
+                                        // Real SMS unavailable (e.g. backend not configured
+                                        // yet) — fall back to the demo code path.
+                                        otpDemoMode = true
+                                        otpInput = ""
+                                        showOtpScreen = true
+                                    }
+                                }
+                                isLoading = false
+                            }
+                        }
+
                         if (!showOtpScreen) {
                             // Phone input field
                             OutlinedTextField(
@@ -548,7 +598,11 @@ fun AuthScreen() {
                                 onValueChange = { phoneInput = it; phoneError = null },
                                 label = { Text(strings.authPhoneEnter) },
                                 placeholder = { Text(strings.authPhoneEnterPlaceholder) },
-                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
+                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone, imeAction = ImeAction.Done),
+                                keyboardActions = KeyboardActions(onDone = {
+                                    focusManager.clearFocus()
+                                    sendCodeAction()
+                                }),
                                 modifier = Modifier.fillMaxWidth(),
                                 singleLine = true,
                                 isError = phoneError != null,
@@ -556,34 +610,7 @@ fun AuthScreen() {
                             )
 
                             Button(
-                                onClick = {
-                                    // Validate on digits only, so spaces / +41 formatting pass
-                                    phoneError = if (phoneInput.count { it.isDigit() } < 9)
-                                        (if (activeLang == "en") "Enter a valid phone number" else "Gib e gültigi Telefonnummere ih") else null
-                                    if (phoneError != null) return@Button
-                                    isLoading = true
-                                    scope.launch {
-                                        val activity = context as android.app.Activity
-                                        when (AuthManager.sendPhoneCode(activity, phoneInput.trim())) {
-                                            is AuthManager.PhoneSendResult.CodeSent -> {
-                                                otpDemoMode = false
-                                                otpInput = ""
-                                                showOtpScreen = true
-                                            }
-                                            is AuthManager.PhoneSendResult.AutoVerified -> {
-                                                // Instant verification signed the user in; app navigates away.
-                                            }
-                                            is AuthManager.PhoneSendResult.Failure -> {
-                                                // Real SMS unavailable (e.g. backend not configured
-                                                // yet) — fall back to the demo code path.
-                                                otpDemoMode = true
-                                                otpInput = ""
-                                                showOtpScreen = true
-                                            }
-                                        }
-                                        isLoading = false
-                                    }
-                                },
+                                onClick = sendCodeAction,
                                 colors = ButtonDefaults.buttonColors(
                                     containerColor = MaterialTheme.colorScheme.primary,
                                     contentColor = MaterialTheme.colorScheme.onPrimary
