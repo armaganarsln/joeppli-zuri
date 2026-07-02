@@ -64,7 +64,7 @@ fun DashboardScreen(
         Spacer(modifier = Modifier.height(8.dp))
 
         Text(
-            text = if (lang == "en") "Recycling Dashboard" else "Recycling Dashboard",
+            text = "Recycling Dashboard",
             style = MaterialTheme.typography.headlineMedium,
             color = MaterialTheme.colorScheme.onBackground
         )
