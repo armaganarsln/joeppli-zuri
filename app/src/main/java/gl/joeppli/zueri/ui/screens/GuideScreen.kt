@@ -194,14 +194,14 @@ fun GuideScreen() {
                                     style = MaterialTheme.typography.titleSmall,
                                     color = MaterialTheme.colorScheme.onPrimaryContainer
                                 )
-                                Icon(
-                                    imageVector = Icons.Filled.Close,
-                                    contentDescription = "Close",
-                                    tint = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.6f),
-                                    modifier = Modifier
-                                        .size(18.dp)
-                                        .clickable { scanResult = null }
-                                )
+                                IconButton(onClick = { scanResult = null }) {
+                                    Icon(
+                                        imageVector = Icons.Filled.Close,
+                                        contentDescription = if (lang == "en") "Close" else "Schliesse",
+                                        tint = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.6f),
+                                        modifier = Modifier.size(18.dp)
+                                    )
+                                }
                             }
                             Spacer(modifier = Modifier.height(8.dp))
                             Text(
