@@ -140,7 +140,16 @@ fun OrderScreen(
                 1 -> OrderStep1(address, { address = it }, { currentStep = 2 })
                 2 -> OrderStep2(selectedDate, { selectedDate = it }, selectedTimeSlot, { selectedTimeSlot = it }, isExpress, { isExpress = it }, { currentStep = 3 })
                 3 -> OrderStep3(selectedMaterials, { currentStep = 4 })
-                4 -> OrderStep4(address, selectedDate, selectedTimeSlot, selectedMaterials, price, isExpress, { currentStep = 5 })
+                4 -> OrderStep4(address, selectedDate, selectedTimeSlot, selectedMaterials, price, isExpress, {
+                    if (price == 0f) {
+                        // Nothing to pay — complete the free order right away
+                        // instead of showing a CHF 0.00 TWINT screen.
+                        RecyclingRepository.addPickup(address, selectedDate, selectedTimeSlot, selectedMaterials.toList(), price, isExpress)
+                        currentStep = 6
+                    } else {
+                        currentStep = 5
+                    }
+                })
                 5 -> OrderStep5(price, {
                     // Complete order and update stats
                     RecyclingRepository.addPickup(address, selectedDate, selectedTimeSlot, selectedMaterials.toList(), price, isExpress)
