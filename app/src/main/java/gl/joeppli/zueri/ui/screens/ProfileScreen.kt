@@ -207,14 +207,14 @@ fun ProfileScreen() {
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     ThemeOptionButton(
-                        label = if (activeLang == "en") "Blue (Light)" else "Blau (Hell)",
+                        label = if (activeLang == "en") "Blue" else "Blau",
                         color = BrandBlue,
                         selected = currentTheme == "blue",
                         onClick = { RecyclingRepository.setTheme("blue") },
                         modifier = Modifier.weight(1f)
                     )
                     ThemeOptionButton(
-                        label = if (activeLang == "en") "Red (Light)" else "Rot (Hell)",
+                        label = if (activeLang == "en") "Red" else "Rot",
                         color = BrandRed,
                         selected = currentTheme == "red",
                         onClick = { RecyclingRepository.setTheme("red") },
@@ -227,14 +227,14 @@ fun ProfileScreen() {
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     ThemeOptionButton(
-                        label = if (activeLang == "en") "Yellow (Light)" else "Gelb (Hell)",
+                        label = if (activeLang == "en") "Yellow" else "Gelb",
                         color = BrandYellow,
                         selected = currentTheme == "yellow",
                         onClick = { RecyclingRepository.setTheme("yellow") },
                         modifier = Modifier.weight(1f)
                     )
                     ThemeOptionButton(
-                        label = if (activeLang == "en") "Dark (Dark)" else "Dunkel (Dunkel)",
+                        label = if (activeLang == "en") "Dark" else "Dunkel",
                         color = NeutralDark,
                         selected = currentTheme == "dark",
                         onClick = { RecyclingRepository.setTheme("dark") },
