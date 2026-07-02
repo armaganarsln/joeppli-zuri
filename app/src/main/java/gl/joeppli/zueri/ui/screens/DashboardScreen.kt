@@ -365,7 +365,7 @@ fun MetricCard(
         ) {
             Text(
                 text = label,
-                fontSize = 9.sp,
+                style = MaterialTheme.typography.labelSmall,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
