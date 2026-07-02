@@ -164,7 +164,7 @@ fun DashboardScreen(
                         // Star Icon
                         Icon(
                             imageVector = Icons.Filled.Star,
-                            contentDescription = "Karma badge",
+                            contentDescription = if (lang == "en") "Karma badge" else "Karma-Abzeiche",
                             tint = EcoGreen,
                             modifier = Modifier.size(36.dp)
                         )

@@ -111,7 +111,7 @@ fun AddressRegistrationScreen() {
                     value = addressInput,
                     onValueChange = { addressInput = it },
                     label = { Text(strings.profileAddress) },
-                    placeholder = { Text("z.B. Langstrasse 120, 8004 Zürich") },
+                    placeholder = { Text(if (lang == "en") "e.g. Langstrasse 120, 8004 Zürich" else "z.B. Langstrasse 120, 8004 Zürich") },
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(12.dp),
                     colors = OutlinedTextFieldDefaults.colors(
