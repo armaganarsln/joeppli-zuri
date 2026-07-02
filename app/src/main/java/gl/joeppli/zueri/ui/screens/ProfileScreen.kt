@@ -58,7 +58,8 @@ fun ProfileScreen() {
             .padding(16.dp)
             .padding(bottom = 80.dp)
     ) {
-        Spacer(modifier = Modifier.height(24.dp))
+        // 8dp to match the other tabs, so the header doesn't jump on tab switch
+        Spacer(modifier = Modifier.height(8.dp))
 
         // Header with avatar
         Row(verticalAlignment = Alignment.CenterVertically) {
