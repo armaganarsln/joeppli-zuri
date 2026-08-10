@@ -30,7 +30,9 @@ import androidx.compose.ui.unit.sp
 import gl.joeppli.zueri.data.AuthManager
 import gl.joeppli.zueri.data.RecyclingRepository
 import gl.joeppli.zueri.ui.LocalJoeppliStrings
+import gl.joeppli.zueri.ui.components.PageHeader
 import kotlinx.coroutines.launch
+import gl.joeppli.zueri.theme.Dimens
 import gl.joeppli.zueri.theme.BrandGreen
 import gl.joeppli.zueri.theme.BrandBlue
 import gl.joeppli.zueri.theme.BrandYellow
@@ -65,51 +67,24 @@ fun ProfileScreen() {
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
             .verticalScroll(scrollState)
-            .padding(16.dp)
-            .padding(bottom = 80.dp)
+            .padding(horizontal = Dimens.screenH)
+            .padding(top = Dimens.screenTop, bottom = Dimens.screenBottom),
+        verticalArrangement = Arrangement.spacedBy(Dimens.section)
     ) {
-        // 8dp to match the other tabs, so the header doesn't jump on tab switch
-        Spacer(modifier = Modifier.height(8.dp))
-
-        // Header with avatar
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Box(
-                modifier = Modifier
-                    .size(64.dp)
-                    .background(MaterialTheme.colorScheme.primaryContainer, CircleShape),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = Icons.Outlined.Person,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onPrimaryContainer,
-                    modifier = Modifier.size(32.dp)
-                )
-            }
-            Column(modifier = Modifier.padding(start = 16.dp)) {
-                Text(
-                    text = if (activeLang == "en") "Profile Settings" else "Profil & Adresse",
-                    style = MaterialTheme.typography.headlineSmall,
-                    color = MaterialTheme.colorScheme.onBackground
-                )
-                Text(
-                    text = if (activeLang == "en") "Your credentials for Jöppli collection" else "Dini Date für automatischi Abholige",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-        }
-
-        Spacer(modifier = Modifier.height(20.dp))
+        PageHeader(
+            title = if (activeLang == "en") "Profile Settings" else "Profil & Adresse",
+            subtitle = if (activeLang == "en") "Your credentials for Jöppli collection" else "Dini Date für automatischi Abholige",
+            icon = Icons.Outlined.Person
+        )
 
         // Profile Form
         Card(
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-            shape = RoundedCornerShape(16.dp),
+            shape = Dimens.card,
             elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
             modifier = Modifier.fillMaxWidth()
         ) {
-            Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+            Column(modifier = Modifier.padding(Dimens.gapLg), verticalArrangement = Arrangement.spacedBy(Dimens.gapLg)) {
                 Text(
                     text = strings.profileContact,
                     style = MaterialTheme.typography.titleMedium,
@@ -122,7 +97,7 @@ fun ProfileScreen() {
                     label = { Text(strings.profileName) },
                     singleLine = true,
                     keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Words),
-                    shape = RoundedCornerShape(12.dp),
+                    shape = Dimens.chip,
                     modifier = Modifier.fillMaxWidth()
                 )
 
@@ -132,7 +107,7 @@ fun ProfileScreen() {
                     label = { Text(strings.profilePhone) },
                     singleLine = true,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
-                    shape = RoundedCornerShape(12.dp),
+                    shape = Dimens.chip,
                     modifier = Modifier.fillMaxWidth()
                 )
 
@@ -141,7 +116,7 @@ fun ProfileScreen() {
                     onValueChange = { address = it },
                     label = { Text(strings.profileAddress) },
                     singleLine = true,
-                    shape = RoundedCornerShape(12.dp),
+                    shape = Dimens.chip,
                     modifier = Modifier.fillMaxWidth()
                 )
 
@@ -150,7 +125,7 @@ fun ProfileScreen() {
                 if (isProfileDirty) {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        horizontalArrangement = Arrangement.spacedBy(Dimens.gapSm)
                     ) {
                         Icon(
                             imageVector = Icons.Outlined.Info,
@@ -174,34 +149,32 @@ fun ProfileScreen() {
                         Toast.makeText(context, strings.profileSaveToast, Toast.LENGTH_SHORT).show()
                     },
                     enabled = isProfileDirty,
-                    shape = RoundedCornerShape(28.dp),
+                    shape = Dimens.ctaShape,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(56.dp)
+                        .height(Dimens.ctaHeight)
                 ) {
                     Text(strings.profileSave, style = MaterialTheme.typography.labelLarge)
                 }
             }
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
-
         // Language settings card
         Card(
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-            shape = RoundedCornerShape(16.dp),
+            shape = Dimens.card,
             elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
             modifier = Modifier.fillMaxWidth()
         ) {
-            Column(modifier = Modifier.padding(16.dp)) {
+            Column(modifier = Modifier.padding(Dimens.gapLg)) {
                 Text(
                     text = strings.profileLangTitle,
                     style = MaterialTheme.typography.titleMedium,
                     color = MaterialTheme.colorScheme.secondary
                 )
-                Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.height(Dimens.gapMd))
 
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(Dimens.gapSm)) {
                     val isDe = activeLang == "de"
                     FilterChip(
                         selected = isDe,
@@ -219,27 +192,25 @@ fun ProfileScreen() {
             }
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
-
         // Theme settings card
         Card(
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-            shape = RoundedCornerShape(16.dp),
+            shape = Dimens.card,
             elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
             modifier = Modifier.fillMaxWidth()
         ) {
-            Column(modifier = Modifier.padding(16.dp)) {
+            Column(modifier = Modifier.padding(Dimens.gapLg)) {
                 val currentTheme by RecyclingRepository.theme.collectAsState()
                 Text(
                     text = if (activeLang == "en") "App Color Theme" else "App-Farbschema",
                     style = MaterialTheme.typography.titleMedium,
                     color = MaterialTheme.colorScheme.secondary
                 )
-                Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.height(Dimens.gapMd))
 
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    horizontalArrangement = Arrangement.spacedBy(Dimens.gapSm)
                 ) {
                     ThemeOptionButton(
                         label = if (activeLang == "en") "Blue" else "Blau",
@@ -259,7 +230,7 @@ fun ProfileScreen() {
                 Spacer(modifier = Modifier.height(8.dp))
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    horizontalArrangement = Arrangement.spacedBy(Dimens.gapSm)
                 ) {
                     ThemeOptionButton(
                         label = if (activeLang == "en") "Yellow" else "Gelb",
@@ -279,24 +250,22 @@ fun ProfileScreen() {
             }
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
-
         // Payment method
         Card(
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-            shape = RoundedCornerShape(16.dp),
+            shape = Dimens.card,
             elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
             modifier = Modifier.fillMaxWidth()
         ) {
-            Column(modifier = Modifier.padding(16.dp)) {
+            Column(modifier = Modifier.padding(Dimens.gapLg)) {
                 Text(
                     text = strings.profilePayment,
                     style = MaterialTheme.typography.titleMedium,
                     color = MaterialTheme.colorScheme.secondary
                 )
-                Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.height(Dimens.gapMd))
 
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(Dimens.gapSm)) {
                     val isTwint = selectedPayment == "twint_demo"
                     FilterChip(
                         selected = isTwint,
@@ -322,16 +291,14 @@ fun ProfileScreen() {
             }
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
-
         // ERZ Feedback/Contact support form
         Card(
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-            shape = RoundedCornerShape(16.dp),
+            shape = Dimens.card,
             elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
             modifier = Modifier.fillMaxWidth()
         ) {
-            Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Column(modifier = Modifier.padding(Dimens.gapLg), verticalArrangement = Arrangement.spacedBy(Dimens.gapMd)) {
                 Text(
                     text = strings.profileSupportTitle,
                     style = MaterialTheme.typography.titleMedium,
@@ -347,7 +314,7 @@ fun ProfileScreen() {
                     value = supportMessage,
                     onValueChange = { supportMessage = it },
                     label = { Text(strings.profileSupportMsg) },
-                    shape = RoundedCornerShape(12.dp),
+                    shape = Dimens.chip,
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(100.dp),
@@ -386,10 +353,10 @@ fun ProfileScreen() {
                         }
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary),
-                    shape = RoundedCornerShape(28.dp),
+                    shape = Dimens.ctaShape,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(56.dp)
+                        .height(Dimens.ctaHeight)
                 ) {
                     Icon(
                         Icons.AutoMirrored.Filled.Send,
@@ -402,15 +369,13 @@ fun ProfileScreen() {
             }
         }
 
-        Spacer(modifier = Modifier.height(24.dp))
-
         Button(
             onClick = { showLogoutDialog = true },
             colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
-            shape = RoundedCornerShape(28.dp),
+            shape = Dimens.ctaShape,
             modifier = Modifier
                 .fillMaxWidth()
-                .height(56.dp)
+                .height(Dimens.ctaHeight)
         ) {
             Text(strings.profileLogout, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onError)
         }
@@ -467,7 +432,7 @@ fun ThemeOptionButton(
             width = if (selected) 2.dp else 1.dp,
             color = if (selected) color else MaterialTheme.colorScheme.outlineVariant
         ),
-        shape = RoundedCornerShape(12.dp),
+        shape = Dimens.chip,
         modifier = modifier.height(44.dp),
         contentPadding = PaddingValues(horizontal = 8.dp)
     ) {
