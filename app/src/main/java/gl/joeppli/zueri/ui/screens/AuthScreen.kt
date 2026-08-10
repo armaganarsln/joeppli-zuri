@@ -743,6 +743,26 @@ fun AuthScreen() {
                                     Text(strings.authPhoneOtpVerify, fontSize = 14.sp, fontWeight = FontWeight.Bold)
                                 }
                             }
+
+                            // Escape hatch when the SMS never arrives. Meaningless
+                            // in demo mode, where the code is shown on screen.
+                            if (!otpDemoMode) {
+                                TextButton(
+                                    onClick = {
+                                        otpInput = ""
+                                        sendCodeAction()
+                                    },
+                                    enabled = !isLoading,
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+                                    Text(
+                                        text = if (activeLang == "en") "Didn't get a code? Send again"
+                                        else "Kein Code becho? Nomal sände",
+                                        fontSize = 13.sp,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                }
+                            }
                         }
                     }
                 }
