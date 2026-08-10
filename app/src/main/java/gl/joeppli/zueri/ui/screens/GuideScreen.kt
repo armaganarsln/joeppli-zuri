@@ -1,7 +1,6 @@
 package gl.joeppli.zueri.ui.screens
 
 import android.widget.Toast
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -38,7 +37,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import gl.joeppli.zueri.data.RecyclingRepository
+import gl.joeppli.zueri.theme.Dimens
 import gl.joeppli.zueri.ui.LocalJoeppliStrings
+import gl.joeppli.zueri.ui.components.PageHeader
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -91,111 +92,110 @@ fun GuideScreen() {
     val expandedItemIds = remember { mutableStateListOf<String>() }
 
     Box(modifier = Modifier.fillMaxSize()) {
-        Column(
+        // One scrolling list for the whole screen: the header and search used to
+        // be pinned above a LazyColumn, which squeezed the material list into
+        // whatever height was left over.
+        LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
-                .background(MaterialTheme.colorScheme.background)
-                .padding(16.dp)
-                .padding(bottom = 80.dp)
+                .background(MaterialTheme.colorScheme.background),
+            contentPadding = PaddingValues(
+                start = Dimens.screenH,
+                end = Dimens.screenH,
+                top = Dimens.screenTop,
+                bottom = Dimens.screenBottom
+            ),
+            verticalArrangement = Arrangement.spacedBy(Dimens.gapMd)
         ) {
-            // 8dp to match the other tabs, so the header doesn't jump on tab switch
-            Spacer(modifier = Modifier.height(8.dp))
-
-            Text(
-                text = strings.guideTitle,
-                style = MaterialTheme.typography.headlineMedium,
-                color = MaterialTheme.colorScheme.onBackground
-            )
-            Text(
-                text = strings.guideSubtitle,
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(top = 4.dp)
-            )
-
-            Spacer(modifier = Modifier.height(20.dp))
-
-            // AI Camera Scan Trigger Card
-            Card(
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondary),
-                shape = RoundedCornerShape(24.dp),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable { showScanSheet = true }
-            ) {
-                Row(
-                    modifier = Modifier.padding(20.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(16.dp)
+            item(key = "header") {
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(Dimens.section),
+                    modifier = Modifier.padding(bottom = Dimens.gapMd)
                 ) {
-                    Box(
+                    PageHeader(
+                        title = strings.guideTitle,
+                        subtitle = strings.guideSubtitle
+                    )
+
+                    // AI Camera Scan Trigger Card
+                    Card(
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondary),
+                        shape = Dimens.cardHero,
                         modifier = Modifier
-                            .size(52.dp)
-                            .background(
-                                MaterialTheme.colorScheme.onSecondary.copy(alpha = 0.18f),
-                                RoundedCornerShape(16.dp)
-                            ),
-                        contentAlignment = Alignment.Center
+                            .fillMaxWidth()
+                            .clickable { showScanSheet = true }
                     ) {
-                        Icon(
-                            imageVector = Icons.Outlined.CenterFocusWeak,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.onSecondary,
-                            modifier = Modifier.size(28.dp)
-                        )
+                        Row(
+                            modifier = Modifier.padding(Dimens.gapLg),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(Dimens.gapLg)
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(52.dp)
+                                    .background(
+                                        MaterialTheme.colorScheme.onSecondary.copy(alpha = 0.18f),
+                                        Dimens.card
+                                    ),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Outlined.CenterFocusWeak,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.onSecondary,
+                                    modifier = Modifier.size(28.dp)
+                                )
+                            }
+                            Column(verticalArrangement = Arrangement.spacedBy(Dimens.gapXs)) {
+                                Text(
+                                    text = strings.guideScannerTitle,
+                                    color = MaterialTheme.colorScheme.onSecondary,
+                                    style = MaterialTheme.typography.titleMedium
+                                )
+                                Text(
+                                    text = strings.guideScannerSubtitle,
+                                    color = MaterialTheme.colorScheme.onSecondary.copy(alpha = 0.85f),
+                                    style = MaterialTheme.typography.bodySmall
+                                )
+                            }
+                        }
                     }
-                    Column {
-                        Text(
-                            text = strings.guideScannerTitle,
-                            color = MaterialTheme.colorScheme.onSecondary,
-                            style = MaterialTheme.typography.titleMedium
-                        )
-                        Text(
-                            text = strings.guideScannerSubtitle,
-                            color = MaterialTheme.colorScheme.onSecondary.copy(alpha = 0.85f),
-                            style = MaterialTheme.typography.bodySmall
-                        )
-                    }
+
+                    // Search input field
+                    OutlinedTextField(
+                        value = searchQuery,
+                        onValueChange = { searchQuery = it },
+                        label = { Text(if (lang == "en") "What are you disposing?" else "Was entsorgsch du?") },
+                        leadingIcon = { Icon(Icons.Outlined.Search, contentDescription = null) },
+                        trailingIcon = {
+                            if (searchQuery.isNotEmpty()) {
+                                IconButton(onClick = { searchQuery = "" }) {
+                                    Icon(
+                                        imageVector = Icons.Filled.Close,
+                                        contentDescription = if (lang == "en") "Clear search" else "Suech lösche",
+                                        modifier = Modifier.size(18.dp)
+                                    )
+                                }
+                            }
+                        },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = Dimens.card
+                    )
                 }
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Search input field
-            OutlinedTextField(
-                value = searchQuery,
-                onValueChange = { searchQuery = it },
-                label = { Text(if (lang == "en") "What are you disposing?" else "Was entsorgsch du?") },
-                leadingIcon = { Icon(Icons.Outlined.Search, contentDescription = null) },
-                trailingIcon = {
-                    if (searchQuery.isNotEmpty()) {
-                        IconButton(onClick = { searchQuery = "" }) {
-                            Icon(
-                                imageVector = Icons.Filled.Close,
-                                contentDescription = if (lang == "en") "Clear search" else "Suech lösche",
-                                modifier = Modifier.size(18.dp)
-                            )
-                        }
-                    }
-                },
-                singleLine = true,
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp)
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
-
             // AI Result details block
-            AnimatedVisibility(visible = scanResult != null) {
-                scanResult?.let { result ->
+            scanResult?.let { result ->
+                item(key = "scan-result") {
                     Card(
                         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
-                        shape = RoundedCornerShape(16.dp),
+                        shape = Dimens.card,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(bottom = 16.dp)
+                            .animateContentSize()
                     ) {
-                        Column(modifier = Modifier.padding(16.dp)) {
+                        Column(modifier = Modifier.padding(Dimens.gapLg)) {
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -215,7 +215,7 @@ fun GuideScreen() {
                                     )
                                 }
                             }
-                            Spacer(modifier = Modifier.height(8.dp))
+                            Spacer(modifier = Modifier.height(Dimens.gapSm))
                             Text(
                                 text = result,
                                 style = MaterialTheme.typography.bodyMedium,
@@ -228,104 +228,100 @@ fun GuideScreen() {
 
             // No search hits — say so instead of leaving the list area blank
             if (filteredMaterials.isEmpty()) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 32.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Icon(
-                        imageVector = Icons.Outlined.Search,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f),
-                        modifier = Modifier.size(40.dp)
-                    )
-                    Spacer(modifier = Modifier.height(12.dp))
-                    Text(
-                        text = if (lang == "en") "Nothing found for \"$searchQuery\""
-                        else "Nüt gfunde für \"$searchQuery\"",
-                        style = MaterialTheme.typography.titleSmall,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(
-                        text = if (lang == "en") "Try a different term, or scan the item instead."
-                        else "Probier en andere Begriff, oder scanne s'Objekt.",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
+                item(key = "empty") {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = Dimens.section),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(Dimens.gapXs)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Outlined.Search,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f),
+                            modifier = Modifier.size(40.dp)
+                        )
+                        Spacer(modifier = Modifier.height(Dimens.gapSm))
+                        Text(
+                            text = if (lang == "en") "Nothing found for \"$searchQuery\""
+                            else "Nüt gfunde für \"$searchQuery\"",
+                            style = MaterialTheme.typography.titleSmall,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        Text(
+                            text = if (lang == "en") "Try a different term, or scan the item instead."
+                            else "Probier en andere Begriff, oder scanne s'Objekt.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
                 }
             }
 
-            // List of materials with swipe-to-add action
-            LazyColumn(
-                verticalArrangement = Arrangement.spacedBy(10.dp),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                items(filteredMaterials, key = { it.id }) { item ->
-                    val isExpanded = expandedItemIds.contains(item.id)
-                    val displayName = if (lang == "en") item.nameEn else item.nameDe
+            items(filteredMaterials, key = { it.id }) { item ->
+                val isExpanded = expandedItemIds.contains(item.id)
+                val displayName = if (lang == "en") item.nameEn else item.nameDe
 
-                    // Material 3 SwipeToDismissBox
-                    val dismissState = rememberSwipeToDismissBoxState(
-                        confirmValueChange = { value ->
-                            if (value == SwipeToDismissBoxValue.EndToStart) {
-                                if (item.accepted) {
-                                    Toast.makeText(context, strings.guideSwipeAddedToast.format(displayName), Toast.LENGTH_SHORT).show()
-                                } else {
-                                    Toast.makeText(context, if (lang == "en") "Cannot collect: return to retail store." else "Entsorgig nöd möglich: Bitte im Fachhandel zruggäh.", Toast.LENGTH_SHORT).show()
-                                }
-                                true
+                // Material 3 SwipeToDismissBox
+                val dismissState = rememberSwipeToDismissBoxState(
+                    confirmValueChange = { value ->
+                        if (value == SwipeToDismissBoxValue.EndToStart) {
+                            if (item.accepted) {
+                                Toast.makeText(context, strings.guideSwipeAddedToast.format(displayName), Toast.LENGTH_SHORT).show()
                             } else {
-                                false
+                                Toast.makeText(context, if (lang == "en") "Cannot collect: return to retail store." else "Entsorgig nöd möglich: Bitte im Fachhandel zruggäh.", Toast.LENGTH_SHORT).show()
                             }
+                            true
+                        } else {
+                            false
+                        }
+                    }
+                )
+
+                // Snap back to neutral state after swipe completes
+                LaunchedEffect(dismissState.currentValue) {
+                    if (dismissState.currentValue == SwipeToDismissBoxValue.EndToStart) {
+                        dismissState.snapTo(SwipeToDismissBoxValue.Settled)
+                    }
+                }
+
+                SwipeToDismissBox(
+                    state = dismissState,
+                    backgroundContent = {
+                        val addColor = MaterialTheme.colorScheme.primary
+                        val color = if (dismissState.dismissDirection == SwipeToDismissBoxValue.EndToStart) {
+                            addColor.copy(alpha = 0.8f)
+                        } else {
+                            Color.Transparent
+                        }
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .clip(Dimens.card)
+                                .background(color)
+                                .padding(horizontal = Dimens.section),
+                            contentAlignment = Alignment.CenterEnd
+                        ) {
+                            if (dismissState.dismissDirection == SwipeToDismissBoxValue.EndToStart) {
+                                Icon(
+                                    imageVector = Icons.Default.Add,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.onPrimary
+                                )
+                            }
+                        }
+                    },
+                    enableDismissFromStartToEnd = false
+                ) {
+                    MaterialRow(
+                        item = item,
+                        lang = lang,
+                        isExpanded = isExpanded,
+                        onExpandToggle = {
+                            if (isExpanded) expandedItemIds.remove(item.id) else expandedItemIds.add(item.id)
                         }
                     )
-
-                    // Snap back to neutral state after swipe completes
-                    LaunchedEffect(dismissState.currentValue) {
-                        if (dismissState.currentValue == SwipeToDismissBoxValue.EndToStart) {
-                            dismissState.snapTo(SwipeToDismissBoxValue.Settled)
-                        }
-                    }
-
-                    SwipeToDismissBox(
-                        state = dismissState,
-                        backgroundContent = {
-                            val addColor = MaterialTheme.colorScheme.primary
-                            val color = if (dismissState.dismissDirection == SwipeToDismissBoxValue.EndToStart) {
-                                addColor.copy(alpha = 0.8f)
-                            } else {
-                                Color.Transparent
-                            }
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .clip(RoundedCornerShape(16.dp))
-                                    .background(color)
-                                    .padding(horizontal = 20.dp),
-                                contentAlignment = Alignment.CenterEnd
-                            ) {
-                                if (dismissState.dismissDirection == SwipeToDismissBoxValue.EndToStart) {
-                                    Icon(
-                                        imageVector = Icons.Default.Add,
-                                        contentDescription = null,
-                                        tint = MaterialTheme.colorScheme.onPrimary
-                                    )
-                                }
-                            }
-                        },
-                        enableDismissFromStartToEnd = false
-                    ) {
-                        MaterialRow(
-                            item = item,
-                            lang = lang,
-                            isExpanded = isExpanded,
-                            onExpandToggle = {
-                                if (isExpanded) expandedItemIds.remove(item.id) else expandedItemIds.add(item.id)
-                            }
-                        )
-                    }
                 }
             }
         }
@@ -340,7 +336,7 @@ fun GuideScreen() {
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(24.dp),
+                        .padding(Dimens.section),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Text(
@@ -352,7 +348,7 @@ fun GuideScreen() {
                         text = strings.guideScannerPrompt,
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(top = 4.dp, bottom = 20.dp)
+                        modifier = Modifier.padding(top = Dimens.gapXs, bottom = Dimens.section)
                     )
 
                     if (isScanning) {
@@ -379,13 +375,13 @@ fun GuideScreen() {
                         )
 
                         Column(
-                            verticalArrangement = Arrangement.spacedBy(10.dp),
+                            verticalArrangement = Arrangement.spacedBy(Dimens.gapMd),
                             modifier = Modifier.fillMaxWidth()
                         ) {
                             itemsToScan.forEach { (name, explanation) ->
                                 Card(
                                     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow),
-                                    shape = RoundedCornerShape(12.dp),
+                                    shape = Dimens.chip,
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .clickable {
@@ -399,9 +395,9 @@ fun GuideScreen() {
                                         }
                                 ) {
                                     Row(
-                                        modifier = Modifier.padding(16.dp),
+                                        modifier = Modifier.padding(Dimens.gapLg),
                                         verticalAlignment = Alignment.CenterVertically,
-                                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                                        horizontalArrangement = Arrangement.spacedBy(Dimens.gapMd)
                                     ) {
                                         Icon(
                                             imageVector = Icons.Outlined.CenterFocusWeak,
@@ -438,7 +434,7 @@ fun MaterialRow(
 
     Card(
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        shape = RoundedCornerShape(16.dp),
+        shape = Dimens.card,
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
         modifier = Modifier
             .fillMaxWidth()
@@ -446,7 +442,7 @@ fun MaterialRow(
     ) {
         Column(
             modifier = Modifier
-                .padding(16.dp)
+                .padding(Dimens.gapLg)
                 .animateContentSize() // Smooth expand animation
         ) {
             Row(
