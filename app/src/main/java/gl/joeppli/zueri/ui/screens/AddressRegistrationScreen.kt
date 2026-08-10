@@ -10,7 +10,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -25,6 +24,7 @@ import androidx.compose.ui.unit.sp
 import gl.joeppli.zueri.data.AuthManager
 import gl.joeppli.zueri.data.RecyclingRepository
 import gl.joeppli.zueri.ui.LocalJoeppliStrings
+import gl.joeppli.zueri.ui.components.AddressAutocompleteField
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -107,21 +107,13 @@ fun AddressRegistrationScreen() {
                 )
 
                 // Custom Address input field
-                OutlinedTextField(
+                AddressAutocompleteField(
                     value = addressInput,
                     onValueChange = { addressInput = it },
-                    label = { Text(strings.profileAddress) },
-                    placeholder = { Text(if (lang == "en") "e.g. Langstrasse 120, 8004 Zürich" else "z.B. Langstrasse 120, 8004 Zürich") },
-                    modifier = Modifier.fillMaxWidth(),
+                    label = strings.profileAddress,
+                    placeholder = if (lang == "en") "e.g. Langstrasse 120, 8004 Zürich" else "z.B. Langstrasse 120, 8004 Zürich",
                     shape = RoundedCornerShape(12.dp),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = MaterialTheme.colorScheme.primary,
-                        unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant
-                    ),
-                    singleLine = true,
-                    leadingIcon = {
-                        Icon(imageVector = Icons.Default.Home, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
-                    }
+                    modifier = Modifier.fillMaxWidth()
                 )
 
                 // Quick selector heading

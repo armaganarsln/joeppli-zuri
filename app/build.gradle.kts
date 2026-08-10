@@ -140,6 +140,8 @@ dependencies {
   // Google Maps SDK & Compose Integration
   implementation(libs.google.maps.compose)
   implementation(libs.play.services.maps)
+  // Places SDK — address autocomplete on the pickup/home address fields
+  implementation(libs.places)
   // Tooling
   debugImplementation(libs.androidx.compose.ui.tooling)
   // Instrumented tests

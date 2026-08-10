@@ -23,6 +23,27 @@ Command line:
 `versionCode` is derived automatically from the git commit count — no manual
 bumping needed for releases.
 
+## Google Maps & Places key
+
+The live tracker map and the address autocomplete both read a single key. Put it
+in `local.properties` (git-ignored — never commit it):
+
+```
+MAPS_API_KEY=AIza...
+```
+
+The build also accepts a `MAPS_API_KEY` environment variable, and falls back to a
+dummy placeholder so builds and CI stay green without a key. With the dummy key
+the map tiles stay blank and address autocomplete silently returns no
+suggestions — the address fields still work as plain text.
+
+On the key's Google Cloud project, enable **Maps SDK for Android** (map tiles)
+and **Places API (New)** (address autocomplete). Restrict the key to the package
+`gl.joeppli.zueri` plus your signing SHA-1.
+
+Firebase setup for real login is documented separately in
+[`FIREBASE_SETUP.md`](FIREBASE_SETUP.md).
+
 ## CI
 
 Every push and PR to `main` runs [`.github/workflows/android.yml`](.github/workflows/android.yml):

@@ -44,6 +44,7 @@ import gl.joeppli.zueri.data.RecyclingRepository
 import gl.joeppli.zueri.notify.OrderNotifications
 import gl.joeppli.zueri.theme.TwintCyan
 import gl.joeppli.zueri.ui.LocalJoeppliStrings
+import gl.joeppli.zueri.ui.components.AddressAutocompleteField
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
@@ -256,13 +257,11 @@ fun OrderStep1(
         )
         Spacer(modifier = Modifier.height(20.dp))
 
-        OutlinedTextField(
+        AddressAutocompleteField(
             value = address,
             onValueChange = onAddressChange,
-            label = { Text(strings.profileAddress) },
-            leadingIcon = { Icon(Icons.Outlined.LocationOn, contentDescription = null) },
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(16.dp)
+            label = strings.profileAddress,
+            modifier = Modifier.fillMaxWidth()
         )
 
         Spacer(modifier = Modifier.height(24.dp))
