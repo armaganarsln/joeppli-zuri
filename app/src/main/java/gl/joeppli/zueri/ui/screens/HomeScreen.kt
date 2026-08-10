@@ -26,7 +26,9 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import gl.joeppli.zueri.data.RecyclingRepository
+import gl.joeppli.zueri.theme.Dimens
 import gl.joeppli.zueri.ui.LocalJoeppliStrings
+import gl.joeppli.zueri.ui.components.PageHeader
 
 @Composable
 fun HomeScreen(
@@ -52,30 +54,19 @@ fun HomeScreen(
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
             .verticalScroll(scrollState)
-            .padding(16.dp)
-            .padding(bottom = 80.dp) // Avoid overlap with bottom bar
+            .padding(horizontal = Dimens.screenH)
+            .padding(top = Dimens.screenTop, bottom = Dimens.screenBottom),
+        verticalArrangement = Arrangement.spacedBy(Dimens.section)
     ) {
-        Spacer(modifier = Modifier.height(8.dp))
-
-        // Greeting
-        Text(
-            text = strings.greeting.format(firstName),
-            style = MaterialTheme.typography.headlineMedium,
-            color = MaterialTheme.colorScheme.onBackground
+        PageHeader(
+            title = strings.greeting.format(firstName),
+            subtitle = strings.readyToRecycle
         )
-        Text(
-            text = strings.readyToRecycle,
-            style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.padding(top = 4.dp)
-        )
-
-        Spacer(modifier = Modifier.height(24.dp))
 
         // Mini Stats Dashboard Panel
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
+            horizontalArrangement = Arrangement.spacedBy(Dimens.gapMd)
         ) {
             MiniStatCard(
                 title = strings.statKarma,
@@ -95,12 +86,10 @@ fun HomeScreen(
             )
         }
 
-        Spacer(modifier = Modifier.height(24.dp))
-
         // Quick Summon Jöppli Card
         Card(
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primary),
-            shape = RoundedCornerShape(24.dp),
+            shape = Dimens.cardHero,
             modifier = Modifier
                 .fillMaxWidth()
                 .clickable { onQuickPickupClick() }
@@ -108,13 +97,13 @@ fun HomeScreen(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(24.dp),
+                    .padding(Dimens.section),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(Dimens.gapLg),
                     modifier = Modifier.weight(1f)
                 ) {
                     Box(
@@ -155,19 +144,20 @@ fun HomeScreen(
             }
         }
 
-        Spacer(modifier = Modifier.height(24.dp))
-
         // Active / last pickup — lets the user return to the live tracker
         lastPickup?.let { pickup ->
             Card(
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer),
-                shape = RoundedCornerShape(20.dp),
+                shape = Dimens.card,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Column(modifier = Modifier.padding(16.dp)) {
+                Column(
+                    modifier = Modifier.padding(Dimens.gapLg),
+                    verticalArrangement = Arrangement.spacedBy(Dimens.gapSm)
+                ) {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        horizontalArrangement = Arrangement.spacedBy(Dimens.gapSm)
                     ) {
                         Icon(
                             imageVector = Icons.Outlined.LocalShipping,
@@ -182,18 +172,18 @@ fun HomeScreen(
                             color = MaterialTheme.colorScheme.onSecondaryContainer
                         )
                     }
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        text = pickup.address,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSecondaryContainer
-                    )
-                    Text(
-                        text = "${pickup.dateString} · ${pickup.timeSlot}",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.8f)
-                    )
-                    Spacer(modifier = Modifier.height(12.dp))
+                    Column(verticalArrangement = Arrangement.spacedBy(Dimens.gapXs)) {
+                        Text(
+                            text = pickup.address,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSecondaryContainer
+                        )
+                        Text(
+                            text = "${pickup.dateString} · ${pickup.timeSlot}",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.8f)
+                        )
+                    }
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
@@ -208,26 +198,24 @@ fun HomeScreen(
                         )
                         Button(
                             onClick = onTrackPickup,
-                            shape = RoundedCornerShape(28.dp)
+                            shape = Dimens.ctaShape
                         ) {
                             Icon(
                                 imageVector = Icons.Outlined.LocationOn,
                                 contentDescription = null,
                                 modifier = Modifier.size(18.dp)
                             )
-                            Spacer(modifier = Modifier.width(8.dp))
+                            Spacer(modifier = Modifier.width(Dimens.gapSm))
                             Text(if (lang == "en") "Track" else "Verfolge")
                         }
                     }
                 }
             }
-
-            Spacer(modifier = Modifier.height(24.dp))
         }
 
         // Menu Options List
         Column(
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+            verticalArrangement = Arrangement.spacedBy(Dimens.gapMd)
         ) {
             MenuRowCard(
                 title = if (lang == "en") "Order Jöppli" else "Jöppli bestellen",
@@ -262,21 +250,21 @@ fun MiniStatCard(
 ) {
     Card(
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        shape = RoundedCornerShape(16.dp),
+        shape = Dimens.card,
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
         modifier = modifier.clickable { onClick() }
     ) {
         Row(
             modifier = Modifier
-                .padding(16.dp)
+                .padding(Dimens.gapLg)
                 .fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
+            horizontalArrangement = Arrangement.spacedBy(Dimens.gapMd)
         ) {
             Box(
                 modifier = Modifier
                     .size(40.dp)
-                    .background(iconColor.copy(alpha = 0.12f), RoundedCornerShape(12.dp)),
+                    .background(iconColor.copy(alpha = 0.12f), Dimens.chip),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
@@ -311,7 +299,7 @@ fun MenuRowCard(
 ) {
     Card(
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        shape = RoundedCornerShape(16.dp),
+        shape = Dimens.card,
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
         modifier = Modifier
             .fillMaxWidth()
@@ -320,13 +308,13 @@ fun MenuRowCard(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
+                .padding(Dimens.gapLg),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                horizontalArrangement = Arrangement.spacedBy(Dimens.gapLg),
                 modifier = Modifier.weight(1f)
             ) {
                 Box(
@@ -334,7 +322,7 @@ fun MenuRowCard(
                         .size(44.dp)
                         .background(
                             MaterialTheme.colorScheme.primaryContainer,
-                            RoundedCornerShape(12.dp)
+                            Dimens.chip
                         ),
                     contentAlignment = Alignment.Center
                 ) {
