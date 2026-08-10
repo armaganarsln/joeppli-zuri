@@ -23,6 +23,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import gl.joeppli.zueri.data.AuthManager
 import gl.joeppli.zueri.data.RecyclingRepository
+import gl.joeppli.zueri.theme.Dimens
 import gl.joeppli.zueri.ui.LocalJoeppliStrings
 import gl.joeppli.zueri.ui.components.AddressAutocompleteField
 
@@ -48,7 +49,7 @@ fun AddressRegistrationScreen() {
             .background(MaterialTheme.colorScheme.background)
             .systemBarsPadding()
             .verticalScroll(scrollState)
-            .padding(24.dp),
+            .padding(Dimens.screenEdgeWide),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
@@ -91,13 +92,13 @@ fun AddressRegistrationScreen() {
 
         Card(
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-            shape = RoundedCornerShape(20.dp),
+            shape = Dimens.cardHero,
             elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
             modifier = Modifier.fillMaxWidth()
         ) {
             Column(
-                modifier = Modifier.padding(20.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+                modifier = Modifier.padding(Dimens.section),
+                verticalArrangement = Arrangement.spacedBy(Dimens.gapLg)
             ) {
                 Text(
                     text = strings.addressRegCustom,
@@ -112,7 +113,7 @@ fun AddressRegistrationScreen() {
                     onValueChange = { addressInput = it },
                     label = strings.profileAddress,
                     placeholder = if (lang == "en") "e.g. Langstrasse 120, 8004 Zürich" else "z.B. Langstrasse 120, 8004 Zürich",
-                    shape = RoundedCornerShape(12.dp),
+                    shape = Dimens.chip,
                     modifier = Modifier.fillMaxWidth()
                 )
 
@@ -127,7 +128,7 @@ fun AddressRegistrationScreen() {
 
                 // Quick select cards — same selectable style as the order wizard
                 Column(
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(Dimens.gapSm),
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     quickAddresses.forEach { addr ->
@@ -140,7 +141,7 @@ fun AddressRegistrationScreen() {
                                 containerColor = if (selected) MaterialTheme.colorScheme.primaryContainer
                                 else MaterialTheme.colorScheme.surfaceContainerHighest
                             ),
-                            shape = RoundedCornerShape(12.dp),
+                            shape = Dimens.chip,
                             border = BorderStroke(
                                 width = 1.dp,
                                 color = if (selected) MaterialTheme.colorScheme.primary
@@ -152,7 +153,7 @@ fun AddressRegistrationScreen() {
                                     .fillMaxWidth()
                                     .padding(horizontal = 16.dp, vertical = 12.dp),
                                 verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                                horizontalArrangement = Arrangement.spacedBy(Dimens.gapMd)
                             ) {
                                 Icon(
                                     imageVector = Icons.Default.LocationOn,
@@ -186,12 +187,12 @@ fun AddressRegistrationScreen() {
                     },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(56.dp),
+                        .height(Dimens.ctaHeight),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = MaterialTheme.colorScheme.primary,
                         contentColor = MaterialTheme.colorScheme.onPrimary
                     ),
-                    shape = RoundedCornerShape(28.dp)
+                    shape = Dimens.ctaShape
                 ) {
                     Text(
                         text = strings.addressRegSubmit,

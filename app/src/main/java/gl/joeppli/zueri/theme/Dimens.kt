@@ -37,8 +37,10 @@ object Dimens {
     val cardHero = RoundedCornerShape(24.dp)
     /** Standard content cards and list rows. */
     val card = RoundedCornerShape(16.dp)
-    /** Inline chips, badges, small containers. */
+    /** Inline chips, icon tiles, small containers. */
     val chip = RoundedCornerShape(12.dp)
+    /** Status badges — FREE / GRATIS, price tags, ARRIVED. */
+    val chipSmall = RoundedCornerShape(8.dp)
 
     /** Filled CTA height — matches the 28dp corner radius convention. */
     val ctaHeight = 56.dp

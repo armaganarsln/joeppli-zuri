@@ -42,6 +42,7 @@ import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.maps.android.compose.*
 import gl.joeppli.zueri.data.RecyclingRepository
 import gl.joeppli.zueri.notify.OrderNotifications
+import gl.joeppli.zueri.theme.Dimens
 import gl.joeppli.zueri.theme.TwintCyan
 import gl.joeppli.zueri.ui.LocalJoeppliStrings
 import gl.joeppli.zueri.ui.components.AddressAutocompleteField
@@ -219,8 +220,8 @@ private fun WizardCta(
         enabled = enabled,
         modifier = modifier
             .fillMaxWidth()
-            .height(56.dp),
-        shape = RoundedCornerShape(28.dp)
+            .height(Dimens.ctaHeight),
+        shape = Dimens.ctaShape
     ) {
         Text(label, style = MaterialTheme.typography.labelLarge)
     }
@@ -246,7 +247,7 @@ fun OrderStep1(
         modifier = Modifier
             .weight(1f)
             .fillMaxWidth()
-            .padding(16.dp)
+            .padding(Dimens.screenH)
             .verticalScroll(rememberScrollState())
     ) {
         Spacer(modifier = Modifier.height(8.dp))
@@ -284,7 +285,7 @@ fun OrderStep1(
                 colors = CardDefaults.cardColors(
                     containerColor = if (address == addr) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface
                 ),
-                shape = RoundedCornerShape(12.dp),
+                shape = Dimens.chip,
                 border = androidx.compose.foundation.BorderStroke(
                     width = 1.dp,
                     color = if (address == addr) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant
@@ -293,7 +294,7 @@ fun OrderStep1(
                 Row(
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    horizontalArrangement = Arrangement.spacedBy(Dimens.gapMd)
                 ) {
                     Icon(
                         imageVector = Icons.Outlined.LocationOn,
@@ -314,7 +315,7 @@ fun OrderStep1(
         WizardCta(
             if (lang == "en") "Continue" else "Weiter",
             enabled = address.isNotBlank(),
-            modifier = Modifier.padding(16.dp),
+            modifier = Modifier.padding(Dimens.gapLg),
             onClick = {
                 RecyclingRepository.registerAddress(address)
                 onNext()
@@ -359,7 +360,7 @@ fun OrderStep2(
         modifier = Modifier
             .weight(1f)
             .fillMaxWidth()
-            .padding(16.dp)
+            .padding(Dimens.screenH)
             .verticalScroll(rememberScrollState())
     ) {
         Spacer(modifier = Modifier.height(8.dp))
@@ -371,7 +372,7 @@ fun OrderStep2(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clip(RoundedCornerShape(12.dp))
+                    .clip(Dimens.chip)
                     .clickable { onDateChange(date) }
                     .padding(vertical = 8.dp),
                 verticalAlignment = Alignment.CenterVertically
@@ -390,7 +391,7 @@ fun OrderStep2(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clip(RoundedCornerShape(12.dp))
+                    .clip(Dimens.chip)
                     .clickable { onTimeSlotChange(slot) }
                     .padding(vertical = 8.dp),
                 verticalAlignment = Alignment.CenterVertically
@@ -405,7 +406,7 @@ fun OrderStep2(
         // Express toggle
         Card(
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-            shape = RoundedCornerShape(16.dp),
+            shape = Dimens.card,
             elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
             modifier = Modifier.fillMaxWidth()
         ) {
@@ -446,7 +447,7 @@ fun OrderStep2(
         WizardCta(
             if (lang == "en") "Continue" else "Weiter",
             enabled = selectedDate.isNotEmpty() && selectedTimeSlot.isNotEmpty(),
-            modifier = Modifier.padding(16.dp),
+            modifier = Modifier.padding(Dimens.gapLg),
             onClick = onNext
         )
     }
@@ -472,7 +473,7 @@ fun OrderStep3(
         modifier = Modifier
             .weight(1f)
             .fillMaxWidth()
-            .padding(16.dp)
+            .padding(Dimens.screenH)
             .verticalScroll(rememberScrollState())
     ) {
         Spacer(modifier = Modifier.height(8.dp))
@@ -488,7 +489,7 @@ fun OrderStep3(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clip(RoundedCornerShape(12.dp))
+                    .clip(Dimens.chip)
                     .clickable {
                         if (checked) selectedMaterials.remove(name) else selectedMaterials.add(name)
                     }
@@ -518,7 +519,7 @@ fun OrderStep3(
                         .background(
                             if (isFree) MaterialTheme.colorScheme.primaryContainer
                             else MaterialTheme.colorScheme.surfaceContainerHighest,
-                            RoundedCornerShape(6.dp)
+                            Dimens.chipSmall
                         )
                         .padding(horizontal = 8.dp, vertical = 4.dp)
                 ) {
@@ -534,7 +535,7 @@ fun OrderStep3(
 
         Spacer(modifier = Modifier.height(16.dp))
         }
-        WizardCta(if (lang == "en") "Continue to Checkout" else "Weiter zur Kasse", enabled = selectedMaterials.isNotEmpty(), modifier = Modifier.padding(16.dp), onClick = onNext)
+        WizardCta(if (lang == "en") "Continue to Checkout" else "Weiter zur Kasse", enabled = selectedMaterials.isNotEmpty(), modifier = Modifier.padding(Dimens.gapLg), onClick = onNext)
     }
 }
 
@@ -555,27 +556,27 @@ fun OrderStep4(
         modifier = Modifier
             .weight(1f)
             .fillMaxWidth()
-            .padding(16.dp)
+            .padding(Dimens.screenH)
             .verticalScroll(rememberScrollState())
     ) {
         Spacer(modifier = Modifier.height(8.dp))
 
         Card(
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
-            shape = RoundedCornerShape(24.dp),
+            shape = Dimens.cardHero,
             modifier = Modifier.fillMaxWidth()
         ) {
-            Column(modifier = Modifier.padding(24.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+            Column(modifier = Modifier.padding(Dimens.section), verticalArrangement = Arrangement.spacedBy(Dimens.gapLg)) {
                 val onContainer = MaterialTheme.colorScheme.onPrimaryContainer
-                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Dimens.gapMd)) {
                     Icon(Icons.Outlined.LocationOn, contentDescription = null, tint = onContainer)
                     Text(address, style = MaterialTheme.typography.bodyMedium, color = onContainer)
                 }
-                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Dimens.gapMd)) {
                     Icon(Icons.Outlined.CalendarMonth, contentDescription = null, tint = onContainer)
                     Text("$dateString · $timeSlot", style = MaterialTheme.typography.bodyMedium, color = onContainer)
                 }
-                Row(verticalAlignment = Alignment.Top, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                Row(verticalAlignment = Alignment.Top, horizontalArrangement = Arrangement.spacedBy(Dimens.gapMd)) {
                     Icon(Icons.AutoMirrored.Outlined.ListAlt, contentDescription = null, tint = onContainer)
                     Column {
                         Text(if (lang == "en") "Recycle Items" else "Wertstoffe", style = MaterialTheme.typography.titleSmall, color = onContainer)
@@ -587,7 +588,7 @@ fun OrderStep4(
                     }
                 }
                 if (isExpress) {
-                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Dimens.gapMd)) {
                         Icon(Icons.Filled.Bolt, contentDescription = null, tint = onContainer)
                         Text("${strings.orderExpressToggle} (+ CHF 4.50)", style = MaterialTheme.typography.bodyMedium, color = onContainer)
                     }
@@ -617,7 +618,7 @@ fun OrderStep4(
         } else {
             if (lang == "en") "Pay with TWINT" else "Zahle mit TWINT"
         }
-        WizardCta(ctaText, modifier = Modifier.padding(16.dp), onClick = onNext)
+        WizardCta(ctaText, modifier = Modifier.padding(Dimens.gapLg), onClick = onNext)
     }
 }
 
@@ -692,8 +693,8 @@ fun OrderStep5(
                 colors = ButtonDefaults.buttonColors(containerColor = TwintCyan),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(56.dp),
-                shape = RoundedCornerShape(28.dp)
+                    .height(Dimens.ctaHeight),
+                shape = Dimens.ctaShape
             ) {
                 Text(if (lang == "en") "Authorize Payment" else "Zahlig freigäh", style = MaterialTheme.typography.labelLarge)
             }
@@ -881,7 +882,7 @@ fun JöppliTrackerScreen(
             if (isArrived) {
                 Box(
                     modifier = Modifier
-                        .background(MaterialTheme.colorScheme.primaryContainer, RoundedCornerShape(8.dp))
+                        .background(MaterialTheme.colorScheme.primaryContainer, Dimens.chipSmall)
                         .padding(horizontal = 10.dp, vertical = 4.dp)
                 ) {
                     Text(
@@ -909,7 +910,7 @@ fun JöppliTrackerScreen(
             modifier = Modifier
                 .weight(1f)
                 .fillMaxWidth()
-                .clip(RoundedCornerShape(24.dp))
+                .clip(Dimens.cardHero)
                 .background(mapBg)
         ) {
             val systemDark = isSystemInDarkTheme()
@@ -1110,11 +1111,11 @@ fun JöppliTrackerScreen(
         // Status Card
         Card(
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-            shape = RoundedCornerShape(16.dp),
+            shape = Dimens.card,
             elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
             modifier = Modifier.fillMaxWidth()
         ) {
-            Column(modifier = Modifier.padding(16.dp)) {
+            Column(modifier = Modifier.padding(Dimens.gapLg)) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically,
@@ -1122,7 +1123,7 @@ fun JöppliTrackerScreen(
                 ) {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(10.dp),
+                        horizontalArrangement = Arrangement.spacedBy(Dimens.gapMd),
                         modifier = Modifier.weight(1f)
                     ) {
                         if (!isArrived) {
@@ -1169,10 +1170,10 @@ fun JöppliTrackerScreen(
             colors = ButtonDefaults.buttonColors(
                 containerColor = if (isArrived) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.secondary
             ),
-            shape = RoundedCornerShape(28.dp),
+            shape = Dimens.ctaShape,
             modifier = Modifier
                 .fillMaxWidth()
-                .height(56.dp)
+                .height(Dimens.ctaHeight)
         ) {
             Text(
                 text = if (isArrived) (if (lang == "en") "Return Home" else "Zrugg zum Start") else (if (lang == "en") "Go to Start Screen" else "Zrugg zum Startbildschirm"),

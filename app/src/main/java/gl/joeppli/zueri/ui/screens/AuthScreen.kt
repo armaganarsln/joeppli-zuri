@@ -40,6 +40,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import gl.joeppli.zueri.data.AuthManager
 import gl.joeppli.zueri.data.RecyclingRepository
+import gl.joeppli.zueri.theme.Dimens
 import gl.joeppli.zueri.ui.JoeppliStrings
 import gl.joeppli.zueri.ui.LocalJoeppliStrings
 import kotlinx.coroutines.delay
@@ -125,7 +126,7 @@ fun AuthScreen() {
             .background(MaterialTheme.colorScheme.background)
             .systemBarsPadding()
             .verticalScroll(scrollState)
-            .padding(24.dp),
+            .padding(Dimens.screenEdgeWide),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
@@ -204,13 +205,13 @@ fun AuthScreen() {
             // Main auth gateway selection cards
             Card(
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                shape = RoundedCornerShape(20.dp),
+                shape = Dimens.cardHero,
                 elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Column(
-                    modifier = Modifier.padding(20.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                    modifier = Modifier.padding(Dimens.section),
+                    verticalArrangement = Arrangement.spacedBy(Dimens.gapMd),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Text(
@@ -230,13 +231,13 @@ fun AuthScreen() {
                         },
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(56.dp),
+                            .height(Dimens.ctaHeight),
                         colors = ButtonDefaults.buttonColors(
                             containerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
                             contentColor = MaterialTheme.colorScheme.onSurface
                         ),
                         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
-                        shape = RoundedCornerShape(28.dp)
+                        shape = Dimens.ctaShape
                     ) {
                         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                             Icon(Icons.Default.AccountCircle, contentDescription = null)
@@ -249,12 +250,12 @@ fun AuthScreen() {
                         onClick = { loginMethod = "EMAIL" },
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(56.dp),
+                            .height(Dimens.ctaHeight),
                         colors = ButtonDefaults.buttonColors(
                             containerColor = MaterialTheme.colorScheme.secondary,
                             contentColor = MaterialTheme.colorScheme.onSecondary
                         ),
-                        shape = RoundedCornerShape(28.dp)
+                        shape = Dimens.ctaShape
                     ) {
                         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                             Icon(Icons.Default.Email, contentDescription = null)
@@ -267,12 +268,12 @@ fun AuthScreen() {
                         onClick = { loginMethod = "PHONE" },
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(56.dp),
+                            .height(Dimens.ctaHeight),
                         colors = ButtonDefaults.buttonColors(
                             containerColor = MaterialTheme.colorScheme.primary,
                             contentColor = MaterialTheme.colorScheme.onPrimary
                         ),
-                        shape = RoundedCornerShape(28.dp)
+                        shape = Dimens.ctaShape
                     ) {
                         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                             Icon(Icons.Default.Phone, contentDescription = null)
@@ -285,13 +286,13 @@ fun AuthScreen() {
             // Secondary login form inputs
             Card(
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                shape = RoundedCornerShape(20.dp),
+                shape = Dimens.cardHero,
                 elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Column(
-                    modifier = Modifier.padding(20.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                    modifier = Modifier.padding(Dimens.section),
+                    verticalArrangement = Arrangement.spacedBy(Dimens.gapLg)
                 ) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -337,13 +338,13 @@ fun AuthScreen() {
                             },
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .height(56.dp),
+                                .height(Dimens.ctaHeight),
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
                                 contentColor = MaterialTheme.colorScheme.onSurface
                             ),
                             border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
-                            shape = RoundedCornerShape(28.dp),
+                            shape = Dimens.ctaShape,
                             enabled = !isLoading
                         ) {
                             if (isLoading) {
@@ -372,9 +373,9 @@ fun AuthScreen() {
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .clip(RoundedCornerShape(12.dp))
+                                    .clip(Dimens.chip)
                                     .background(MaterialTheme.colorScheme.background)
-                                    .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(12.dp))
+                                    .border(1.dp, MaterialTheme.colorScheme.outlineVariant, Dimens.chip)
                                     .clickable {
                                         if (isLoading) return@clickable
                                         isLoading = true
@@ -404,7 +405,7 @@ fun AuthScreen() {
                                 }
                                 Box(
                                     modifier = Modifier
-                                        .background(MaterialTheme.colorScheme.tertiary, RoundedCornerShape(6.dp))
+                                        .background(MaterialTheme.colorScheme.tertiary, Dimens.chipSmall)
                                         .padding(horizontal = 8.dp, vertical = 2.dp)
                                 ) {
                                     Text(
@@ -446,7 +447,7 @@ fun AuthScreen() {
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .clip(RoundedCornerShape(28.dp))
+                                .clip(Dimens.ctaShape)
                                 .background(MaterialTheme.colorScheme.surfaceContainerHighest)
                                 .padding(4.dp),
                             horizontalArrangement = Arrangement.spacedBy(4.dp)
@@ -544,8 +545,8 @@ fun AuthScreen() {
                             ),
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .height(56.dp),
-                            shape = RoundedCornerShape(28.dp),
+                                .height(Dimens.ctaHeight),
+                            shape = Dimens.ctaShape,
                             enabled = !isLoading
                         ) {
                             if (isLoading) {
@@ -617,8 +618,8 @@ fun AuthScreen() {
                                 ),
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .height(56.dp),
-                                shape = RoundedCornerShape(28.dp),
+                                    .height(Dimens.ctaHeight),
+                                shape = Dimens.ctaShape,
                                 enabled = !isLoading
                             ) {
                                 if (isLoading) {
@@ -677,7 +678,7 @@ fun AuthScreen() {
                                             .border(
                                                 width = if (isFocusedBox) 2.dp else 1.dp,
                                                 color = if (isFocusedBox) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant,
-                                                shape = RoundedCornerShape(8.dp)
+                                                shape = Dimens.chipSmall
                                             )
                                             .background(
                                                 if (isFocusedBox) MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
@@ -733,8 +734,8 @@ fun AuthScreen() {
                                 ),
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .height(56.dp),
-                                shape = RoundedCornerShape(28.dp),
+                                    .height(Dimens.ctaHeight),
+                                shape = Dimens.ctaShape,
                                 enabled = !isLoading
                             ) {
                                 if (isLoading) {
