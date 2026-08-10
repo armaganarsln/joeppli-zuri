@@ -22,10 +22,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import gl.joeppli.zueri.data.RecyclingRepository
+import gl.joeppli.zueri.theme.Dimens
 import gl.joeppli.zueri.theme.EcoGreen
 import gl.joeppli.zueri.theme.ZurichBlue
 import gl.joeppli.zueri.theme.ZurichBlueDark
 import gl.joeppli.zueri.ui.LocalJoeppliStrings
+import gl.joeppli.zueri.ui.components.PageHeader
 import java.util.Locale
 
 @Composable
@@ -58,28 +60,18 @@ fun DashboardScreen(
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
             .verticalScroll(scrollState)
-            .padding(16.dp)
-            .padding(bottom = 80.dp)
+            .padding(horizontal = Dimens.screenH)
+            .padding(top = Dimens.screenTop, bottom = Dimens.screenBottom),
+        verticalArrangement = Arrangement.spacedBy(Dimens.section)
     ) {
-        Spacer(modifier = Modifier.height(8.dp))
-
-        Text(
-            text = "Recycling Dashboard",
-            style = MaterialTheme.typography.headlineMedium,
-            color = MaterialTheme.colorScheme.onBackground
+        PageHeader(
+            title = "Recycling Dashboard",
+            subtitle = if (lang == "en") "Your contribution to Zürich's circular economy" else "Din Biitrag zur Zürcher Chreislaufwirtschaft"
         )
-        Text(
-            text = if (lang == "en") "Your contribution to Zürich's circular economy" else "Din Biitrag zur Zürcher Chreislaufwirtschaft",
-            style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.padding(top = 4.dp)
-        )
-
-        Spacer(modifier = Modifier.height(20.dp))
 
         // Glassmorphic Züri-Karma Hero Card with Gradient and circular progress animation
         Card(
-            shape = RoundedCornerShape(24.dp),
+            shape = Dimens.cardHero,
             modifier = Modifier.fillMaxWidth(),
             elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
         ) {
@@ -97,9 +89,9 @@ fun DashboardScreen(
                     .border(
                         width = 1.dp,
                         color = Color.White.copy(alpha = 0.2f),
-                        shape = RoundedCornerShape(24.dp)
+                        shape = Dimens.cardHero
                     )
-                    .padding(24.dp)
+                    .padding(Dimens.section)
             ) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -173,12 +165,10 @@ fun DashboardScreen(
             }
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
-
         // Three-Column Quick Metrics
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+            horizontalArrangement = Arrangement.spacedBy(Dimens.gapMd)
         ) {
             MetricCard(
                 label = if (lang == "en") "TOTAL RECYCLED" else "TOTAL RECYCLET",
@@ -193,24 +183,22 @@ fun DashboardScreen(
             )
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
-
         // Umwelteffekt Card
         Card(
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
-            shape = RoundedCornerShape(16.dp),
+            shape = Dimens.card,
             modifier = Modifier.fillMaxWidth()
         ) {
-            Column(modifier = Modifier.padding(16.dp)) {
+            Column(modifier = Modifier.padding(Dimens.gapLg)) {
                 Text(
                     text = if (lang == "en") "Environmental Impact" else "Umwelteffekt",
                     style = MaterialTheme.typography.titleSmall,
                     color = MaterialTheme.colorScheme.onPrimaryContainer
                 )
-                Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.height(Dimens.gapMd))
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(16.dp)
+                    horizontalArrangement = Arrangement.spacedBy(Dimens.gapLg)
                 ) {
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
@@ -240,22 +228,20 @@ fun DashboardScreen(
             }
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
-
         // Categories Breakdown Progress bars
         Card(
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-            shape = RoundedCornerShape(16.dp),
+            shape = Dimens.card,
             elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
             modifier = Modifier.fillMaxWidth()
         ) {
-            Column(modifier = Modifier.padding(16.dp)) {
+            Column(modifier = Modifier.padding(Dimens.gapLg)) {
                 Text(
                     text = if (lang == "en") "Recycled Materials Breakdown" else "Wertstoff ufteilt",
                     style = MaterialTheme.typography.titleMedium,
                     color = MaterialTheme.colorScheme.secondary
                 )
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(Dimens.gapLg))
 
                 val cats = stats.categories
                 CategoryBar(if (lang == "en") "Paper / Cardboard" else "Papier / Karton", cats.cardboard, stats.totalKg, Color(0xFF3B82F6))
@@ -266,16 +252,14 @@ fun DashboardScreen(
             }
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
-
         // Neighborhood goal progress bar
         Card(
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-            shape = RoundedCornerShape(16.dp),
+            shape = Dimens.card,
             elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
             modifier = Modifier.fillMaxWidth()
         ) {
-            Column(modifier = Modifier.padding(16.dp)) {
+            Column(modifier = Modifier.padding(Dimens.gapLg)) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -300,7 +284,7 @@ fun DashboardScreen(
                         color = MaterialTheme.colorScheme.primary
                     )
                 }
-                Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.height(Dimens.gapMd))
                 LinearProgressIndicator(
                     progress = { stats.neighborhoodTotalKg / 5000f },
                     color = MaterialTheme.colorScheme.primary,
@@ -310,7 +294,7 @@ fun DashboardScreen(
                         .height(8.dp)
                         .clip(RoundedCornerShape(4.dp))
                 )
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(Dimens.gapSm))
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween
@@ -329,15 +313,13 @@ fun DashboardScreen(
             }
         }
 
-        Spacer(modifier = Modifier.height(20.dp))
-
         // Order Button CTA
         Button(
             onClick = { onOrderClick() },
-            shape = RoundedCornerShape(28.dp),
+            shape = Dimens.ctaShape,
             modifier = Modifier
                 .fillMaxWidth()
-                .height(56.dp)
+                .height(Dimens.ctaHeight)
         ) {
             Text(if (lang == "en") "Order Jöppli" else "Jöppli bestelle", style = MaterialTheme.typography.labelLarge)
         }
@@ -353,13 +335,13 @@ fun MetricCard(
 ) {
     Card(
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        shape = RoundedCornerShape(16.dp),
+        shape = Dimens.card,
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
         modifier = modifier
     ) {
         Column(
             modifier = Modifier
-                .padding(12.dp)
+                .padding(Dimens.gapLg)
                 .fillMaxWidth(),
             horizontalAlignment = Alignment.Start
         ) {
@@ -369,7 +351,7 @@ fun MetricCard(
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
-            Spacer(modifier = Modifier.height(4.dp))
+            Spacer(modifier = Modifier.height(Dimens.gapXs))
             Text(
                 text = value,
                 style = MaterialTheme.typography.titleMedium,
@@ -386,7 +368,7 @@ fun CategoryBar(
     total: Float,
     barColor: Color
 ) {
-    Column(modifier = Modifier.padding(vertical = 6.dp)) {
+    Column(modifier = Modifier.padding(vertical = Dimens.gapSm)) {
         val percentage = if (total > 0f) (value / total * 100).toInt() else 0
         Row(
             modifier = Modifier.fillMaxWidth(),
