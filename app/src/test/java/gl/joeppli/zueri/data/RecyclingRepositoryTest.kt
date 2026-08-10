@@ -90,12 +90,13 @@ class RecyclingRepositoryTest {
         val after = RecyclingRepository.stats.value
         assertTrue(after.totalKg > before.totalKg)
         assertTrue(after.co2Saved > before.co2Saved)
-        assertTrue(after.karma >= before.karma)
+        assertEquals(before.pickupCount + 1, after.pickupCount)
     }
 
     @Test
-    fun karma_isCappedAt100() {
-        repeat(10) {
+    fun addPickup_countsEveryRequest() {
+        val before = RecyclingRepository.stats.value.pickupCount
+        repeat(3) {
             RecyclingRepository.addPickup(
                 address = "Hauptstrasse 1, 8750 Glarus",
                 dateString = "12.06.2026",
@@ -103,6 +104,6 @@ class RecyclingRepositoryTest {
                 materials = listOf("Altglas", "Papier/Karton", "Alu/Metall")
             )
         }
-        assertEquals(100, RecyclingRepository.stats.value.karma)
+        assertEquals(before + 3, RecyclingRepository.stats.value.pickupCount)
     }
 }

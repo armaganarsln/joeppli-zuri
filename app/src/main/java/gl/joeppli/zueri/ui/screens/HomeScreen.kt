@@ -10,7 +10,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Bolt
 import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.Recycling
 import androidx.compose.material.icons.outlined.LocalShipping
 import androidx.compose.material.icons.outlined.LocationOn
 import androidx.compose.material.icons.automirrored.outlined.MenuBook
@@ -74,9 +74,9 @@ fun HomeScreen(
             horizontalArrangement = Arrangement.spacedBy(Dimens.gapMd)
         ) {
             MiniStatCard(
-                title = strings.statKarma,
-                value = "${stats.karma}/100",
-                icon = Icons.Filled.Star,
+                title = if (lang == "en") "Recycled" else "Recyclet",
+                value = "%.0f kg".format(stats.totalKg),
+                icon = Icons.Filled.Recycling,
                 iconColor = MaterialTheme.colorScheme.primary,
                 onClick = { onNavigateToTab("STATS") },
                 modifier = Modifier.weight(1f)

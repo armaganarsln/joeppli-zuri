@@ -1,31 +1,21 @@
 package gl.joeppli.zueri.ui.screens
 
-import androidx.compose.animation.core.FastOutSlowInEasing
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import gl.joeppli.zueri.data.RecyclingRepository
 import gl.joeppli.zueri.theme.Dimens
-import gl.joeppli.zueri.theme.EcoGreen
-import gl.joeppli.zueri.theme.ZurichBlue
-import gl.joeppli.zueri.theme.ZurichBlueDark
 import gl.joeppli.zueri.ui.LocalJoeppliStrings
 import gl.joeppli.zueri.ui.components.PageHeader
 import java.util.Locale
@@ -42,19 +32,6 @@ fun DashboardScreen(
     val carKm = (stats.co2Saved * 7).toInt()
     val treesPlanted = String.format(Locale.ROOT, "%.1f", stats.co2Saved * 0.05f)
 
-    // Entry animation for progress
-    var animationPlayed by remember { mutableStateOf(false) }
-    val targetProgress = stats.karma / 100f
-    val progressAnimation by animateFloatAsState(
-        targetValue = if (animationPlayed) targetProgress else 0f,
-        animationSpec = tween(durationMillis = 1000, easing = FastOutSlowInEasing),
-        label = "karma_progress"
-    )
-
-    LaunchedEffect(key1 = true) {
-        animationPlayed = true
-    }
-
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -69,99 +46,48 @@ fun DashboardScreen(
             subtitle = if (lang == "en") "Your contribution to Glarus's circular economy" else "Din Biitrag zur Glarner Chreislaufwirtschaft"
         )
 
-        // Glassmorphic Züri-Karma Hero Card with Gradient and circular progress animation
+        // Personal summary — what this resident has handed over. No score,
+        // no levels: a municipal service reports, it doesn't compete.
         Card(
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
             shape = Dimens.cardHero,
-            modifier = Modifier.fillMaxWidth(),
-            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+            modifier = Modifier.fillMaxWidth()
         ) {
-            Box(
+            Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(
-                        Brush.linearGradient(
-                            colors = listOf(
-                                ZurichBlue.copy(alpha = 0.85f),
-                                ZurichBlueDark.copy(alpha = 0.85f)
-                            )
-                        )
-                    )
-                    .border(
-                        width = 1.dp,
-                        color = Color.White.copy(alpha = 0.2f),
-                        shape = Dimens.cardHero
-                    )
-                    .padding(Dimens.section)
+                    .padding(Dimens.section),
+                verticalArrangement = Arrangement.spacedBy(Dimens.gapSm)
             ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Column(modifier = Modifier.weight(1.5f)) {
-                        Box(
-                            modifier = Modifier
-                                .background(Color.White.copy(alpha = 0.2f), RoundedCornerShape(20.dp))
-                                .padding(horizontal = 10.dp, vertical = 4.dp)
-                        ) {
-                            Text(
-                                text = strings.statKarma.uppercase(Locale.ROOT),
-                                style = MaterialTheme.typography.labelSmall,
-                                color = Color.White
-                            )
-                        }
-                        Spacer(modifier = Modifier.height(10.dp))
-                        Row(verticalAlignment = Alignment.Bottom) {
-                            Text(
-                                text = "${stats.karma}",
-                                fontSize = 38.sp,
-                                fontWeight = FontWeight.Black,
-                                color = Color.White,
-                                lineHeight = 38.sp
-                            )
-                            Text(
-                                text = "/100",
-                                style = MaterialTheme.typography.titleMedium,
-                                color = Color.White.copy(alpha = 0.5f),
-                                modifier = Modifier.padding(bottom = 4.dp, start = 2.dp)
-                            )
-                        }
-                        Spacer(modifier = Modifier.height(6.dp))
-                        Text(
-                            text = if (lang == "en") "Level 4: Neighborhood Hero" else "Level 4: Quartier-Held",
-                            style = MaterialTheme.typography.titleSmall,
-                            color = EcoGreen
-                        )
-                    }
-
-                    // Circular Progress Indicators
-                    Box(
-                        modifier = Modifier.size(80.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        // Background Circle
-                        CircularProgressIndicator(
-                            progress = { 1f },
-                            modifier = Modifier.fillMaxSize(),
-                            color = Color.White.copy(alpha = 0.15f),
-                            strokeWidth = 6.dp,
-                        )
-                        // Animated fill Circle
-                        CircularProgressIndicator(
-                            progress = { progressAnimation },
-                            modifier = Modifier.fillMaxSize(),
-                            color = EcoGreen,
-                            strokeWidth = 6.dp,
-                        )
-                        // Star Icon
-                        Icon(
-                            imageVector = Icons.Filled.Star,
-                            contentDescription = if (lang == "en") "Karma badge" else "Karma-Abzeiche",
-                            tint = EcoGreen,
-                            modifier = Modifier.size(36.dp)
-                        )
-                    }
+                Text(
+                    text = if (lang == "en") "Recycled with Jöppli" else "Mit em Jöppli recyclet",
+                    style = MaterialTheme.typography.titleSmall,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
+                )
+                Row(verticalAlignment = Alignment.Bottom) {
+                    Text(
+                        text = String.format(Locale.ROOT, "%.1f", stats.totalKg),
+                        fontSize = 40.sp,
+                        fontWeight = FontWeight.Black,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer,
+                        lineHeight = 42.sp
+                    )
+                    Text(
+                        text = " kg",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f),
+                        modifier = Modifier.padding(bottom = 6.dp)
+                    )
                 }
+                Text(
+                    text = if (stats.pickupCount == 1) {
+                        if (lang == "en") "over 1 collection" else "über 1 Abholig"
+                    } else {
+                        if (lang == "en") "over ${stats.pickupCount} collections" else "über ${stats.pickupCount} Abholige"
+                    },
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
+                )
             }
         }
 
@@ -252,67 +178,6 @@ fun DashboardScreen(
             }
         }
 
-        // Neighborhood goal progress bar
-        Card(
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-            shape = Dimens.card,
-            elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Column(modifier = Modifier.padding(Dimens.gapLg)) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.Top
-                ) {
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(
-                            text = if (lang == "en") "Neighborhood Milestone" else "Quartier-Meilestei",
-                            style = MaterialTheme.typography.titleMedium,
-                            color = MaterialTheme.colorScheme.secondary
-                        )
-                        Text(
-                            text = if (lang == "en") "Collected in your municipality this month" else "Gsammlet i dinere Gmeind de Monet",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                    val pct = (stats.neighborhoodTotalKg / 5000f * 100).toInt()
-                    Text(
-                        text = "$pct%",
-                        style = MaterialTheme.typography.titleSmall,
-                        color = MaterialTheme.colorScheme.primary
-                    )
-                }
-                Spacer(modifier = Modifier.height(Dimens.gapMd))
-                LinearProgressIndicator(
-                    progress = { stats.neighborhoodTotalKg / 5000f },
-                    color = MaterialTheme.colorScheme.primary,
-                    trackColor = MaterialTheme.colorScheme.surfaceContainerHighest,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(8.dp)
-                        .clip(RoundedCornerShape(4.dp))
-                )
-                Spacer(modifier = Modifier.height(Dimens.gapSm))
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Text(
-                        text = "${stats.neighborhoodTotalKg.toInt()} kg ${if (lang == "en") "collected" else "gsammlet"}",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    Text(
-                        text = if (lang == "en") "Goal: 5,000 kg" else "Ziel: 5'000 kg",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-            }
-        }
-
         // Order Button CTA
         Button(
             onClick = { onOrderClick() },
@@ -321,7 +186,7 @@ fun DashboardScreen(
                 .fillMaxWidth()
                 .height(Dimens.ctaHeight)
         ) {
-            Text(if (lang == "en") "Order Jöppli" else "Jöppli bestelle", style = MaterialTheme.typography.labelLarge)
+            Text(if (lang == "en") "Request a collection" else "Abholig aafroge", style = MaterialTheme.typography.labelLarge)
         }
     }
 }

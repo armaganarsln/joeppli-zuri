@@ -19,7 +19,6 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
-import kotlin.math.min
 import kotlin.random.Random
 
 @Serializable
@@ -46,9 +45,8 @@ data class CategoryBreakdown(
 data class RecyclingStats(
     val totalKg: Float = 142.5f,
     val categories: CategoryBreakdown = CategoryBreakdown(),
-    val karma: Int = 85,
     val co2Saved: Float = 198.4f,
-    val neighborhoodTotalKg: Float = 4230f
+    val pickupCount: Int = 0
 )
 
 @Serializable
@@ -249,7 +247,6 @@ object RecyclingRepository {
         val addedAlu = if (materials.contains("aluminum") || materials.contains("Alu/Metall")) Random.nextFloat() * 3f + 1f else 0f
 
         val sumAdded = addedGlass + addedCardboard + addedPet + addedBio + addedAlu
-        val newKarma = min(100, currentStats.karma + materials.size * 4)
 
         currentStats.categories.glass += addedGlass
         currentStats.categories.cardboard += addedCardboard
@@ -259,9 +256,8 @@ object RecyclingRepository {
 
         _stats.value = currentStats.copy(
             totalKg = currentStats.totalKg + sumAdded,
-            karma = newKarma,
             co2Saved = currentStats.co2Saved + sumAdded * 1.4f,
-            neighborhoodTotalKg = currentStats.neighborhoodTotalKg + sumAdded + Random.nextFloat() * 10f
+            pickupCount = currentStats.pickupCount + 1
         )
         persist()
     }
