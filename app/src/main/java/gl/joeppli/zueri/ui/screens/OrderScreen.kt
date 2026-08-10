@@ -39,6 +39,7 @@ import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.MapStyleOptions
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.maps.android.compose.*
+import gl.joeppli.zueri.data.JoeppliService
 import gl.joeppli.zueri.data.RecyclingRepository
 import gl.joeppli.zueri.notify.OrderNotifications
 import gl.joeppli.zueri.theme.Dimens
@@ -214,10 +215,10 @@ fun OrderStep1(
     val strings = LocalJoeppliStrings.current
     val lang by RecyclingRepository.userLanguage.collectAsState()
     val quickAddresses = listOf(
-        "Langstrasse 120, 8004 Zürich",
-        "Badenerstrasse 350, 8003 Zürich",
-        "Limmatquai 50, 8001 Zürich",
-        "Schaffhauserstrasse 100, 8057 Zürich"
+        "Hauptstrasse 10, 8750 Glarus",
+        "Bahnhofstrasse 5, 8754 Netstal",
+        "Landstrasse 20, 8868 Oberurnen",
+        "Burgstrasse 3, 8752 Näfels"
     )
 
     Column(modifier = Modifier.fillMaxSize()) {
@@ -557,23 +558,23 @@ fun JöppliTrackerScreen(
     val statusMessages = remember(lang) {
         if (lang == "en") {
             listOf(
-                "Dispatched: Jöppli is leaving ERZ Werkhof Hardau...",
-                "Calculating route through Kreis 4/5...",
+                "On the way: Jöppli is leaving the Werkhof Glarus...",
+                "Planning the round through the village...",
                 "Loading sensors calibrated: 100% green electricity charged...",
-                "Crossing Hardbrücke towards Langstrasse...",
-                "Slightly yielding to Tram 8 on Badenerstrasse...",
-                "Turning into your neighborhood street...",
+                "Driving along the Hauptstrasse...",
+                "Passing the Gemeindesammelstelle...",
+                "Turning into your street...",
                 "Jöppli is approaching your address...",
-                "Safety sensors active: Ready to load..."
+                "Safety sensors active: ready to load..."
             )
         } else {
             listOf(
-                "Dispositioniert: Jöppli verlaht de ERZ Werkhof Hardau…",
-                "Routeplanig durch Kreis 4/5 wird grächnet…",
+                "Underwägs: s'Jöppli verlaht de Werkhof Glarus…",
+                "D'Rundi dur s'Dorf wird plant…",
                 "Ladesensore kalibriert: 100% Ökostrom glade…",
-                "Überquert d'Hardbrugg Richtig Langstrass…",
-                "Wiicht churz em Tram 8 uf de Badenerstrass uus…",
-                "Biegt i dini Quartierstrass ii…",
+                "Fahrt d'Hauptstrass düre…",
+                "Fahrt a de Gmeindssammelstell verbii…",
+                "Biegt i dini Strass ii…",
                 "Jöppli nähert sich dinere Adress…",
                 "Sicherheits-Sensore aktiv: Parat zum Lade…"
             )
@@ -624,8 +625,8 @@ fun JöppliTrackerScreen(
     val isArrived = progress.value >= 1f
 
     // Geocode the saved pickup address so the final destination reflects
-    // the user's real address; falls back to the Alt-Wiedikon centre
-    // (Goldbrunnenplatz) when geocoding is unavailable.
+    // the user's real address; falls back to Netstal centre when geocoding
+    // is unavailable.
     var geocodedDest by remember { mutableStateOf<LatLng?>(null) }
     LaunchedEffect(address) {
         geocodedDest = withContext(Dispatchers.IO) {
@@ -633,7 +634,7 @@ fun JöppliTrackerScreen(
                 if (address.isNotBlank() && Geocoder.isPresent()) {
                     @Suppress("DEPRECATION")
                     Geocoder(context, Locale.GERMAN)
-                        .getFromLocationName("$address, Zürich, Switzerland", 1)
+                        .getFromLocationName("$address, Kanton Glarus, Switzerland", 1)
                         ?.firstOrNull()
                         ?.let { LatLng(it.latitude, it.longitude) }
                 } else null
@@ -641,17 +642,17 @@ fun JöppliTrackerScreen(
         }
     }
 
-    // Real route coordinates in Alt Wiedikon, Zurich:
-    // Werkhof Hardau (Origin) -> Seebahnstrasse -> Schmiede Wiedikon -> Wiedikon Station -> real destination
+    // Route through the Glarus valley floor: the depot at the Grubenstrasse
+    // collection point, out through Glarus and north towards Netstal. Waypoints
+    // are approximate — they shape the drawn line, not a navigation instruction.
     val routeCoords = remember(geocodedDest) {
         listOf(
-            LatLng(47.3820, 8.5135), // Werkhof Hardau (Origin)
-            LatLng(47.3795, 8.5144), // Seebahnstrasse North
-            LatLng(47.3770, 8.5152), // Seebahnstrasse Mid
-            LatLng(47.3735, 8.5165), // Schmiede Wiedikon area
-            LatLng(47.3695, 8.5170), // Wiedikon Station area
-            LatLng(47.3672, 8.5125)  // Alt Wiedikon junction (Birmensdorferstrasse)
-        ) + (geocodedDest ?: LatLng(47.3662, 8.5134)) // real address, else Goldbrunnenplatz
+            LatLng(JoeppliService.DEPOT_LAT, JoeppliService.DEPOT_LNG), // Werkhof Glarus
+            LatLng(47.0424, 9.0672), // Hauptstrasse, Glarus centre
+            LatLng(47.0452, 9.0641), // towards Riedern
+            LatLng(47.0500, 9.0600), // valley road north
+            LatLng(47.0540, 9.0570)  // approaching Netstal
+        ) + (geocodedDest ?: LatLng(47.0561, 9.0553)) // real address, else Netstal centre
     }
 
     // Interpolate the vehicle position based on animated progress (0.0 to 1.0)
@@ -854,11 +855,11 @@ fun JöppliTrackerScreen(
             }
 
             val cameraPositionState = rememberCameraPositionState {
-                position = CameraPosition.fromLatLngZoom(LatLng(47.3740, 8.5150), 14.5f) // center Wiedikon
+                position = CameraPosition.fromLatLngZoom(LatLng(47.0480, 9.0620), 13.5f) // Glarus valley
             }
 
             // Frame the whole route once the destination is known — a geocoded
-            // address outside Alt-Wiedikon would otherwise sit off-screen.
+            // address outside the valley floor would otherwise sit off-screen.
             LaunchedEffect(routeCoords) {
                 val bounds = LatLngBounds.builder().apply {
                     routeCoords.forEach { include(it) }
@@ -907,7 +908,7 @@ fun JöppliTrackerScreen(
                 // Origin Depot Marker
                 Marker(
                     state = MarkerState(position = routeCoords.first()),
-                    title = if (lang == "en") "Werkhof Hardau" else "ERZ Werkhof Hardau",
+                    title = JoeppliService.DEPOT_NAME,
                     snippet = if (lang == "en") "Start" else "Abfahrtsort",
                     icon = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE)
                 )

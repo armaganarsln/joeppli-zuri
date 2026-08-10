@@ -25,10 +25,10 @@ object AddressSuggestions {
     /** Placeholder key shipped in the repo; never worth a network round trip. */
     private const val DUMMY_KEY_PREFIX = "AIzaSyDummyKey"
 
-    /** Roughly the city of Zürich — biases results to the service area. */
-    private val ZURICH_BOUNDS = RectangularBounds.newInstance(
-        LatLng(47.3200, 8.4500), // south-west
-        LatLng(47.4350, 8.6250)  // north-east
+    /** Roughly the canton of Glarus — biases results to the service area. */
+    private val GLARUS_BOUNDS = RectangularBounds.newInstance(
+        LatLng(46.8000, 8.8600), // south-west
+        LatLng(47.1800, 9.2600)  // north-east
     )
 
     private var client: PlacesClient? = null
@@ -59,7 +59,7 @@ object AddressSuggestions {
     }.getOrNull()
 
     /**
-     * Suggests Swiss addresses for [query], biased to Zürich.
+     * Suggests Swiss addresses for [query], biased to canton Glarus.
      * Returns an empty list when autocomplete is unavailable for any reason.
      */
     suspend fun suggest(context: Context, query: String): List<String> {
@@ -71,7 +71,7 @@ object AddressSuggestions {
             val request = FindAutocompletePredictionsRequest.builder()
                 .setQuery(query)
                 .setCountries("CH")
-                .setLocationBias(ZURICH_BOUNDS)
+                .setLocationBias(GLARUS_BOUNDS)
                 .setSessionToken(token)
                 .build()
             places.findAutocompletePredictions(request).await()

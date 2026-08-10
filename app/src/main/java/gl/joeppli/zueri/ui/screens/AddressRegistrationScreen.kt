@@ -37,10 +37,10 @@ fun AddressRegistrationScreen() {
     val scrollState = rememberScrollState()
 
     val quickAddresses = listOf(
-        "Langstrasse 120, 8004 Zürich",
-        "Badenerstrasse 350, 8003 Zürich",
-        "Limmatquai 50, 8001 Zürich",
-        "Schaffhauserstrasse 100, 8057 Zürich"
+        "Hauptstrasse 10, 8750 Glarus",
+        "Bahnhofstrasse 5, 8754 Netstal",
+        "Landstrasse 20, 8868 Oberurnen",
+        "Burgstrasse 3, 8752 Näfels"
     )
 
     Column(
@@ -112,7 +112,7 @@ fun AddressRegistrationScreen() {
                     value = addressInput,
                     onValueChange = { addressInput = it },
                     label = strings.profileAddress,
-                    placeholder = if (lang == "en") "e.g. Langstrasse 120, 8004 Zürich" else "z.B. Langstrasse 120, 8004 Zürich",
+                    placeholder = if (lang == "en") "e.g. Hauptstrasse 10, 8750 Glarus" else "z.B. Hauptstrasse 10, 8750 Glarus",
                     shape = Dimens.chip,
                     modifier = Modifier.fillMaxWidth()
                 )

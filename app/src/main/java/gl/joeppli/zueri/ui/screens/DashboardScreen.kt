@@ -66,7 +66,7 @@ fun DashboardScreen(
     ) {
         PageHeader(
             title = "Recycling Dashboard",
-            subtitle = if (lang == "en") "Your contribution to Zürich's circular economy" else "Din Biitrag zur Zürcher Chreislaufwirtschaft"
+            subtitle = if (lang == "en") "Your contribution to Glarus's circular economy" else "Din Biitrag zur Glarner Chreislaufwirtschaft"
         )
 
         // Glassmorphic Züri-Karma Hero Card with Gradient and circular progress animation
@@ -272,7 +272,7 @@ fun DashboardScreen(
                             color = MaterialTheme.colorScheme.secondary
                         )
                         Text(
-                            text = if (lang == "en") "Collected in Kreis 4 / 5 this month" else "Gsammlet im Kreis 4 / 5 de Monet",
+                            text = if (lang == "en") "Collected in your municipality this month" else "Gsammlet i dinere Gmeind de Monet",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )

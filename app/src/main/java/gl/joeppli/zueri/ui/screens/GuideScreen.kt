@@ -366,12 +366,12 @@ fun GuideScreen() {
                             Pair("Coffee Capsule (Alu)", "The object is a Nespresso coffee capsule made of aluminum. It is 100% recyclable in Switzerland. Please hand it to the Jöppli under 'Metal'. Tip: capsules don't need to be emptied — ERZ separates the coffee grounds automatically for biogas!"),
                             Pair("Pizza Box", "The object is a pizza box. Boxes with grease stains do NOT belong in the paper/cardboard recycling, as they contaminate the cellulose fibers. Please dispose of it with household waste. Only clean cardboard is recyclable."),
                             Pair("PET Beverage Bottle", "The object is a PET beverage bottle. It is 100% recyclable. Please flatten it, screw the cap back on and drop it into the Jöppli. Do not mix with milk bottles (PE)!"),
-                            Pair("Yogurt Cup (Plastic)", "The object is a plastic yogurt cup. Cup and aluminum lid must be separated. The alu lid goes into metal recycling. The plastic cup belongs in the paid plastic collection or household waste (in Zürich, Jöppli subsidizes this as special waste).")
+                            Pair("Yogurt Cup (Plastic)", "The object is a plastic yogurt cup. Cup and aluminum lid must be separated. The alu lid goes into metal recycling. The plastic cup belongs in household waste, or hand it to the Jöppli as special waste.")
                         ) else listOf(
                             Pair("Kaffeekapsel (Alu)", "Das Objekt ist eine Nespresso Kaffeekapsel aus Aluminium. Sie ist zu 100% recycelbar in der Schweiz. Bitte im Jöppli unter 'Metall' abgeben. Tipp: Die Kapseln müssen nicht entleert werden, ERZ trennt den Kaffeesatz automatisch für Biogas!"),
                             Pair("Pizzakarton", "Das Objekt ist eine Pizzaschachtel. Pizzakartons mit Ölflecken gehören NICHT ins Altpapier (Karton), da sie die Zellstofffasern verunreinigen. Bitte über den Hausmüll entsorgen. Nur saubere Kartons sind recycelbar."),
                             Pair("PET Getränkeflasche", "Das Objekt ist eine PET Getränkeflasche. Sie ist zu 100% recycelbar. Bitte flachdrücken, den Deckel aufschrauben und ins Jöppli werfen. Nicht mit Milchflaschen (PE) mischen!"),
-                            Pair("Joghurtbecher (Plastik)", "Das Objekt ist ein Plastik-Joghurtbecher. Becher und Aluminiumdeckel müssen getrennt werden. Der Aludeckel kommt ins Metall-Recycling. Der Plastikbecher gehört in die kostenpflichtige Plastiksammlung oder den Hausmüll (in Zürich subventioniert Jöppli dies als Spezialabfall).")
+                            Pair("Joghurtbecher (Plastik)", "Das Objekt ist ein Plastik-Joghurtbecher. Becher und Aluminiumdeckel müssen getrennt werden. Der Aludeckel kommt ins Metall-Recycling. De Plastikbecher ghört in Hausmüll, oder gib en em Jöppli als Spezialabfall mit.")
                         )
 
                         Column(
