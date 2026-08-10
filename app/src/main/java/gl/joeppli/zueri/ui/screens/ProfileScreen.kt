@@ -52,6 +52,7 @@ fun ProfileScreen() {
 
     var supportMessage by rememberSaveable { mutableStateOf("") }
     var selectedPayment by rememberSaveable(profile.defaultPaymentMethod) { mutableStateOf(profile.defaultPaymentMethod) }
+    var showLogoutDialog by rememberSaveable { mutableStateOf(false) }
 
     Column(
         modifier = Modifier
@@ -375,13 +376,7 @@ fun ProfileScreen() {
         Spacer(modifier = Modifier.height(24.dp))
 
         Button(
-            onClick = {
-                // Reset local state immediately (navigates to the auth screen),
-                // then end the Firebase session and clear the saved credential.
-                RecyclingRepository.logout()
-                scope.launch { AuthManager.signOut(context) }
-                Toast.makeText(context, strings.profileLogoutToast, Toast.LENGTH_SHORT).show()
-            },
+            onClick = { showLogoutDialog = true },
             colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
             shape = RoundedCornerShape(28.dp),
             modifier = Modifier
@@ -390,6 +385,38 @@ fun ProfileScreen() {
         ) {
             Text(strings.profileLogout, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onError)
         }
+    }
+
+    // Logging out ends the session and returns to the auth screen — confirm
+    // first so a mis-tap under the support form can't drop the user out.
+    if (showLogoutDialog) {
+        AlertDialog(
+            onDismissRequest = { showLogoutDialog = false },
+            title = { Text(strings.profileLogout) },
+            text = {
+                Text(
+                    if (activeLang == "en") "You'll be signed out and returned to the login screen."
+                    else "Du wirsch abgmäldet und chunnsch zrugg zum Login."
+                )
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    showLogoutDialog = false
+                    // Reset local state immediately (navigates to the auth screen),
+                    // then end the Firebase session and clear the saved credential.
+                    RecyclingRepository.logout()
+                    scope.launch { AuthManager.signOut(context) }
+                    Toast.makeText(context, strings.profileLogoutToast, Toast.LENGTH_SHORT).show()
+                }) {
+                    Text(strings.profileLogout, color = MaterialTheme.colorScheme.error)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showLogoutDialog = false }) {
+                    Text(if (activeLang == "en") "Cancel" else "Abbräche")
+                }
+            }
+        )
     }
 }
 
