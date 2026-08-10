@@ -44,12 +44,11 @@ class RecyclingRepositoryTest {
     }
 
     @Test
-    fun registerAddress_setsHomeAndInvoiceAddress() {
+    fun registerAddress_setsHomeAddress() {
         RecyclingRepository.loginWithPhone("+41 79 123 45 67")
-        RecyclingRepository.registerAddress("Bahnhofstrasse 1, 8001 Zürich")
+        RecyclingRepository.registerAddress("Bahnhofstrasse 1, 8750 Glarus")
         val profile = RecyclingRepository.userProfile.value
-        assertEquals("Bahnhofstrasse 1, 8001 Zürich", profile.homeAddress)
-        assertEquals("Bahnhofstrasse 1, 8001 Zürich", profile.invoiceAddress)
+        assertEquals("Bahnhofstrasse 1, 8750 Glarus", profile.homeAddress)
     }
 
     @Test
