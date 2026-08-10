@@ -13,6 +13,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Send
+import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -53,6 +54,11 @@ fun ProfileScreen() {
     var supportMessage by rememberSaveable { mutableStateOf("") }
     var selectedPayment by rememberSaveable(profile.defaultPaymentMethod) { mutableStateOf(profile.defaultPaymentMethod) }
     var showLogoutDialog by rememberSaveable { mutableStateOf(false) }
+
+    // Payment method saves on tap, so only the three text fields can go stale.
+    val isProfileDirty = name != profile.name ||
+        phone != profile.phone ||
+        address != profile.homeAddress
 
     Column(
         modifier = Modifier
@@ -139,12 +145,35 @@ fun ProfileScreen() {
                     modifier = Modifier.fillMaxWidth()
                 )
 
+                // Nothing else signals that edits are still only local, so the
+                // save button stays inert until something actually differs.
+                if (isProfileDirty) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Outlined.Info,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.tertiary,
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Text(
+                            text = if (activeLang == "en") "You have unsaved changes"
+                            else "Du hesch nöd gspeicherti Änderige",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.tertiary
+                        )
+                    }
+                }
+
                 Button(
                     onClick = {
                         RecyclingRepository.updateProfile(name, phone, address, selectedPayment)
                         AuthManager.pushProfileToCloud()
                         Toast.makeText(context, strings.profileSaveToast, Toast.LENGTH_SHORT).show()
                     },
+                    enabled = isProfileDirty,
                     shape = RoundedCornerShape(28.dp),
                     modifier = Modifier
                         .fillMaxWidth()
