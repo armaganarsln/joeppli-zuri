@@ -167,6 +167,18 @@ fun GuideScreen() {
                 onValueChange = { searchQuery = it },
                 label = { Text(if (lang == "en") "What are you disposing?" else "Was entsorgsch du?") },
                 leadingIcon = { Icon(Icons.Outlined.Search, contentDescription = null) },
+                trailingIcon = {
+                    if (searchQuery.isNotEmpty()) {
+                        IconButton(onClick = { searchQuery = "" }) {
+                            Icon(
+                                imageVector = Icons.Filled.Close,
+                                contentDescription = if (lang == "en") "Clear search" else "Suech lösche",
+                                modifier = Modifier.size(18.dp)
+                            )
+                        }
+                    }
+                },
+                singleLine = true,
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(16.dp)
             )
@@ -211,6 +223,37 @@ fun GuideScreen() {
                             )
                         }
                     }
+                }
+            }
+
+            // No search hits — say so instead of leaving the list area blank
+            if (filteredMaterials.isEmpty()) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 32.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Icon(
+                        imageVector = Icons.Outlined.Search,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f),
+                        modifier = Modifier.size(40.dp)
+                    )
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Text(
+                        text = if (lang == "en") "Nothing found for \"$searchQuery\""
+                        else "Nüt gfunde für \"$searchQuery\"",
+                        style = MaterialTheme.typography.titleSmall,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = if (lang == "en") "Try a different term, or scan the item instead."
+                        else "Probier en andere Begriff, oder scanne s'Objekt.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
                 }
             }
 
