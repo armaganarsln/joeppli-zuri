@@ -700,6 +700,13 @@ fun OrderStep5(
     }
 }
 
+/** Great-circle distance in metres between two coordinates. */
+private fun distanceMeters(a: LatLng, b: LatLng): Double {
+    val results = FloatArray(1)
+    android.location.Location.distanceBetween(a.latitude, a.longitude, b.latitude, b.longitude, results)
+    return results[0].toDouble()
+}
+
 @Composable
 fun JöppliTrackerScreen(
     address: String,
@@ -778,6 +785,69 @@ fun JöppliTrackerScreen(
     }
 
     val isArrived = progress.value >= 1f
+
+    // Geocode the saved pickup address so the final destination reflects
+    // the user's real address; falls back to the Alt-Wiedikon centre
+    // (Goldbrunnenplatz) when geocoding is unavailable.
+    var geocodedDest by remember { mutableStateOf<LatLng?>(null) }
+    LaunchedEffect(address) {
+        geocodedDest = withContext(Dispatchers.IO) {
+            runCatching {
+                if (address.isNotBlank() && Geocoder.isPresent()) {
+                    @Suppress("DEPRECATION")
+                    Geocoder(context, Locale.GERMAN)
+                        .getFromLocationName("$address, Zürich, Switzerland", 1)
+                        ?.firstOrNull()
+                        ?.let { LatLng(it.latitude, it.longitude) }
+                } else null
+            }.getOrNull()
+        }
+    }
+
+    // Real route coordinates in Alt Wiedikon, Zurich:
+    // Werkhof Hardau (Origin) -> Seebahnstrasse -> Schmiede Wiedikon -> Wiedikon Station -> real destination
+    val routeCoords = remember(geocodedDest) {
+        listOf(
+            LatLng(47.3820, 8.5135), // Werkhof Hardau (Origin)
+            LatLng(47.3795, 8.5144), // Seebahnstrasse North
+            LatLng(47.3770, 8.5152), // Seebahnstrasse Mid
+            LatLng(47.3735, 8.5165), // Schmiede Wiedikon area
+            LatLng(47.3695, 8.5170), // Wiedikon Station area
+            LatLng(47.3672, 8.5125)  // Alt Wiedikon junction (Birmensdorferstrasse)
+        ) + (geocodedDest ?: LatLng(47.3662, 8.5134)) // real address, else Goldbrunnenplatz
+    }
+
+    // Interpolate the vehicle position based on animated progress (0.0 to 1.0)
+    val truckPos = remember(progress.value, routeCoords) {
+        val progressVal = progress.value.coerceIn(0f, 1f)
+        if (progressVal >= 1f) {
+            routeCoords.last()
+        } else {
+            val segmentCount = routeCoords.size - 1
+            val exactIndex = progressVal * segmentCount
+            val index = exactIndex.toInt()
+            val fraction = exactIndex - index
+            val startCoord = routeCoords[index]
+            val endCoord = routeCoords[index + 1]
+            val lat = startCoord.latitude + (endCoord.latitude - startCoord.latitude) * fraction
+            val lng = startCoord.longitude + (endCoord.longitude - startCoord.longitude) * fraction
+            LatLng(lat, lng)
+        }
+    }
+
+    // Distance still to drive: rest of the current segment plus every segment
+    // after it. ETA assumes ~18 km/h average for city driving with stops.
+    val remainingMeters = remember(truckPos, routeCoords) {
+        val progressVal = progress.value.coerceIn(0f, 1f)
+        val segmentCount = routeCoords.size - 1
+        val index = (progressVal * segmentCount).toInt().coerceAtMost(segmentCount - 1)
+        var total = distanceMeters(truckPos, routeCoords[index + 1])
+        for (i in (index + 1) until segmentCount) {
+            total += distanceMeters(routeCoords[i], routeCoords[i + 1])
+        }
+        total
+    }
+    val etaMinutes = kotlin.math.ceil(remainingMeters / 300.0).toInt().coerceAtLeast(1)
 
     // Radar pulsing transition animation
     val infiniteTransition = rememberInfiniteTransition(label = "radar")
@@ -946,56 +1016,6 @@ fun JöppliTrackerScreen(
                 )
             }
 
-            // Geocode the saved pickup address so the final destination reflects
-            // the user's real address; falls back to the Alt-Wiedikon centre
-            // (Goldbrunnenplatz) when geocoding is unavailable.
-            var geocodedDest by remember { mutableStateOf<LatLng?>(null) }
-            LaunchedEffect(address) {
-                geocodedDest = withContext(Dispatchers.IO) {
-                    runCatching {
-                        if (address.isNotBlank() && Geocoder.isPresent()) {
-                            @Suppress("DEPRECATION")
-                            Geocoder(context, Locale.GERMAN)
-                                .getFromLocationName("$address, Zürich, Switzerland", 1)
-                                ?.firstOrNull()
-                                ?.let { LatLng(it.latitude, it.longitude) }
-                        } else null
-                    }.getOrNull()
-                }
-            }
-
-            // Real route coordinates in Alt Wiedikon, Zurich:
-            // Werkhof Hardau (Origin) -> Seebahnstrasse -> Schmiede Wiedikon -> Wiedikon Station -> real destination
-            val routeCoords = remember(geocodedDest) {
-                listOf(
-                    LatLng(47.3820, 8.5135), // Werkhof Hardau (Origin)
-                    LatLng(47.3795, 8.5144), // Seebahnstrasse North
-                    LatLng(47.3770, 8.5152), // Seebahnstrasse Mid
-                    LatLng(47.3735, 8.5165), // Schmiede Wiedikon area
-                    LatLng(47.3695, 8.5170), // Wiedikon Station area
-                    LatLng(47.3672, 8.5125)  // Alt Wiedikon junction (Birmensdorferstrasse)
-                ) + (geocodedDest ?: LatLng(47.3662, 8.5134)) // real address, else Goldbrunnenplatz
-            }
-
-            // Interpolate the vehicle position based on animated progress (0.0 to 1.0)
-            val truckPos = remember(progress.value) {
-                val progressVal = progress.value.coerceIn(0f, 1f)
-                if (progressVal >= 1f) {
-                    routeCoords.last()
-                } else {
-                    val totalPoints = routeCoords.size
-                    val segmentCount = totalPoints - 1
-                    val exactIndex = progressVal * segmentCount
-                    val index = exactIndex.toInt()
-                    val fraction = exactIndex - index
-                    val startCoord = routeCoords[index]
-                    val endCoord = routeCoords[index + 1]
-                    val lat = startCoord.latitude + (endCoord.latitude - startCoord.latitude) * fraction
-                    val lng = startCoord.longitude + (endCoord.longitude - startCoord.longitude) * fraction
-                    LatLng(lat, lng)
-                }
-            }
-
             val cameraPositionState = rememberCameraPositionState {
                 position = CameraPosition.fromLatLngZoom(LatLng(47.3740, 8.5150), 14.5f) // center Wiedikon
             }
@@ -1080,22 +1100,43 @@ fun JöppliTrackerScreen(
             modifier = Modifier.fillMaxWidth()
         ) {
             Column(modifier = Modifier.padding(16.dp)) {
-                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    if (!isArrived) {
-                        CircularProgressIndicator(modifier = Modifier.size(16.dp), strokeWidth = 2.dp)
-                    } else {
-                        Icon(
-                            Icons.Filled.CheckCircle,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(18.dp)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(10.dp),
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        if (!isArrived) {
+                            CircularProgressIndicator(modifier = Modifier.size(16.dp), strokeWidth = 2.dp)
+                        } else {
+                            Icon(
+                                Icons.Filled.CheckCircle,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(18.dp)
+                            )
+                        }
+                        Text(
+                            text = if (isArrived) (if (lang == "en") "Ready for Loading" else "Parat zum Iilade") else (if (lang == "en") "Jöppli Status" else "Jöppli Status"),
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.secondary
                         )
                     }
-                    Text(
-                        text = if (isArrived) (if (lang == "en") "Ready for Loading" else "Parat zum Iilade") else (if (lang == "en") "Jöppli Status" else "Jöppli Status"),
-                        style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.secondary
-                    )
+                    // ETA + distance still to go — grounds the status prose in numbers
+                    if (!isArrived) {
+                        Text(
+                            text = if (remainingMeters >= 1000)
+                                String.format(Locale.ROOT, "%d min · %.1f km", etaMinutes, remainingMeters / 1000)
+                            else
+                                String.format(Locale.ROOT, "%d min · %d m", etaMinutes, remainingMeters.toInt()),
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                    }
                 }
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
