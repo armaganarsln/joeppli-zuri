@@ -33,7 +33,9 @@ import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.model.LatLng
+import com.google.android.gms.maps.model.LatLngBounds
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.MapStyleOptions
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
@@ -1018,6 +1020,20 @@ fun JöppliTrackerScreen(
 
             val cameraPositionState = rememberCameraPositionState {
                 position = CameraPosition.fromLatLngZoom(LatLng(47.3740, 8.5150), 14.5f) // center Wiedikon
+            }
+
+            // Frame the whole route once the destination is known — a geocoded
+            // address outside Alt-Wiedikon would otherwise sit off-screen.
+            LaunchedEffect(routeCoords) {
+                val bounds = LatLngBounds.builder().apply {
+                    routeCoords.forEach { include(it) }
+                }.build()
+                runCatching {
+                    cameraPositionState.animate(
+                        CameraUpdateFactory.newLatLngBounds(bounds, 120),
+                        durationMs = 800
+                    )
+                }
             }
 
             GoogleMap(
