@@ -7,13 +7,13 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.CenterFocusStrong
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Recycling
-import androidx.compose.material.icons.outlined.BarChart
+import androidx.compose.material.icons.filled.Place
 import androidx.compose.material.icons.outlined.CenterFocusWeak
+import androidx.compose.material.icons.outlined.Place
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material3.*
@@ -111,6 +111,7 @@ fun MainAppContent() {
                             activeTab = "ORDER"
                         }
                     )
+                    "POINTS" -> SammelstellenScreen()
                     "STATS" -> DashboardScreen(
                         onOrderClick = { activeTab = "ORDER" }
                     )
@@ -166,11 +167,11 @@ fun CustomBottomBar(
                     onClick = { onTabSelect("HOME") }
                 )
                 BottomTabItem(
-                    label = strings.bottomRecycling,
-                    icon = Icons.Outlined.BarChart,
-                    selectedIcon = Icons.Filled.BarChart,
-                    selected = activeTab == "STATS",
-                    onClick = { onTabSelect("STATS") }
+                    label = strings.bottomSammelstellen,
+                    icon = Icons.Outlined.Place,
+                    selectedIcon = Icons.Filled.Place,
+                    selected = activeTab == "POINTS",
+                    onClick = { onTabSelect("POINTS") }
                 )
                 // Space reserved for the centered FAB
                 Spacer(modifier = Modifier.weight(1f))
