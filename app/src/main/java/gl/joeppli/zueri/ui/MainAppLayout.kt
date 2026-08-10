@@ -19,6 +19,7 @@ import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -49,6 +50,13 @@ fun MainAppContent() {
     var prefillQuickOrder by rememberSaveable { mutableStateOf(false) }
     var openTracker by rememberSaveable { mutableStateOf(false) }
 
+    // Keeps each tab's state (order wizard progress, scroll positions, search
+    // text) alive while the user visits another tab. Entry points that mean
+    // "start a new order" drop the saved wizard first, so they never resume
+    // into a half-filled draft or a finished tracker.
+    val tabStateHolder = rememberSaveableStateHolder()
+    val startFreshOrder = { tabStateHolder.removeState("ORDER") }
+
     // From any tab other than Home, Back returns to Home rather than exiting
     // the app. On Home it stays disabled so the system handles back (exit).
     // The Order tab registers its own BackHandler for in-wizard steps, which
@@ -69,6 +77,7 @@ fun MainAppContent() {
                     activeTab = tab
                 },
                 onQuickPickupClick = {
+                    startFreshOrder()
                     prefillQuickOrder = true
                     openTracker = false
                     activeTab = "ORDER"
@@ -81,37 +90,44 @@ fun MainAppContent() {
                 .fillMaxSize()
                 .padding(paddingValues)
         ) {
-            when (activeTab) {
-                "HOME" -> HomeScreen(
-                    onNavigateToTab = { tab ->
-                        prefillQuickOrder = false
-                        openTracker = false
-                        activeTab = tab
-                    },
-                    onQuickPickupClick = {
-                        prefillQuickOrder = true
-                        openTracker = false
-                        activeTab = "ORDER"
-                    },
-                    onTrackPickup = {
-                        prefillQuickOrder = false
-                        openTracker = true
-                        activeTab = "ORDER"
-                    }
-                )
-                "STATS" -> DashboardScreen(
-                    onOrderClick = { activeTab = "ORDER" }
-                )
-                "ORDER" -> OrderScreen(
-                    onNavigateHome = {
-                        openTracker = false
-                        activeTab = "HOME"
-                    },
-                    prefillQuick = prefillQuickOrder,
-                    startAtTracker = openTracker
-                )
-                "GUIDE" -> GuideScreen()
-                "PROFILE" -> ProfileScreen()
+            tabStateHolder.SaveableStateProvider(activeTab) {
+                when (activeTab) {
+                    "HOME" -> HomeScreen(
+                        onNavigateToTab = { tab ->
+                            prefillQuickOrder = false
+                            openTracker = false
+                            activeTab = tab
+                        },
+                        onQuickPickupClick = {
+                            startFreshOrder()
+                            prefillQuickOrder = true
+                            openTracker = false
+                            activeTab = "ORDER"
+                        },
+                        onTrackPickup = {
+                            startFreshOrder()
+                            prefillQuickOrder = false
+                            openTracker = true
+                            activeTab = "ORDER"
+                        }
+                    )
+                    "STATS" -> DashboardScreen(
+                        onOrderClick = { activeTab = "ORDER" }
+                    )
+                    "ORDER" -> OrderScreen(
+                        onNavigateHome = {
+                            // Leaving the wizard through its own back/exit is an
+                            // explicit abandon — don't resume this draft later.
+                            startFreshOrder()
+                            openTracker = false
+                            activeTab = "HOME"
+                        },
+                        prefillQuick = prefillQuickOrder,
+                        startAtTracker = openTracker
+                    )
+                    "GUIDE" -> GuideScreen()
+                    "PROFILE" -> ProfileScreen()
+                }
             }
         }
     }
