@@ -15,6 +15,7 @@ import androidx.compose.material.icons.outlined.LocalShipping
 import androidx.compose.material.icons.outlined.LocationOn
 import androidx.compose.material.icons.automirrored.outlined.MenuBook
 import androidx.compose.material.icons.outlined.ManageAccounts
+import androidx.compose.material.icons.outlined.Place
 import androidx.compose.material.icons.outlined.Schedule
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -225,10 +226,10 @@ fun HomeScreen(
             verticalArrangement = Arrangement.spacedBy(Dimens.gapMd)
         ) {
             MenuRowCard(
-                title = if (lang == "en") "Order Jöppli" else "Jöppli bestellen",
-                subtitle = if (lang == "en") "Schedule autonomous collection" else "Autonomi Abholig planä",
-                icon = Icons.Outlined.LocalShipping,
-                onClick = { onNavigateToTab("ORDER") }
+                title = if (lang == "en") "Collection points" else "Sammelstelle",
+                subtitle = if (lang == "en") "Locations and opening hours" else "Standort und Öffnigszite",
+                icon = Icons.Outlined.Place,
+                onClick = { onNavigateToTab("POINTS") }
             )
             MenuRowCard(
                 title = if (lang == "en") "What can I recycle?" else "Was chan ich recycle?",
@@ -237,8 +238,8 @@ fun HomeScreen(
                 onClick = { onNavigateToTab("GUIDE") }
             )
             MenuRowCard(
-                title = if (lang == "en") "My Profile" else "Mini Date",
-                subtitle = if (lang == "en") "Address & TWINT" else "Adresse & TWINT",
+                title = if (lang == "en") "My details" else "Mini Date",
+                subtitle = if (lang == "en") "Address and contact" else "Adress und Kontakt",
                 icon = Icons.Outlined.ManageAccounts,
                 onClick = { onNavigateToTab("PROFILE") }
             )

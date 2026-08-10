@@ -72,7 +72,7 @@ fun ProfileScreen() {
     ) {
         PageHeader(
             title = if (activeLang == "en") "Profile Settings" else "Profil & Adresse",
-            subtitle = if (activeLang == "en") "Your credentials for Jöppli collection" else "Dini Date für automatischi Abholige",
+            subtitle = if (activeLang == "en") "Where the Jöppli should stop" else "Wo s'Jöppli sell halte",
             icon = Icons.Outlined.Person
         )
 
