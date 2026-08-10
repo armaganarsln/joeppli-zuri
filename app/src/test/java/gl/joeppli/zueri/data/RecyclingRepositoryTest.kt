@@ -61,36 +61,31 @@ class RecyclingRepositoryTest {
     }
 
     @Test
-    fun updateProfile_keepsInvoiceAddressInSync() {
+    fun updateProfile_storesContactDetails() {
         RecyclingRepository.loginWithEmail("Anna", "anna@example.ch")
         RecyclingRepository.updateProfile(
             name = "Anna Muster",
             phone = "+41 79 000 00 00",
-            homeAddr = "Langstrasse 10, 8004 Zürich",
-            payment = "twint_demo"
+            homeAddr = "Hauptstrasse 10, 8750 Glarus"
         )
         val profile = RecyclingRepository.userProfile.value
         assertEquals("Anna Muster", profile.name)
         assertEquals("+41 79 000 00 00", profile.phone)
-        assertEquals("Langstrasse 10, 8004 Zürich", profile.homeAddress)
-        assertEquals("Langstrasse 10, 8004 Zürich", profile.invoiceAddress)
+        assertEquals("Hauptstrasse 10, 8750 Glarus", profile.homeAddress)
     }
 
     @Test
     fun addPickup_recordsOrderAndGrowsStats() {
         val before = RecyclingRepository.stats.value
         RecyclingRepository.addPickup(
-            address = "Hardaustrasse 1, 8004 Zürich",
+            address = "Hauptstrasse 1, 8750 Glarus",
             dateString = "12.06.2026",
-            timeSlot = "08:00 – 10:00",
-            materials = listOf("Altglas", "Papier/Karton"),
-            price = 0f,
-            isExpress = false
+            timeSlot = "09:00 – 11:00",
+            materials = listOf("Altglas", "Papier/Karton")
         )
         val pickup = RecyclingRepository.lastPickup.value
         assertNotNull(pickup)
         assertEquals(listOf("Altglas", "Papier/Karton"), pickup!!.materials)
-        assertFalse(pickup.isExpress)
 
         val after = RecyclingRepository.stats.value
         assertTrue(after.totalKg > before.totalKg)
@@ -102,12 +97,10 @@ class RecyclingRepositoryTest {
     fun karma_isCappedAt100() {
         repeat(10) {
             RecyclingRepository.addPickup(
-                address = "Hardaustrasse 1, 8004 Zürich",
+                address = "Hauptstrasse 1, 8750 Glarus",
                 dateString = "12.06.2026",
-                timeSlot = "08:00 – 10:00",
-                materials = listOf("Altglas", "Papier/Karton", "Alu/Metall"),
-                price = 0f,
-                isExpress = true
+                timeSlot = "09:00 – 11:00",
+                materials = listOf("Altglas", "Papier/Karton", "Alu/Metall")
             )
         }
         assertEquals(100, RecyclingRepository.stats.value.karma)

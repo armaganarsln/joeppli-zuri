@@ -190,8 +190,7 @@ fun HomeScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = if (pickup.price == 0f) (if (lang == "en") "Free" else "Gratis")
-                            else "CHF %.2f".format(pickup.price),
+                            text = if (lang == "en") "Requested" else "Aagfrogt",
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onSecondaryContainer

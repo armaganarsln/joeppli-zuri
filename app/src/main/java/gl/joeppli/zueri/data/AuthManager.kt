@@ -210,9 +210,6 @@ object AuthManager {
                 email = snap.getString("email").takeUnless { it.isNullOrBlank() } ?: email,
                 phone = snap.getString("phone").takeUnless { it.isNullOrBlank() } ?: phone,
                 homeAddress = snap.getString("homeAddress").orEmpty(),
-                invoiceAddress = snap.getString("invoiceAddress").orEmpty(),
-                invoiceSameAsHome = snap.getBoolean("invoiceSameAsHome") ?: true,
-                defaultPaymentMethod = snap.getString("defaultPaymentMethod") ?: "twint_demo",
                 authType = authType
             )
         } else {
@@ -238,10 +235,7 @@ object AuthManager {
         "name" to p.name,
         "email" to p.email,
         "phone" to p.phone,
-        "homeAddress" to p.homeAddress,
-        "invoiceAddress" to p.invoiceAddress,
-        "invoiceSameAsHome" to p.invoiceSameAsHome,
-        "defaultPaymentMethod" to p.defaultPaymentMethod
+        "homeAddress" to p.homeAddress
     )
 
     /** Signs out of Firebase and clears the saved credential selection. */

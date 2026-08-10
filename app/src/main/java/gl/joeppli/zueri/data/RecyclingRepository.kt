@@ -29,9 +29,6 @@ data class UserProfile(
     val email: String = "",
     val phone: String = "",
     val homeAddress: String = "",
-    val invoiceAddress: String = "",
-    val invoiceSameAsHome: Boolean = true,
-    val defaultPaymentMethod: String = "twint_demo",
     val isLoggedIn: Boolean = false,
     val authType: String? = null
 )
@@ -59,9 +56,7 @@ data class PickupRequest(
     val address: String,
     val dateString: String,
     val timeSlot: String,
-    val materials: List<String>,
-    val price: Float,
-    val isExpress: Boolean
+    val materials: List<String>
 )
 
 private val Context.joeppliDataStore: DataStore<Preferences> by preferencesDataStore(name = "joeppli_state")
@@ -196,9 +191,6 @@ object RecyclingRepository {
         email: String,
         phone: String,
         homeAddress: String,
-        invoiceAddress: String,
-        invoiceSameAsHome: Boolean,
-        defaultPaymentMethod: String,
         authType: String
     ) {
         _userProfile.value = UserProfile(
@@ -207,9 +199,6 @@ object RecyclingRepository {
             email = email,
             phone = phone,
             homeAddress = homeAddress,
-            invoiceAddress = invoiceAddress,
-            invoiceSameAsHome = invoiceSameAsHome,
-            defaultPaymentMethod = defaultPaymentMethod,
             isLoggedIn = true,
             authType = authType
         )
@@ -218,10 +207,7 @@ object RecyclingRepository {
 
     fun registerAddress(homeAddr: String) {
         val current = _userProfile.value
-        _userProfile.value = current.copy(
-            homeAddress = homeAddr,
-            invoiceAddress = homeAddr
-        )
+        _userProfile.value = current.copy(homeAddress = homeAddr)
         persist()
     }
 
@@ -240,20 +226,18 @@ object RecyclingRepository {
         persist()
     }
 
-    fun updateProfile(name: String, phone: String, homeAddr: String, payment: String) {
+    fun updateProfile(name: String, phone: String, homeAddr: String) {
         val current = _userProfile.value
         _userProfile.value = current.copy(
             name = name,
             phone = phone,
-            homeAddress = homeAddr,
-            invoiceAddress = if (current.invoiceSameAsHome) homeAddr else current.invoiceAddress,
-            defaultPaymentMethod = payment
+            homeAddress = homeAddr
         )
         persist()
     }
 
-    fun addPickup(address: String, dateString: String, timeSlot: String, materials: List<String>, price: Float, isExpress: Boolean) {
-        val request = PickupRequest(address, dateString, timeSlot, materials, price, isExpress)
+    fun addPickup(address: String, dateString: String, timeSlot: String, materials: List<String>) {
+        val request = PickupRequest(address, dateString, timeSlot, materials)
         _lastPickup.value = request
 
         // Update statistics

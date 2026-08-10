@@ -17,11 +17,10 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.outlined.ListAlt
-import androidx.compose.material.icons.filled.Bolt
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.outlined.CalendarMonth
 import androidx.compose.material.icons.outlined.LocationOn
-import androidx.compose.material.icons.outlined.PhoneIphone
+import androidx.compose.material.icons.outlined.Recycling
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.listSaver
@@ -43,7 +42,6 @@ import com.google.maps.android.compose.*
 import gl.joeppli.zueri.data.RecyclingRepository
 import gl.joeppli.zueri.notify.OrderNotifications
 import gl.joeppli.zueri.theme.Dimens
-import gl.joeppli.zueri.theme.TwintCyan
 import gl.joeppli.zueri.ui.LocalJoeppliStrings
 import gl.joeppli.zueri.ui.components.AddressAutocompleteField
 import kotlinx.coroutines.Dispatchers
@@ -61,7 +59,7 @@ fun OrderScreen(
     val strings = LocalJoeppliStrings.current
     val lang by RecyclingRepository.userLanguage.collectAsState()
     
-    var currentStep by rememberSaveable { mutableStateOf(if (startAtTracker) 6 else if (prefillQuick) 2 else 1) }
+    var currentStep by rememberSaveable { mutableStateOf(if (startAtTracker) 5 else if (prefillQuick) 2 else 1) }
 
     // Form states — saveable so an in-progress order survives rotation
     var address by rememberSaveable { mutableStateOf("") }
@@ -73,7 +71,6 @@ fun OrderScreen(
             restore = { it.toMutableStateList() }
         )
     ) { mutableStateListOf<String>() }
-    var isExpress by rememberSaveable { mutableStateOf(prefillQuick) }
 
     val profile by RecyclingRepository.userProfile.collectAsState()
     val lastPickup by RecyclingRepository.lastPickup.collectAsState()
@@ -100,20 +97,11 @@ fun OrderScreen(
         selectedTimeSlot = strings.orderSlotEvening
     }
 
-    // Pricing calculation
-    val freeCats = listOf("glass", "altglas", "paper", "cardboard", "karton", "compost", "bio", "aluminum", "tin", "alu", "papier", "organic", "grüngut", "biogut")
-    val hasPaidMaterial = selectedMaterials.any { mat ->
-        !freeCats.any { free -> mat.lowercase().contains(free) }
-    }
-    var price = 0f
-    if (hasPaidMaterial) price += 8f
-    if (isExpress) price += 4.5f
-
     // Hardware Back mirrors the wizard's on-screen back arrow: step back
-    // through 2..5, and leave to Home from the first step or the tracker.
+    // through 2..4, and leave to Home from the first step or the tracker.
     BackHandler {
         when (currentStep) {
-            in 2..5 -> currentStep--
+            in 2..4 -> currentStep--
             else -> onNavigateHome()
         }
     }
@@ -124,17 +112,16 @@ fun OrderScreen(
             .background(MaterialTheme.colorScheme.background)
     ) {
         // Wizard header with back navigation + progress (hidden on the tracker)
-        if (currentStep <= 5) {
+        if (currentStep <= 4) {
             WizardHeader(
                 title = when (currentStep) {
                     1 -> strings.orderStepAddress
                     2 -> strings.orderStepSlot
                     3 -> strings.orderStepMaterials
-                    4 -> strings.orderStepSummary
-                    else -> strings.orderStepPayment
+                    else -> strings.orderStepSummary
                 },
                 step = currentStep,
-                totalSteps = 5,
+                totalSteps = 4,
                 onBack = { if (currentStep > 1) currentStep-- else onNavigateHome() }
             )
         }
@@ -142,24 +129,15 @@ fun OrderScreen(
         Box(modifier = Modifier.weight(1f)) {
             when (currentStep) {
                 1 -> OrderStep1(address, { address = it }, { currentStep = 2 })
-                2 -> OrderStep2(selectedDate, { selectedDate = it }, selectedTimeSlot, { selectedTimeSlot = it }, isExpress, { isExpress = it }, { currentStep = 3 })
+                2 -> OrderStep2(selectedDate, { selectedDate = it }, selectedTimeSlot, { selectedTimeSlot = it }, { currentStep = 3 })
                 3 -> OrderStep3(selectedMaterials, { currentStep = 4 })
-                4 -> OrderStep4(address, selectedDate, selectedTimeSlot, selectedMaterials, price, isExpress, {
-                    if (price == 0f) {
-                        // Nothing to pay — complete the free order right away
-                        // instead of showing a CHF 0.00 TWINT screen.
-                        RecyclingRepository.addPickup(address, selectedDate, selectedTimeSlot, selectedMaterials.toList(), price, isExpress)
-                        currentStep = 6
-                    } else {
-                        currentStep = 5
-                    }
+                4 -> OrderStep4(address, selectedDate, selectedTimeSlot, selectedMaterials, {
+                    // Collection is a free municipal service — confirming the
+                    // request is the last step.
+                    RecyclingRepository.addPickup(address, selectedDate, selectedTimeSlot, selectedMaterials.toList())
+                    currentStep = 5
                 })
-                5 -> OrderStep5(price, {
-                    // Complete order and update stats
-                    RecyclingRepository.addPickup(address, selectedDate, selectedTimeSlot, selectedMaterials.toList(), price, isExpress)
-                    currentStep = 6
-                })
-                6 -> JöppliTrackerScreen(address, onNavigateHome)
+                5 -> JöppliTrackerScreen(address, onNavigateHome)
             }
         }
     }
@@ -330,8 +308,6 @@ fun OrderStep2(
     onDateChange: (String) -> Unit,
     selectedTimeSlot: String,
     onTimeSlotChange: (String) -> Unit,
-    isExpress: Boolean,
-    onExpressChange: (Boolean) -> Unit,
     onNext: () -> Unit
 ) {
     val strings = LocalJoeppliStrings.current
@@ -402,47 +378,6 @@ fun OrderStep2(
         }
 
         Spacer(modifier = Modifier.height(16.dp))
-
-        // Express toggle
-        Card(
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-            shape = Dimens.card,
-            elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Row(
-                modifier = Modifier
-                    .padding(16.dp)
-                    .fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Icon(
-                    imageVector = Icons.Filled.Bolt,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.tertiary
-                )
-                Column(
-                    modifier = Modifier
-                        .weight(1f)
-                        .padding(horizontal = 12.dp)
-                ) {
-                    Text(
-                        strings.orderExpressToggle,
-                        style = MaterialTheme.typography.titleSmall,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                    Text(
-                        strings.orderExpressDesc,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-                Switch(checked = isExpress, onCheckedChange = onExpressChange)
-            }
-        }
-
-        Spacer(modifier = Modifier.height(16.dp))
         }
         WizardCta(
             if (lang == "en") "Continue" else "Weiter",
@@ -460,12 +395,12 @@ fun OrderStep3(
 ) {
     val lang by RecyclingRepository.userLanguage.collectAsState()
     val materials = listOf(
-        Pair(if (lang == "en") "Paper / Cardboard" else "Papier/Karton", true),
-        Pair(if (lang == "en") "Glass" else "Altglas", true),
-        Pair(if (lang == "en") "Aluminum / Metal" else "Alu/Metall", true),
-        Pair(if (lang == "en") "Compost / Organic" else "Biogut/Kompost", true),
-        Pair(if (lang == "en") "Electronic Waste" else "Elektroschrott", false),
-        Pair(if (lang == "en") "Bulky Waste (Furniture, Wood)" else "Sperrgut (Möbel, Holz)", false)
+        if (lang == "en") "Paper / Cardboard" else "Papier/Karton",
+        if (lang == "en") "Glass" else "Altglas",
+        if (lang == "en") "Aluminum / Metal" else "Alu/Metall",
+        if (lang == "en") "Compost / Organic" else "Biogut/Kompost",
+        if (lang == "en") "Electronic Waste" else "Elektroschrott",
+        if (lang == "en") "Bulky Waste (Furniture, Wood)" else "Sperrgut (Möbel, Holz)"
     )
 
     Column(modifier = Modifier.fillMaxSize()) {
@@ -478,13 +413,14 @@ fun OrderStep3(
     ) {
         Spacer(modifier = Modifier.height(8.dp))
         Text(
-            text = if (lang == "en") "Standard items are free. Bulky waste & E-waste costs CHF 8.00 flat fee." else "Standardgut isch gratis. Sperrgut & E-Schrott koschtet CHF 8.– pauschal.",
+            text = if (lang == "en") "Collection is free of charge for all residents."
+            else "D'Abholig isch für alli Iiwohner gratis.",
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
         Spacer(modifier = Modifier.height(12.dp))
 
-        materials.forEach { (name, isFree) ->
+        materials.forEach { name ->
             val checked = selectedMaterials.contains(name)
             Row(
                 modifier = Modifier
@@ -513,29 +449,17 @@ fun OrderStep3(
                         modifier = Modifier.padding(start = 8.dp)
                     )
                 }
-
-                Box(
-                    modifier = Modifier
-                        .background(
-                            if (isFree) MaterialTheme.colorScheme.primaryContainer
-                            else MaterialTheme.colorScheme.surfaceContainerHighest,
-                            Dimens.chipSmall
-                        )
-                        .padding(horizontal = 8.dp, vertical = 4.dp)
-                ) {
-                    Text(
-                        text = if (isFree) (if (lang == "en") "FREE" else "GRATIS") else "+ CHF 8.–",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = if (isFree) MaterialTheme.colorScheme.onPrimaryContainer
-                        else MaterialTheme.colorScheme.secondary
-                    )
-                }
             }
         }
 
         Spacer(modifier = Modifier.height(16.dp))
         }
-        WizardCta(if (lang == "en") "Continue to Checkout" else "Weiter zur Kasse", enabled = selectedMaterials.isNotEmpty(), modifier = Modifier.padding(Dimens.gapLg), onClick = onNext)
+        WizardCta(
+            if (lang == "en") "Review request" else "Aafrog aaluege",
+            enabled = selectedMaterials.isNotEmpty(),
+            modifier = Modifier.padding(Dimens.gapLg),
+            onClick = onNext
+        )
     }
 }
 
@@ -545,8 +469,6 @@ fun OrderStep4(
     dateString: String,
     timeSlot: String,
     materials: List<String>,
-    price: Float,
-    isExpress: Boolean,
     onNext: () -> Unit
 ) {
     val strings = LocalJoeppliStrings.current
@@ -587,24 +509,17 @@ fun OrderStep4(
                         )
                     }
                 }
-                if (isExpress) {
-                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Dimens.gapMd)) {
-                        Icon(Icons.Filled.Bolt, contentDescription = null, tint = onContainer)
-                        Text("${strings.orderExpressToggle} (+ CHF 4.50)", style = MaterialTheme.typography.bodyMedium, color = onContainer)
-                    }
-                }
-
                 HorizontalDivider(color = onContainer.copy(alpha = 0.15f))
 
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
+                    horizontalArrangement = Arrangement.spacedBy(Dimens.gapMd),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(if (lang == "en") "Total Fee" else "Total Gebühr", style = MaterialTheme.typography.titleMedium, color = onContainer)
+                    Icon(Icons.Outlined.Recycling, contentDescription = null, tint = onContainer)
                     Text(
-                        text = if (price == 0f) (if (lang == "en") "FREE" else "GRATIS") else String.format(Locale.ROOT, "CHF %.2f", price),
-                        style = MaterialTheme.typography.headlineSmall,
+                        text = if (lang == "en") "Free municipal service" else "Gratis Gmeindsdienscht",
+                        style = MaterialTheme.typography.titleSmall,
                         color = onContainer
                     )
                 }
@@ -613,94 +528,14 @@ fun OrderStep4(
 
         Spacer(modifier = Modifier.height(16.dp))
         }
-        val ctaText = if (price == 0f) {
-            if (lang == "en") "Confirm Order" else "Bestellig bestätige"
-        } else {
-            if (lang == "en") "Pay with TWINT" else "Zahle mit TWINT"
-        }
-        WizardCta(ctaText, modifier = Modifier.padding(Dimens.gapLg), onClick = onNext)
+        WizardCta(
+            if (lang == "en") "Confirm request" else "Aafrog bestätige",
+            modifier = Modifier.padding(Dimens.gapLg),
+            onClick = onNext
+        )
     }
 }
 
-@Composable
-fun OrderStep5(
-    price: Float,
-    onPaymentSuccess: () -> Unit
-) {
-    val strings = LocalJoeppliStrings.current
-    val lang by RecyclingRepository.userLanguage.collectAsState()
-    var loading by remember { mutableStateOf(false) }
-
-    if (loading) {
-        LaunchedEffect(Unit) {
-            delay(2000)
-            onPaymentSuccess()
-        }
-    }
-
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(24.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
-    ) {
-        if (loading) {
-            CircularProgressIndicator(modifier = Modifier.size(64.dp))
-            Spacer(modifier = Modifier.height(24.dp))
-            Text(
-                if (lang == "en") "Processing Payment..." else "Zahlig wird verarbeitet…",
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.secondary
-            )
-        } else {
-            Box(
-                modifier = Modifier
-                    .size(100.dp)
-                    .background(TwintCyan.copy(alpha = 0.12f), RoundedCornerShape(50.dp)),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = Icons.Outlined.PhoneIphone,
-                    contentDescription = null,
-                    tint = TwintCyan,
-                    modifier = Modifier.size(48.dp)
-                )
-            }
-            Spacer(modifier = Modifier.height(24.dp))
-            Text(
-                if (lang == "en") "TWINT Express Payment" else "TWINT Express-Zahlig",
-                style = MaterialTheme.typography.titleLarge,
-                color = MaterialTheme.colorScheme.secondary
-            )
-            Text(
-                text = String.format(Locale.ROOT, "CHF %.2f", price),
-                style = MaterialTheme.typography.displaySmall,
-                color = TwintCyan,
-                modifier = Modifier.padding(vertical = 12.dp)
-            )
-            Text(
-                text = if (lang == "en") "Tap below to authorize the payment via TWINT sandbox." else "Klick unde, zum d'Zahlig über d'TWINT-Demo freigäh.",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(horizontal = 16.dp),
-                textAlign = TextAlign.Center
-            )
-            Spacer(modifier = Modifier.height(32.dp))
-
-            Button(
-                onClick = { loading = true },
-                colors = ButtonDefaults.buttonColors(containerColor = TwintCyan),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(Dimens.ctaHeight),
-                shape = Dimens.ctaShape
-            ) {
-                Text(if (lang == "en") "Authorize Payment" else "Zahlig freigäh", style = MaterialTheme.typography.labelLarge)
-            }
-        }
-    }
-}
 
 /** Great-circle distance in metres between two coordinates. */
 private fun distanceMeters(a: LatLng, b: LatLng): Double {

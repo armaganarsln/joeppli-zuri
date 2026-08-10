@@ -79,6 +79,9 @@ android {
         }
     }
     compileOptions {
+        // minSdk is 24, but the Sammelstellen opening-hours model uses
+        // java.time (API 26+). Desugaring backports it.
+        isCoreLibraryDesugaringEnabled = true
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
@@ -142,6 +145,8 @@ dependencies {
   implementation(libs.play.services.maps)
   // Places SDK — address autocomplete on the pickup/home address fields
   implementation(libs.places)
+  // Backports java.time to minSdk 24 (opening-hours model)
+  coreLibraryDesugaring(libs.desugar.jdk.libs)
   // Tooling
   debugImplementation(libs.androidx.compose.ui.tooling)
   // Instrumented tests

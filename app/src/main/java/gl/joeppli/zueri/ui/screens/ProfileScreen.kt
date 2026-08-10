@@ -54,7 +54,6 @@ fun ProfileScreen() {
     var address by rememberSaveable(profile.homeAddress) { mutableStateOf(profile.homeAddress) }
 
     var supportMessage by rememberSaveable { mutableStateOf("") }
-    var selectedPayment by rememberSaveable(profile.defaultPaymentMethod) { mutableStateOf(profile.defaultPaymentMethod) }
     var showLogoutDialog by rememberSaveable { mutableStateOf(false) }
 
     // Payment method saves on tap, so only the three text fields can go stale.
@@ -144,7 +143,7 @@ fun ProfileScreen() {
 
                 Button(
                     onClick = {
-                        RecyclingRepository.updateProfile(name, phone, address, selectedPayment)
+                        RecyclingRepository.updateProfile(name, phone, address)
                         AuthManager.pushProfileToCloud()
                         Toast.makeText(context, strings.profileSaveToast, Toast.LENGTH_SHORT).show()
                     },
@@ -244,47 +243,6 @@ fun ProfileScreen() {
                         color = NeutralDark,
                         selected = currentTheme == "dark",
                         onClick = { RecyclingRepository.setTheme("dark") },
-                        modifier = Modifier.weight(1f)
-                    )
-                }
-            }
-        }
-
-        // Payment method
-        Card(
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-            shape = Dimens.card,
-            elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Column(modifier = Modifier.padding(Dimens.gapLg)) {
-                Text(
-                    text = strings.profilePayment,
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.secondary
-                )
-                Spacer(modifier = Modifier.height(Dimens.gapMd))
-
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(Dimens.gapSm)) {
-                    val isTwint = selectedPayment == "twint_demo"
-                    FilterChip(
-                        selected = isTwint,
-                        onClick = {
-                            selectedPayment = "twint_demo"
-                            RecyclingRepository.updateProfile(name, phone, address, "twint_demo")
-                            AuthManager.pushProfileToCloud()
-                        },
-                        label = { Text("TWINT (Standard)") },
-                        modifier = Modifier.weight(1f)
-                    )
-                    FilterChip(
-                        selected = !isTwint,
-                        onClick = {
-                            selectedPayment = "card"
-                            RecyclingRepository.updateProfile(name, phone, address, "card")
-                            AuthManager.pushProfileToCloud()
-                        },
-                        label = { Text(if (activeLang == "en") "Credit Card" else "Kreditkarte") },
                         modifier = Modifier.weight(1f)
                     )
                 }
