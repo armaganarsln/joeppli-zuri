@@ -21,6 +21,7 @@ import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.outlined.CalendarMonth
 import androidx.compose.material.icons.outlined.LocationOn
 import androidx.compose.material.icons.outlined.Recycling
+import androidx.compose.material.icons.outlined.Schedule
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.listSaver
@@ -48,7 +49,8 @@ import gl.joeppli.zueri.ui.components.AddressAutocompleteField
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
-import java.text.SimpleDateFormat
+import java.time.LocalDate
+import java.time.LocalTime
 import java.util.*
 
 @Composable
@@ -93,9 +95,18 @@ fun OrderScreen(
         val standardCompost = if (lang == "en") "Compost / Organic" else "Biogut/Kompost"
         selectedMaterials.addAll(listOf(standardPaper, standardGlass, standardMetal, standardCompost))
         
-        val format = SimpleDateFormat("EEEE, dd. MMMM", if (lang == "en") Locale.US else Locale.GERMAN)
-        selectedDate = format.format(Date())
-        selectedTimeSlot = strings.orderSlotEvening
+        // Prefill the next slot the vehicle is actually collecting in.
+        JoeppliService.nextSlot(LocalDate.now(), LocalTime.now())?.let { (date, window) ->
+            val locale = if (lang == "en") Locale.ENGLISH else Locale.GERMAN
+            val dayName = date.dayOfWeek.getDisplayName(java.time.format.TextStyle.FULL, locale)
+            val stamp = "%02d.%02d.".format(date.dayOfMonth, date.monthValue)
+            selectedDate = when {
+                date == LocalDate.now() -> if (lang == "en") "Today · $dayName $stamp" else "Hüt · $dayName $stamp"
+                date == LocalDate.now().plusDays(1) -> if (lang == "en") "Tomorrow · $dayName $stamp" else "Morn · $dayName $stamp"
+                else -> "$dayName $stamp"
+            }
+            selectedTimeSlot = "${window.label(lang)} (${window.timeRange()})"
+        }
     }
 
     // Hardware Back mirrors the wizard's on-screen back arrow: step back
@@ -311,26 +322,27 @@ fun OrderStep2(
     onTimeSlotChange: (String) -> Unit,
     onNext: () -> Unit
 ) {
-    val strings = LocalJoeppliStrings.current
     val lang by RecyclingRepository.userLanguage.collectAsState()
-    
+
+    // Only days the vehicle actually runs are offered — the service drives
+    // Tue/Thu/Sat, not on demand.
+    val locale = if (lang == "en") Locale.ENGLISH else Locale.GERMAN
     val dateOptions = remember(lang) {
-        val format = SimpleDateFormat("EEEE, dd. MMMM", if (lang == "en") Locale.US else Locale.GERMAN)
-        val today = Date()
-        val tomorrow = Date(today.time + 24 * 60 * 60 * 1000)
-        val nextDay = Date(today.time + 2 * 24 * 60 * 60 * 1000)
-        listOf(
-            if (lang == "en") "Today (${format.format(today)})" else "Heute (${format.format(today)})",
-            if (lang == "en") "Tomorrow (${format.format(tomorrow)})" else "Morgen (${format.format(tomorrow)})",
-            format.format(nextDay)
-        )
+        val today = LocalDate.now()
+        JoeppliService.upcomingDates(today, 3).map { date ->
+            val dayName = date.dayOfWeek.getDisplayName(java.time.format.TextStyle.FULL, locale)
+            val stamp = "%02d.%02d.".format(date.dayOfMonth, date.monthValue)
+            when {
+                date == today -> if (lang == "en") "Today · $dayName $stamp" else "Hüt · $dayName $stamp"
+                date == today.plusDays(1) -> if (lang == "en") "Tomorrow · $dayName $stamp" else "Morn · $dayName $stamp"
+                else -> "$dayName $stamp"
+            }
+        }
     }
 
-    val timeSlots = listOf(
-        strings.orderSlotMorning,
-        strings.orderSlotAfternoon,
-        strings.orderSlotEvening
-    )
+    val timeSlots = remember(lang) {
+        JoeppliService.windows.map { "${it.label(lang)} (${it.timeRange()})" }
+    }
 
     Column(modifier = Modifier.fillMaxSize()) {
     Column(
@@ -342,8 +354,38 @@ fun OrderStep2(
     ) {
         Spacer(modifier = Modifier.height(8.dp))
 
+        // Why the choice is limited — stated up front rather than as an error.
+        Card(
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer),
+            shape = Dimens.card,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Row(
+                modifier = Modifier.padding(Dimens.gapLg),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(Dimens.gapMd)
+            ) {
+                Icon(
+                    imageVector = Icons.Outlined.Schedule,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSecondaryContainer,
+                    modifier = Modifier.size(20.dp)
+                )
+                Text(
+                    text = if (lang == "en")
+                        "Jöppli drives Tue, Thu and Sat, outside the commuter rush."
+                    else
+                        "S'Jöppli fahrt am Zischtig, Dunschtig und Samschtig — usserhalb vom Bruefsverkehr.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSecondaryContainer
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
         // Date selection list
-        Text(if (lang == "en") "Date" else "Datum", style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.secondary)
+        Text(if (lang == "en") "Collection day" else "Abholtag", style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.secondary)
         Spacer(modifier = Modifier.height(4.dp))
         dateOptions.forEach { date ->
             Row(
@@ -362,7 +404,7 @@ fun OrderStep2(
         Spacer(modifier = Modifier.height(16.dp))
 
         // Time Slot selection list
-        Text(if (lang == "en") "Time Window" else "Zeitfenster", style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.secondary)
+        Text(if (lang == "en") "Collection window" else "Zitfenschter", style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.secondary)
         Spacer(modifier = Modifier.height(4.dp))
         timeSlots.forEach { slot ->
             Row(

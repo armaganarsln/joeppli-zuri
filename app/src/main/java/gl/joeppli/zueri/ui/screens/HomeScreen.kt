@@ -15,20 +15,25 @@ import androidx.compose.material.icons.outlined.LocalShipping
 import androidx.compose.material.icons.outlined.LocationOn
 import androidx.compose.material.icons.automirrored.outlined.MenuBook
 import androidx.compose.material.icons.outlined.ManageAccounts
+import androidx.compose.material.icons.outlined.Schedule
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import gl.joeppli.zueri.data.JoeppliService
 import gl.joeppli.zueri.data.RecyclingRepository
 import gl.joeppli.zueri.theme.Dimens
 import gl.joeppli.zueri.ui.LocalJoeppliStrings
 import gl.joeppli.zueri.ui.components.PageHeader
+import kotlinx.coroutines.delay
+import java.time.LocalDate
+import java.time.LocalTime
+import java.time.format.TextStyle
+import java.util.Locale
 
 @Composable
 fun HomeScreen(
@@ -85,6 +90,9 @@ fun HomeScreen(
                 modifier = Modifier.weight(1f)
             )
         }
+
+        // When is the vehicle next out? The first thing a resident wants.
+        NextCollectionCard(lang = lang)
 
         // Quick Summon Jöppli Card
         Card(
@@ -234,6 +242,78 @@ fun HomeScreen(
                 icon = Icons.Outlined.ManageAccounts,
                 onClick = { onNavigateToTab("PROFILE") }
             )
+        }
+    }
+}
+
+/**
+ * The service's next collection window, or a live "collecting now" state.
+ * Jöppli runs on set days, so this replaces the on-demand promise that an
+ * always-available service would make.
+ */
+@Composable
+private fun NextCollectionCard(lang: String) {
+    val today = remember { LocalDate.now() }
+    var now by remember { mutableStateOf(LocalTime.now()) }
+    LaunchedEffect(Unit) {
+        while (true) {
+            delay(30_000)
+            now = LocalTime.now()
+        }
+    }
+    val collectingNow = JoeppliService.isCollectingNow(today, now)
+    val next = JoeppliService.nextSlot(today, now)
+    val locale = if (lang == "en") Locale.ENGLISH else Locale.GERMAN
+
+    Card(
+        colors = CardDefaults.cardColors(
+            containerColor = if (collectingNow) MaterialTheme.colorScheme.primaryContainer
+            else MaterialTheme.colorScheme.surface
+        ),
+        shape = Dimens.card,
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(Dimens.gapLg),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(Dimens.gapMd)
+        ) {
+            Icon(
+                imageVector = Icons.Outlined.Schedule,
+                contentDescription = null,
+                tint = if (collectingNow) MaterialTheme.colorScheme.onPrimaryContainer
+                else MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(22.dp)
+            )
+            Column(verticalArrangement = Arrangement.spacedBy(Dimens.gapXs)) {
+                Text(
+                    text = when {
+                        collectingNow -> if (lang == "en") "Jöppli is out collecting" else "S'Jöppli isch am Sammle"
+                        else -> if (lang == "en") "Next collection" else "Nächschti Abholig"
+                    },
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = if (collectingNow) MaterialTheme.colorScheme.onPrimaryContainer
+                    else MaterialTheme.colorScheme.onSurface
+                )
+                Text(
+                    text = next?.let { (date, window) ->
+                        val day = date.dayOfWeek.getDisplayName(TextStyle.FULL, locale)
+                        val whenLabel = when (date) {
+                            today -> if (lang == "en") "today" else "hüt"
+                            today.plusDays(1) -> if (lang == "en") "tomorrow" else "morn"
+                            else -> day
+                        }
+                        "$whenLabel · ${window.timeRange()}"
+                    } ?: if (lang == "en") "Schedule unavailable" else "Kei Fahrplan",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = if (collectingNow) MaterialTheme.colorScheme.onPrimaryContainer
+                    else MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
         }
     }
 }
